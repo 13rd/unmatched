@@ -10,25 +10,30 @@
     <div class="container">
         <h1>Игровое поле</h1>
         
-        <div class="controls-top">
-            <div class="file-upload">
-                <label for="backgroundUpload" class="btn">Загрузить фон</label>
-                <input type="file" id="backgroundUpload" accept="image/*" style="display: none;">
-            </div>
-            
-            <div class="file-upload">
-                <label for="pointsUpload" class="btn">Загрузить точки (JSON)</label>
-                <input type="file" id="pointsUpload" accept=".json" style="display: none;">
-            </div>
-        </div>
-        
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <canvas id="gameCanvas" width="1200" height="800"></canvas>
         
         <div class="controls">
-            <button id="addChip">Добавить фишку</button>
             <button id="clearBoard">Очистить поле</button>
+            <button id="backToSetup">Вернуться к настройкам</button>
         </div>
     </div>
+    
+    <div class="container2">
+        <div class="hp-panel">
+            <h2>Счётчики HP</h2>
+            
+            <div class="player-hp-section">
+                <h3>Игрок 1</h3>
+                <div id="player1-chips" class="chips-list"></div>
+            </div>
+            
+            <div class="player-hp-section">
+                <h3>Игрок 2</h3>
+                <div id="player2-chips" class="chips-list"></div>
+            </div>
+        </div>
+    </div>
+    
     <script src="game.js"></script>
 </body>
 </html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройка игры</title>
+    <link rel="stylesheet" href="setup.css">
+</head>
+<body>
+    <div class="setup-container">
+        <h1>Настройка игры</h1>
+        
+        <!-- Загрузка поля и точек -->
+        <div class="setup-section">
+            <h2>Игровое поле</h2>
+            
+            <div class="file-upload-group">
+                <div class="file-upload">
+                    <label for="setupBackgroundUpload" class="btn">Загрузить фон</label>
+                    <input type="file" id="setupBackgroundUpload" accept="image/*" style="display: none;">
+                    <span id="backgroundFileName">Файл не выбран</span>
+                </div>
+                
+                <div class="file-upload">
+                    <label for="setupPointsUpload" class="btn">Загрузить точки (JSON)</label>
+                    <input type="file" id="setupPointsUpload" accept=".json" style="display: none;">
+                    <span id="pointsFileName">Файл не выбран</span>
+                </div>
+            </div>
+            
+            <canvas id="previewCanvas" width="600" height="400"></canvas>
+        </div>
+        
+        <!-- Настройки игроков -->
+        <div class="setup-section">
+            <h2>Настройки игроков</h2>
+            
+            <div class="players-setup">
+                <!-- Игрок 1 -->
+                <div class="player-setup">
+                    <h3>Игрок 1</h3>
+                    
+                    <div class="chip-setup">
+                        <label>Цвет главной фишки:</label>
+                        <div class="color-picker" id="setup-player1-main-colors"></div>
+                    </div>
+                    
+                    <div class="chip-setup">
+                        <label>Цвет дополнительных фишек:</label>
+                        <div class="color-picker" id="setup-player1-extra-colors"></div>
+                        <div class="quantity-control">
+                            <label>Количество:</label>
+                            <input type="number" id="setup-player1-extra-count" min="0" max="10" value="3">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Игрок 2 -->
+                <div class="player-setup">
+                    <h3>Игрок 2</h3>
+                    
+                    <div class="chip-setup">
+                        <label>Цвет главной фишки:</label>
+                        <div class="color-picker" id="setup-player2-main-colors"></div>
+                    </div>
+                    
+                    <div class="chip-setup">
+                        <label>Цвет дополнительных фишек:</label>
+                        <div class="color-picker" id="setup-player2-extra-colors"></div>
+                        <div class="quantity-control">
+                            <label>Количество:</label>
+                            <input type="number" id="setup-player2-extra-count" min="0" max="10" value="3">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Кнопка запуска -->
+        <div class="start-section">
+            <button id="startGame" class="btn-start">Начать игру</button>
+        </div>
+    </div>
+    
+    <script src="setup.js"></script>
+</body>
+</html>
