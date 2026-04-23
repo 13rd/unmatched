@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игровое поле</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Игровое поле</h1>
+        
+        <div class="controls-top">
+            <div class="file-upload">
+                <label for="backgroundUpload" class="btn">Загрузить фон</label>
+                <input type="file" id="backgroundUpload" accept="image/*" style="display: none;">
+            </div>
+            
+            <div class="file-upload">
+                <label for="pointsUpload" class="btn">Загрузить точки (JSON)</label>
+                <input type="file" id="pointsUpload" accept=".json" style="display: none;">
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="controls">
+            <button id="addChip">Добавить фишку</button>
+            <button id="clearBoard">Очистить поле</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>

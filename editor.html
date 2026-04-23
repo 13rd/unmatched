@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактор точек игрового поля</title>
+    <link rel="stylesheet" href="editor.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Редактор точек игрового поля</h1>
+        
+        <div class="controls-top">
+            <div class="file-upload">
+                <label for="imageUpload" class="btn">Загрузить фон</label>
+                <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                <span id="fileName">Файл не выбран</span>
+            </div>
+            
+            <div class="mode-switch">
+                <button id="addMode" class="btn active">Добавить точки</button>
+                <button id="deleteMode" class="btn">Удалить точки</button>
+            </div>
+        </div>
+        
+        <canvas id="editorCanvas" width="800" height="600"></canvas>
+        
+        <div class="controls-bottom">
+            <div class="info">
+                <span>Точек на поле: <strong id="pointCount">0</strong></span>
+            </div>
+            
+            <div class="actions">
+                <button id="clearAll" class="btn btn-warning">Очистить все</button>
+                <button id="exportJSON" class="btn btn-success">Экспортировать JSON</button>
+                <button id="exportJS" class="btn btn-success">Экспортировать JS</button>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>Инструкция:</h3>
+            <ul>
+                <li>Загрузите изображение фона</li>
+                <li>Кликайте по canvas для добавления точек</li>
+                <li>Переключитесь в режим удаления, чтобы убрать точки</li>
+                <li>Экспортируйте координаты в JSON или JS формате</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script src="editor.js"></script>
+</body>
+</html>
