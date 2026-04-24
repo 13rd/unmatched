@@ -247,13 +247,25 @@ io.on('connection', (socket) => {
     // Запрос колод
     socket.on('request-decks', () => {
         const room = rooms.get(socket.roomCode);
-        if (!room) return;
+        if (!room) {
+            console.log('Запрос колод: комната не найдена для', socket.roomCode);
+            return;
+        }
+        
+        console.log('Запрос колод от пользователя', socket.username, 'для комнаты', socket.roomCode);
         
         // Отправляем колоды клиенту
-        socket.emit('decks-data', {
+        const decksData = {
             player1: room.settings.player1.deck || null,
             player2: room.settings.player2.deck || null
+        };
+        
+        console.log('Отправка колод:', {
+            player1: decksData.player1 ? 'есть' : 'нет',
+            player2: decksData.player2 ? 'есть' : 'нет'
         });
+        
+        socket.emit('decks-data', decksData);
     });
 
     // Запрос фонового изображения

@@ -194,6 +194,12 @@ class GameBoard {
                 this.isInitialized = true;
             }
             
+            // ВАЖНО: Запрашиваем колоды ПОСЛЕ создания комнаты
+            if (window.cardManager) {
+                console.log('Запрос колод после создания комнаты');
+                window.cardManager.requestDecks();
+            }
+            
             // Обновляем UI после небольшой задержки
             setTimeout(() => {
                 this.updatePlayerRoleUI();
@@ -213,6 +219,12 @@ class GameBoard {
                 // Если фишек нет, создаем их (первый игрок)
                 this.createPlayerChips(this.settings);
                 this.isInitialized = true;
+            }
+            
+            // ВАЖНО: Запрашиваем колоды ПОСЛЕ подключения к комнате
+            if (window.cardManager) {
+                console.log('Запрос колод после подключения к комнате');
+                window.cardManager.requestDecks();
             }
             
             // Обновляем UI после небольшой задержки, чтобы DOM был готов
@@ -967,22 +979,24 @@ class CardManager {
         this.setupEventListeners();
         this.setupSocketListeners();
         
-        // Запрашиваем колоды с сервера
-        this.requestDecks();
+        // НЕ запрашиваем колоды здесь - они будут запрошены после подключения к комнате
+        console.log('CardManager инициализирован, ожидание подключения к комнате для загрузки колод');
     }
 
     requestDecks() {
         // Запрашиваем колоды у сервера
+        console.log('Запрос колод с сервера...');
         this.gameBoard.socket.emit('request-decks');
     }
 
     loadDecks(decksData) {
         // Загружаем колоды с сервера
+        console.log('Получены колоды с сервера:', decksData);
         this.player1Deck = new Deck('player1', decksData.player1);
         this.player2Deck = new Deck('player2', decksData.player2);
         this.decksLoaded = true;
         this.updateDeckCounts();
-        console.log('Колоды загружены с сервера');
+        console.log('Колоды загружены с сервера. Player1:', this.player1Deck.getCardsCount(), 'Player2:', this.player2Deck.getCardsCount());
     }
 
     updateDeckCounts() {
@@ -1255,6 +1269,7 @@ class CardManager {
 
         // Получение колод с сервера
         socket.on('decks-data', (decksData) => {
+            console.log('Событие decks-data получено:', decksData);
             this.loadDecks(decksData);
         });
 
