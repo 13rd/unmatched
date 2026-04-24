@@ -117,6 +117,11 @@ class GameBoard {
         this.snapDistance = 80;
         this.hpPanel = null;
         
+        // WebSocket подключение
+        this.socket = io();
+        this.roomCode = sessionStorage.getItem('roomCode');
+        this.isInitialized = false;
+        
         // Загружаем фоновое изображение
         this.backgroundImage = new Image();
         this.backgroundImage.onload = () => this.draw();
@@ -125,6 +130,7 @@ class GameBoard {
         this.loadGameSettings();
         
         this.setupEventListeners();
+        this.setupSocketListeners();
         this.draw();
     }
 
@@ -138,20 +144,155 @@ class GameBoard {
             return;
         }
 
-        const settings = JSON.parse(settingsJson);
+        this.settings = JSON.parse(settingsJson);
         
         // Загружаем фон
-        if (settings.backgroundImage) {
-            this.backgroundImage.src = settings.backgroundImage;
+        if (this.settings.backgroundImage) {
+            this.backgroundImage.src = this.settings.backgroundImage;
         }
         
         // Загружаем точки
-        if (settings.points) {
-            this.loadPointsFromJSON(settings.points);
+        if (this.settings.points) {
+            this.loadPointsFromJSON(this.settings.points);
         }
         
-        // Создаем фишки игроков
-        this.createPlayerChips(settings);
+        // Подключаемся к комнате только если код есть
+        if (this.roomCode) {
+            console.log('Подключаемся к комнате:', this.roomCode);
+            this.socket.emit('join-room', this.roomCode);
+        } else {
+            console.error('Код комнаты не найден!');
+        }
+    }
+
+    setupSocketListeners() {
+        // Комната создана (создатель комнаты)
+        this.socket.on('room-created', (data) => {
+            console.log('Комната создана:', data.roomCode);
+            
+            if (!this.isInitialized) {
+                // Создаем фишки для новой комнаты
+                this.createPlayerChips(this.settings);
+                this.isInitialized = true;
+            }
+        });
+
+        // Успешное подключение к комнате
+        this.socket.on('room-joined', (data) => {
+            console.log('Подключились к комнате:', data.roomCode);
+            
+            // Если есть сохраненные фишки, загружаем их
+            if (data.chips && data.chips.length > 0) {
+                this.loadChipsFromServer(data.chips);
+            } else if (!this.isInitialized) {
+                // Если фишек нет, создаем их (первый игрок)
+                this.createPlayerChips(this.settings);
+                this.isInitialized = true;
+            }
+        });
+        
+        // Ошибка подключения к комнате
+        this.socket.on('room-error', (message) => {
+            console.error('Ошибка комнаты:', message);
+            alert('Ошибка: ' + message);
+        });
+
+        // Другой игрок присоединился
+        this.socket.on('player-joined', (playerId) => {
+            console.log('Игрок присоединился:', playerId);
+        });
+
+        // Другой игрок покинул комнату
+        this.socket.on('player-left', (playerId) => {
+            console.log('Игрок покинул комнату:', playerId);
+        });
+
+        // Синхронизация перемещения фишки
+        this.socket.on('chip-moved', (data) => {
+            const chip = this.chips.find(c => c.id === data.chipId);
+            if (chip) {
+                chip.x = data.x;
+                chip.y = data.y;
+                
+                // Отсоединяем от старой точки
+                if (chip.attachedPoint) {
+                    chip.attachedPoint.detachChip();
+                }
+                
+                // Присоединяем к новой точке
+                if (data.attachedPointId !== null) {
+                    const point = this.points.find(p => p.id === data.attachedPointId);
+                    if (point) {
+                        point.attachChip(chip);
+                    }
+                }
+                
+                this.draw();
+            }
+        });
+
+        // Синхронизация изменения HP
+        this.socket.on('hp-changed', (data) => {
+            const chip = this.chips.find(c => c.id === data.chipId);
+            if (chip) {
+                chip.hp = data.hp;
+                if (this.hpPanel) {
+                    this.hpPanel.renderChips();
+                }
+            }
+        });
+
+        // Синхронизация инициализации фишек
+        this.socket.on('chips-initialized', (chips) => {
+            this.loadChipsFromServer(chips);
+        });
+
+        // Синхронизация очистки поля
+        this.socket.on('board-cleared', () => {
+            this.chips = [];
+            this.points.forEach(point => point.chip = null);
+            if (this.hpPanel) {
+                this.hpPanel.renderChips();
+            }
+            this.draw();
+        });
+    }
+
+    loadChipsFromServer(chipsData) {
+        this.chips = [];
+        this.points.forEach(point => point.chip = null);
+        
+        chipsData.forEach(chipData => {
+            const chip = new Chip(
+                chipData.x,
+                chipData.y,
+                chipData.color,
+                chipData.id,
+                chipData.isMain,
+                chipData.player
+            );
+            chip.hp = chipData.hp;
+            this.chips.push(chip);
+            
+            // Присоединяем к точке если есть
+            if (chipData.attachedPointId !== null) {
+                const point = this.points.find(p => p.id === chipData.attachedPointId);
+                if (point) {
+                    point.attachChip(chip);
+                }
+            }
+        });
+        
+        console.log('Загружено фишек с сервера:', this.chips.length);
+        
+        // Инициализируем панель HP если она еще не создана
+        if (!this.hpPanel) {
+            this.hpPanel = new HPPanel(this);
+        } else {
+            this.hpPanel.renderChips();
+        }
+        
+        this.draw();
     }
 
     createPlayerChips(settings) {
@@ -162,6 +303,8 @@ class GameBoard {
         if (pointIndex < freePoints.length) {
             const point = freePoints[pointIndex++];
             const chip = new Chip(point.x, point.y, settings.player1.mainColor, this.chips.length, true, 'player1');
+            chip.hp = settings.player1.mainHP;
+            chip.maxHp = settings.player1.mainHP;
             this.chips.push(chip);
             point.attachChip(chip);
         }
@@ -170,6 +313,8 @@ class GameBoard {
         for (let i = 0; i < settings.player1.extraCount && pointIndex < freePoints.length; i++) {
             const point = freePoints[pointIndex++];
             const chip = new Chip(point.x, point.y, settings.player1.extraColor, this.chips.length, false, 'player1');
+            chip.hp = settings.player1.extraHP;
+            chip.maxHp = settings.player1.extraHP;
             this.chips.push(chip);
             point.attachChip(chip);
         }
@@ -178,6 +323,8 @@ class GameBoard {
         if (pointIndex < freePoints.length) {
             const point = freePoints[pointIndex++];
             const chip = new Chip(point.x, point.y, settings.player2.mainColor, this.chips.length, true, 'player2');
+            chip.hp = settings.player2.mainHP;
+            chip.maxHp = settings.player2.mainHP;
             this.chips.push(chip);
             point.attachChip(chip);
         }
@@ -186,8 +333,33 @@ class GameBoard {
         for (let i = 0; i < settings.player2.extraCount && pointIndex < freePoints.length; i++) {
             const point = freePoints[pointIndex++];
             const chip = new Chip(point.x, point.y, settings.player2.extraColor, this.chips.length, false, 'player2');
+            chip.hp = settings.player2.extraHP;
+            chip.maxHp = settings.player2.extraHP;
             this.chips.push(chip);
             point.attachChip(chip);
+        }
+        
+        console.log('Создано фишек:', this.chips.length);
+        
+        // Отправляем созданные фишки на сервер
+        const chipsData = this.chips.map(chip => ({
+            id: chip.id,
+            x: chip.x,
+            y: chip.y,
+            color: chip.color,
+            isMain: chip.isMain,
+            player: chip.player,
+            hp: chip.hp,
+            attachedPointId: chip.attachedPoint ? chip.attachedPoint.id : null
+        }));
+        
+        this.socket.emit('chips-initialized', chipsData);
+        
+        // Инициализируем панель HP если она еще не создана
+        if (!this.hpPanel) {
+            this.hpPanel = new HPPanel(this);
+        } else {
+            this.hpPanel.renderChips();
         }
         
         this.draw();
@@ -296,7 +468,19 @@ class GameBoard {
             
             if (closestPoint) {
                 closestPoint.attachChip(this.draggedChip);
-            } 
+            }
+            
+            // Отправляем обновление на сервер
+            this.socket.emit('chip-moved', {
+                chipId: this.draggedChip.id,
+                x: this.draggedChip.x,
+                y: this.draggedChip.y,
+                attachedPointId: this.draggedChip.attachedPoint ? this.draggedChip.attachedPoint.id : null,
+                color: this.draggedChip.color,
+                isMain: this.draggedChip.isMain,
+                player: this.draggedChip.player,
+                hp: this.draggedChip.hp
+            });
             
             this.draggedChip.isDragging = false;
             this.draggedChip = null;
@@ -328,6 +512,13 @@ class GameBoard {
     clearBoard() {
         this.chips = [];
         this.points.forEach(point => point.chip = null);
+        
+        // Отправляем событие очистки на сервер
+        this.socket.emit('board-cleared');
+        
+        if (this.hpPanel) {
+            this.hpPanel.renderChips();
+        }
         this.draw();
     }
 
@@ -454,11 +645,17 @@ class HPPanel {
         } else {
             hpElement.style.color = '#2d3748';
         }
+        
+        // Отправляем обновление HP на сервер
+        this.gameBoard.socket.emit('hp-changed', {
+            chipId: chip.id,
+            hp: chip.hp
+        });
     }
 }
 
 // Инициализация игры
 window.addEventListener('DOMContentLoaded', () => {
     const gameBoard = new GameBoard('gameCanvas');
-    gameBoard.hpPanel = new HPPanel(gameBoard);
+    // Панель HP будет инициализирована автоматически после создания/загрузки фишек
 });

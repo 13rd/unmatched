@@ -35,8 +35,14 @@ class GameSetup {
             player2: { mainColor: null, mainHP: 14, extraColor: null, extraHP: 1, extraCount: 3 }
         };
         
+        this.socket = io();
+        this.roomCode = null;
+        this.isCreator = false;
+        this.isJoining = false;
+        
         this.initializeColorPickers();
         this.setupEventListeners();
+        this.setupSocketListeners();
     }
 
     initializeColorPickers() {
@@ -79,6 +85,29 @@ class GameSetup {
     }
 
     setupEventListeners() {
+        // Кнопки выбора режима
+        document.getElementById('createRoomBtn').addEventListener('click', () => {
+            this.isCreator = true;
+            this.isJoining = false;
+            document.getElementById('joinRoomSection').style.display = 'none';
+            alert('Настройте игру и нажмите "Начать игру" для создания комнаты');
+        });
+
+        document.getElementById('joinRoomBtn').addEventListener('click', () => {
+            this.isJoining = true;
+            this.isCreator = false;
+            document.getElementById('joinRoomSection').style.display = 'block';
+        });
+
+        document.getElementById('joinRoomConfirm').addEventListener('click', () => {
+            const roomCode = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+            if (roomCode.length === 6) {
+                this.joinRoom(roomCode);
+            } else {
+                alert('Введите корректный код комнаты (6 символов)');
+            }
+        });
+
         // Загрузка фона
         document.getElementById('setupBackgroundUpload').addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -144,6 +173,41 @@ class GameSetup {
         });
     }
 
+    setupSocketListeners() {
+        this.socket.on('room-created', (data) => {
+            this.roomCode = data.roomCode;
+            document.getElementById('currentRoomCode').textContent = data.roomCode;
+            document.getElementById('roomCodeDisplay').style.display = 'block';
+            
+            // Сохраняем настройки и переходим к игре
+            sessionStorage.setItem('gameSettings', JSON.stringify(data.settings));
+            sessionStorage.setItem('roomCode', data.roomCode);
+            
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
+        });
+
+        this.socket.on('room-joined', (data) => {
+            this.roomCode = data.roomCode;
+            
+            // Сохраняем настройки полученные от сервера
+            sessionStorage.setItem('gameSettings', JSON.stringify(data.settings));
+            sessionStorage.setItem('roomCode', data.roomCode);
+            
+            alert('Успешно подключились к комнате!');
+            window.location.href = 'index.html';
+        });
+
+        this.socket.on('room-error', (message) => {
+            alert('Ошибка: ' + message);
+        });
+    }
+
+    joinRoom(roomCode) {
+        this.socket.emit('join-room', roomCode);
+    }
+
     drawPreview() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
@@ -173,40 +237,47 @@ class GameSetup {
     }
 
     startGame() {
-        // Проверяем, что все настройки заполнены
-        if (!this.backgroundImageData) {
-            alert('Загрузите фоновое изображение!');
+        // Если пользователь присоединяется к комнате, не нужно создавать новую
+        if (this.isJoining) {
+            alert('Используйте кнопку "Подключиться" для входа в комнату');
             return;
         }
 
-        if (!this.pointsData) {
-            alert('Загрузите точки!');
-            return;
+        // Проверяем, что все настройки заполнены (только для создателя)
+        if (this.isCreator) {
+            if (!this.backgroundImageData) {
+                alert('Загрузите фоновое изображение!');
+                return;
+            }
+
+            if (!this.pointsData) {
+                alert('Загрузите точки!');
+                return;
+            }
+
+            if (!this.settings.player1.mainColor || !this.settings.player1.extraColor) {
+                alert('Выберите цвета для Игрока 1!');
+                return;
+            }
+
+            if (!this.settings.player2.mainColor || !this.settings.player2.extraColor) {
+                alert('Выберите цвета для Игрока 2!');
+                return;
+            }
+
+            // Создаем объект настроек
+            const gameSettings = {
+                backgroundImage: this.backgroundImageData,
+                points: this.pointsData,
+                player1: this.settings.player1,
+                player2: this.settings.player2
+            };
+
+            // Отправляем запрос на создание комнаты
+            this.socket.emit('create-room', gameSettings);
+        } else {
+            alert('Выберите режим игры: создать комнату или присоединиться к существующей');
         }
-
-        if (!this.settings.player1.mainColor || !this.settings.player1.extraColor) {
-            alert('Выберите цвета для Игрока 1!');
-            return;
-        }
-
-        if (!this.settings.player2.mainColor || !this.settings.player2.extraColor) {
-            alert('Выберите цвета для Игрока 2!');
-            return;
-        }
-
-        // Создаем объект настроек
-        const gameSettings = {
-            backgroundImage: this.backgroundImageData,
-            points: this.pointsData,
-            player1: this.settings.player1,
-            player2: this.settings.player2
-        };
-
-        // Сохраняем в sessionStorage (работает между страницами на том же сервере)
-        sessionStorage.setItem('gameSettings', JSON.stringify(gameSettings));
-
-        // Переходим на страницу игры
-        window.location.href = 'index.html';
     }
 }
 

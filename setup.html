@@ -10,6 +10,26 @@
     <div class="setup-container">
         <h1>Настройка игры</h1>
         
+        <!-- Выбор режима игры -->
+        <div class="setup-section">
+            <h2>Режим игры</h2>
+            <div class="game-mode-selection">
+                <button id="createRoomBtn" class="btn mode-btn">Создать новую комнату</button>
+                <button id="joinRoomBtn" class="btn mode-btn">Присоединиться к комнате</button>
+            </div>
+            
+            <div id="joinRoomSection" style="display: none; margin-top: 20px;">
+                <label for="roomCodeInput">Введите код комнаты:</label>
+                <input type="text" id="roomCodeInput" placeholder="Например: ABC123" maxlength="6" style="text-transform: uppercase;">
+                <button id="joinRoomConfirm" class="btn">Подключиться</button>
+            </div>
+            
+            <div id="roomCodeDisplay" style="display: none; margin-top: 20px;">
+                <p><strong>Код вашей комнаты:</strong> <span id="currentRoomCode" style="font-size: 24px; color: #3182ce;"></span></p>
+                <p style="font-size: 14px; color: #666;">Поделитесь этим кодом с другими игроками</p>
+            </div>
+        </div>
+        
         <!-- Загрузка поля и точек -->
         <div class="setup-section">
             <h2>Игровое поле</h2>
@@ -98,6 +118,7 @@
         </div>
     </div>
     
+    <script src="/socket.io/socket.io.js"></script>
     <script src="setup.js"></script>
 </body>
 </html>
