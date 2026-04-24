@@ -11,6 +11,40 @@ body {
     padding: 40px 20px;
 }
 
+.user-info {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    z-index: 1000;
+}
+
+.user-info span {
+    color: #2d3748;
+    font-weight: bold;
+}
+
+.logout-btn {
+    padding: 6px 12px;
+    background: #e53e3e;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.logout-btn:hover {
+    background: #c53030;
+}
+
 .setup-container {
     max-width: 1200px;
     margin: 0 auto;

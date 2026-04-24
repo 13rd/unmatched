@@ -117,6 +117,15 @@ class GameBoard {
         this.snapDistance = 80;
         this.hpPanel = null;
         this.playerRole = null; // 'player1', 'player2', или 'spectator'
+        this.userId = localStorage.getItem('userId');
+        this.username = localStorage.getItem('username');
+        
+        // Проверка авторизации
+        if (!this.userId || !this.username) {
+            alert('Необходима авторизация!');
+            window.location.href = 'auth.html';
+            return;
+        }
         
         // WebSocket подключение
         this.socket = io();
@@ -155,10 +164,19 @@ class GameBoard {
         // Подключаемся к комнате только если код есть
         if (this.roomCode) {
             console.log('Подключаемся к комнате:', this.roomCode);
-            this.socket.emit('join-room', this.roomCode);
             
-            // Запрашиваем фоновое изображение с сервера
-            this.socket.emit('request-background');
+            // ВАЖНО: Сначала отправляем авторизацию, затем подключаемся к комнате
+            this.socket.emit('user-auth', {
+                userId: this.userId,
+                username: this.username
+            });
+            
+            // Небольшая задержка, чтобы авторизация прошла первой
+            setTimeout(() => {
+                this.socket.emit('join-room', this.roomCode);
+                // Запрашиваем фоновое изображение с сервера
+                this.socket.emit('request-background');
+            }, 100);
         } else {
             console.error('Код комнаты не найден!');
         }
@@ -276,6 +294,37 @@ class GameBoard {
         // Обновляем UI в зависимости от роли игрока
         const player1Area = document.querySelector('.card-area.player-area:nth-of-type(2)');
         const player2Area = document.querySelector('.card-area.player-area:nth-of-type(3)');
+        
+        // Отображаем информацию о пользователе
+        const usernameElement = document.getElementById('currentUsername');
+        const roleElement = document.getElementById('currentRole');
+        
+        if (usernameElement) {
+            usernameElement.textContent = `Игрок: ${this.username}`;
+        }
+        
+        if (roleElement) {
+            const roleNames = {
+                'player1': 'Игрок 1',
+                'player2': 'Игрок 2',
+                'spectator': 'Наблюдатель'
+            };
+            roleElement.textContent = `Роль: ${roleNames[this.playerRole] || 'Неизвестно'}`;
+        }
+        
+        // Обработчик выхода
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                if (confirm('Вы уверены, что хотите выйти?')) {
+                    localStorage.removeItem('username');
+                    localStorage.removeItem('userId');
+                    localStorage.removeItem('loginTime');
+                    sessionStorage.clear();
+                    window.location.href = 'auth.html';
+                }
+            });
+        }
         
         if (this.playerRole === 'player1') {
             // Игрок 1 видит свои карты, но не видит карты игрока 2

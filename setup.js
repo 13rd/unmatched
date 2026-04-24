@@ -53,10 +53,32 @@ class GameSetup {
         this.roomCode = null;
         this.isCreator = false;
         this.isJoining = false;
+        this.userId = localStorage.getItem('userId');
+        this.username = localStorage.getItem('username');
+        
+        // Проверка авторизации
+        this.checkAuth();
         
         this.initializeColorPickers();
         this.setupEventListeners();
         this.setupSocketListeners();
+    }
+
+    checkAuth() {
+        if (!this.userId || !this.username) {
+            alert('Необходима авторизация!');
+            window.location.href = 'auth.html';
+            return;
+        }
+        
+        // Отправляем данные пользователя на сервер сразу при подключении
+        this.socket.on('connect', () => {
+            this.socket.emit('user-auth', {
+                userId: this.userId,
+                username: this.username
+            });
+            console.log('Авторизован как:', this.username, this.userId);
+        });
     }
 
     initializeColorPickers() {
@@ -418,5 +440,22 @@ class GameSetup {
 
 // Инициализация
 window.addEventListener('DOMContentLoaded', () => {
+    // Отображаем имя пользователя
+    const username = localStorage.getItem('username');
+    if (username) {
+        document.getElementById('currentUsername').textContent = `Игрок: ${username}`;
+    }
+    
+    // Обработчик выхода
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        if (confirm('Вы уверены, что хотите выйти?')) {
+            localStorage.removeItem('username');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('loginTime');
+            sessionStorage.clear();
+            window.location.href = 'auth.html';
+        }
+    });
+    
     new GameSetup();
 });

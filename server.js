@@ -19,6 +19,8 @@ app.use(express.static(path.join(__dirname)));
 
 // Хранилище игровых комнат
 const rooms = new Map();
+// Хранилище пользователей (userId -> { socketId, username, roomCode })
+const users = new Map();
 
 // Генерация уникального кода комнаты
 function generateRoomCode() {
@@ -46,16 +48,75 @@ setInterval(() => {
 
 io.on('connection', (socket) => {
     console.log('Новое подключение:', socket.id);
+    
+    // Флаг авторизации
+    socket.isAuthenticated = false;
+
+    // Авторизация пользователя
+    socket.on('user-auth', (data) => {
+        const { userId, username } = data;
+        
+        if (!userId || !username) {
+            console.error('Попытка авторизации без userId или username');
+            return;
+        }
+        
+        // Проверяем, был ли пользователь уже подключен
+        const existingUser = users.get(userId);
+        
+        if (existingUser) {
+            console.log(`Пользователь ${username} (${userId}) переподключился`);
+            
+            // Обновляем socketId
+            existingUser.socketId = socket.id;
+            socket.userId = userId;
+            socket.username = username;
+            socket.isAuthenticated = true;
+            
+            // Если у пользователя была комната, переподключаем его
+            if (existingUser.roomCode) {
+                const room = rooms.get(existingUser.roomCode);
+                if (room) {
+                    socket.roomCode = existingUser.roomCode;
+                    socket.join(existingUser.roomCode);
+                    
+                    // Восстанавливаем роль игрока
+                    socket.playerRole = room.playerRoles[userId];
+                    
+                    console.log(`Пользователь ${username} переподключен к комнате ${existingUser.roomCode} как ${socket.playerRole}`);
+                }
+            }
+        } else {
+            // Новый пользователь
+            users.set(userId, {
+                socketId: socket.id,
+                username: username,
+                roomCode: null
+            });
+            
+            socket.userId = userId;
+            socket.username = username;
+            socket.isAuthenticated = true;
+            
+            console.log(`Новый пользователь: ${username} (${userId})`);
+        }
+    });
 
     // Создание новой комнаты
     socket.on('create-room', (settings) => {
+        if (!socket.isAuthenticated || !socket.userId) {
+            socket.emit('room-error', 'Необходима авторизация');
+            return;
+        }
+        
         const roomCode = generateRoomCode();
+        const userId = socket.userId;
         
         rooms.set(roomCode, {
             settings: settings, // Храним полные настройки с колодами на сервере
             chips: [],
-            players: [socket.id],
-            playerRoles: { [socket.id]: 'player1' },
+            players: [userId],
+            playerRoles: { [userId]: 'player1' },
             createdAt: Date.now()
         });
         
@@ -63,7 +124,13 @@ io.on('connection', (socket) => {
         socket.roomCode = roomCode;
         socket.playerRole = 'player1';
         
-        console.log(`Комната создана: ${roomCode}`);
+        // Обновляем информацию о пользователе
+        const user = users.get(userId);
+        if (user) {
+            user.roomCode = roomCode;
+        }
+        
+        console.log(`Комната создана: ${roomCode} пользователем ${socket.username}`);
         
         // Отправляем клиенту только базовые настройки (БЕЗ колод)
         socket.emit('room-created', { 
@@ -92,6 +159,11 @@ io.on('connection', (socket) => {
 
     // Подключение к существующей комнате
     socket.on('join-room', (roomCode) => {
+        if (!socket.isAuthenticated || !socket.userId) {
+            socket.emit('room-error', 'Необходима авторизация');
+            return;
+        }
+        
         const room = rooms.get(roomCode);
         
         if (!room) {
@@ -99,27 +171,51 @@ io.on('connection', (socket) => {
             return;
         }
         
+        const userId = socket.userId;
+        
         socket.join(roomCode);
         socket.roomCode = roomCode;
         
         // Определяем роль игрока
         let playerRole = null;
-        if (room.players.length === 0) {
-            playerRole = 'player1';
-            room.playerRoles = { [socket.id]: 'player1' };
-        } else if (room.players.length === 1) {
-            playerRole = 'player2';
-            room.playerRoles[socket.id] = 'player2';
+        
+        // Проверяем, был ли этот пользователь уже в комнате
+        if (room.playerRoles[userId]) {
+            // Пользователь переподключается - восстанавливаем его роль
+            playerRole = room.playerRoles[userId];
+            console.log(`Пользователь ${socket.username} переподключился к комнате ${roomCode} как ${playerRole}`);
         } else {
-            // Если уже 2 игрока, назначаем наблюдателя
-            playerRole = 'spectator';
-            room.playerRoles[socket.id] = 'spectator';
+            // Новый пользователь - назначаем роль
+            // Проверяем, какие роли уже заняты
+            const existingRoles = Object.values(room.playerRoles);
+            const hasPlayer1 = existingRoles.includes('player1');
+            const hasPlayer2 = existingRoles.includes('player2');
+            
+            if (!hasPlayer1) {
+                playerRole = 'player1';
+            } else if (!hasPlayer2) {
+                playerRole = 'player2';
+            } else {
+                playerRole = 'spectator';
+            }
+            
+            room.playerRoles[userId] = playerRole;
+            
+            // Добавляем в массив игроков только если его там нет
+            if (!room.players.includes(userId)) {
+                room.players.push(userId);
+            }
+            
+            console.log(`Пользователь ${socket.username} присоединился к комнате ${roomCode} как ${playerRole}`);
         }
         
-        room.players.push(socket.id);
         socket.playerRole = playerRole;
         
-        console.log(`Игрок ${socket.id} присоединился к комнате ${roomCode} как ${playerRole}`);
+        // Обновляем информацию о пользователе
+        const user = users.get(userId);
+        if (user) {
+            user.roomCode = roomCode;
+        }
         
         // Отправляем текущее состояние игры новому игроку (БЕЗ колод)
         socket.emit('room-joined', {
@@ -149,7 +245,7 @@ io.on('connection', (socket) => {
         });
         
         // Уведомляем других игроков о новом подключении
-        socket.to(roomCode).emit('player-joined', socket.id);
+        socket.to(roomCode).emit('player-joined', { userId, username: socket.username });
     });
 
     // Запрос колод
@@ -363,24 +459,30 @@ io.on('connection', (socket) => {
 
     // Отключение игрока
     socket.on('disconnect', () => {
-        console.log('Отключение:', socket.id);
+        console.log('Отключение:', socket.id, socket.username);
+        
+        const userId = socket.userId;
+        
+        // НЕ удаляем пользователя из users - он может переподключиться
+        // Просто помечаем, что он отключен
+        if (userId) {
+            const user = users.get(userId);
+            if (user) {
+                console.log(`Пользователь ${socket.username} отключен, но данные сохранены для переподключения`);
+            }
+        }
         
         if (socket.roomCode) {
             const room = rooms.get(socket.roomCode);
             if (room) {
-                room.players = room.players.filter(id => id !== socket.id);
+                // НЕ удаляем игрока из комнаты - он может вернуться
+                // Уведомляем других игроков об отключении
+                socket.to(socket.roomCode).emit('player-disconnected', { 
+                    userId: userId, 
+                    username: socket.username 
+                });
                 
-                // Уведомляем других игроков
-                socket.to(socket.roomCode).emit('player-left', socket.id);
-                
-                // Удаляем комнату только если она пустая И прошло больше 5 минут с создания
-                const roomAge = Date.now() - room.createdAt;
-                if (room.players.length === 0 && roomAge > 300000) {
-                    rooms.delete(socket.roomCode);
-                    console.log(`Комната ${socket.roomCode} удалена (неактивна)`);
-                } else if (room.players.length === 0) {
-                    console.log(`Комната ${socket.roomCode} пуста, но сохранена для переподключения`);
-                }
+                console.log(`Пользователь ${socket.username} отключился от комнаты ${socket.roomCode}, но может переподключиться`);
             }
         }
     });
