@@ -143,6 +143,15 @@ io.on('connection', (socket) => {
         });
     });
 
+    // Запрос фонового изображения
+    socket.on('request-background', () => {
+        const room = rooms.get(socket.roomCode);
+        if (!room) return;
+        
+        // Отправляем фоновое изображение клиенту
+        socket.emit('background-image', room.settings.backgroundImage || null);
+    });
+
     // Синхронизация перемещения фишки
     socket.on('chip-moved', (data) => {
         const room = rooms.get(socket.roomCode);
@@ -275,6 +284,55 @@ io.on('connection', (socket) => {
         
         // Отправляем всем остальным в комнате
         socket.to(socket.roomCode).emit('card-removed', data);
+    });
+
+    // Синхронизация сброса карты
+    socket.on('card-discarded', (data) => {
+        const room = rooms.get(socket.roomCode);
+        if (!room) return;
+        
+        // Инициализируем массив сброса если его нет
+        if (!room.discardPiles) {
+            room.discardPiles = {
+                player1: [],
+                player2: []
+            };
+        }
+        
+        // Добавляем карту в сброс
+        room.discardPiles[data.player].push(data.card);
+        
+        // Отправляем всем остальным в комнате
+        socket.to(socket.roomCode).emit('card-discarded', data);
+    });
+
+    // Синхронизация возврата карты из сброса
+    socket.on('card-returned-from-discard', (data) => {
+        const room = rooms.get(socket.roomCode);
+        if (!room) return;
+        
+        // Удаляем карту из сброса
+        if (room.discardPiles && room.discardPiles[data.player]) {
+            room.discardPiles[data.player].splice(data.cardIndex, 1);
+        }
+        
+        // Добавляем карту обратно в игру
+        if (!room.cards) {
+            room.cards = [];
+        }
+        room.cards.push(data.card);
+        
+        // Отправляем всем остальным в комнате
+        socket.to(socket.roomCode).emit('card-returned-from-discard', data);
+    });
+
+    // Синхронизация перемешивания колоды
+    socket.on('deck-shuffled', (data) => {
+        const room = rooms.get(socket.roomCode);
+        if (!room) return;
+        
+        // Отправляем всем остальным в комнате
+        socket.to(socket.roomCode).emit('deck-shuffled', data);
     });
 
     // Отключение игрока

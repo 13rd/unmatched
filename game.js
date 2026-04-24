@@ -146,11 +146,6 @@ class GameBoard {
 
         this.settings = JSON.parse(settingsJson);
         
-        // Загружаем фон
-        if (this.settings.backgroundImage) {
-            this.backgroundImage.src = this.settings.backgroundImage;
-        }
-        
         // Загружаем точки
         if (this.settings.points) {
             this.loadPointsFromJSON(this.settings.points);
@@ -160,6 +155,9 @@ class GameBoard {
         if (this.roomCode) {
             console.log('Подключаемся к комнате:', this.roomCode);
             this.socket.emit('join-room', this.roomCode);
+            
+            // Запрашиваем фоновое изображение с сервера
+            this.socket.emit('request-background');
         } else {
             console.error('Код комнаты не найден!');
         }
@@ -188,6 +186,14 @@ class GameBoard {
                 // Если фишек нет, создаем их (первый игрок)
                 this.createPlayerChips(this.settings);
                 this.isInitialized = true;
+            }
+        });
+        
+        // Получение фонового изображения с сервера
+        this.socket.on('background-image', (imageData) => {
+            if (imageData) {
+                this.backgroundImage.src = imageData;
+                console.log('Фоновое изображение загружено с сервера');
             }
         });
         
@@ -808,6 +814,7 @@ class Deck {
             const j = Math.floor(Math.random() * (i + 1));
             [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
         }
+        console.log('Колода перемешана');
     }
 }
 
@@ -824,6 +831,10 @@ class CardManager {
         this.player1Deck = null;
         this.player2Deck = null;
         this.decksLoaded = false;
+        
+        // Сброшенные карты
+        this.player1Discard = [];
+        this.player2Discard = [];
         
         this.draggedCard = null;
         this.currentPlayer = null;
@@ -845,7 +856,22 @@ class CardManager {
         this.player1Deck = new Deck('player1', decksData.player1);
         this.player2Deck = new Deck('player2', decksData.player2);
         this.decksLoaded = true;
+        this.updateDeckCounts();
         console.log('Колоды загружены с сервера');
+    }
+
+    updateDeckCounts() {
+        if (this.player1Deck) {
+            document.getElementById('deckCountPlayer1').textContent = `Колода: ${this.player1Deck.getCardsCount()}`;
+        }
+        if (this.player2Deck) {
+            document.getElementById('deckCountPlayer2').textContent = `Колода: ${this.player2Deck.getCardsCount()}`;
+        }
+    }
+
+    updateDiscardCounts() {
+        document.getElementById('discardPilePlayer1').textContent = `Сброс: ${this.player1Discard.length}`;
+        document.getElementById('discardPilePlayer2').textContent = `Сброс: ${this.player2Discard.length}`;
     }
 
     setupEventListeners() {
@@ -858,10 +884,237 @@ class CardManager {
             this.drawCard('player2');
         });
 
+        // Кнопки перемешивания колоды
+        document.getElementById('shuffleDeckPlayer1').addEventListener('click', () => {
+            this.shuffleDeck('player1');
+        });
+
+        document.getElementById('shuffleDeckPlayer2').addEventListener('click', () => {
+            this.shuffleDeck('player2');
+        });
+
+        // Кнопки просмотра сброса
+        document.getElementById('discardPilePlayer1').addEventListener('click', () => {
+            this.showDiscardPile('player1');
+        });
+
+        document.getElementById('discardPilePlayer2').addEventListener('click', () => {
+            this.showDiscardPile('player2');
+        });
+
+        // Закрытие модального окна
+        document.querySelector('.modal-close').addEventListener('click', () => {
+            document.getElementById('discardModal').style.display = 'none';
+        });
+
+        document.getElementById('discardModal').addEventListener('click', (e) => {
+            if (e.target.id === 'discardModal') {
+                document.getElementById('discardModal').style.display = 'none';
+            }
+        });
+
         // Drag and drop для полей
         [this.sharedField, this.player1Field, this.player2Field].forEach(field => {
             field.addEventListener('dragover', (e) => this.handleDragOver(e));
             field.addEventListener('drop', (e) => this.handleDrop(e));
+        });
+    }
+
+    shuffleDeck(player) {
+        if (!this.decksLoaded) {
+            alert('Колоды еще загружаются, подождите...');
+            return;
+        }
+
+        const deck = player === 'player1' ? this.player1Deck : this.player2Deck;
+        deck.shuffle();
+        alert('Колода перемешана!');
+        
+        // Синхронизируем с сервером
+        this.gameBoard.socket.emit('deck-shuffled', { player: player });
+    }
+
+    showDiscardPile(player) {
+        const discardPile = player === 'player1' ? this.player1Discard : this.player2Discard;
+        const modal = document.getElementById('discardModal');
+        const grid = document.getElementById('discardGrid');
+        grid.innerHTML = '';
+        
+        // Сохраняем текущего игрока для возврата карт
+        this.currentDiscardPlayer = player;
+
+        if (discardPile.length === 0) {
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #718096;">Сброс пуст</p>';
+        } else {
+            discardPile.forEach((card, index) => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'discard-card';
+                cardDiv.dataset.cardIndex = index;
+                
+                if (card.image) {
+                    const img = document.createElement('img');
+                    img.src = card.image;
+                    cardDiv.appendChild(img);
+                } else {
+                    const text = document.createElement('div');
+                    text.className = 'discard-card-text';
+                    text.textContent = card.text;
+                    cardDiv.appendChild(text);
+                }
+                
+                // Кнопка возврата карты в руку
+                const returnBtn = document.createElement('button');
+                returnBtn.className = 'return-card-btn';
+                returnBtn.textContent = '↩';
+                returnBtn.title = 'Вернуть в руку';
+                returnBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    this.returnCardFromDiscard(player, index);
+                };
+                cardDiv.appendChild(returnBtn);
+                
+                // Клик для увеличенного просмотра
+                cardDiv.addEventListener('click', () => {
+                    this.showCardPreview(card);
+                });
+                
+                grid.appendChild(cardDiv);
+            });
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    discardCard(cardId) {
+        const card = this.cards.get(cardId);
+        if (!card) return;
+
+        const discardPile = card.owner === 'player1' ? this.player1Discard : this.player2Discard;
+        discardPile.push({
+            text: card.text,
+            image: card.image
+        });
+
+        this.updateDiscardCounts();
+
+        // Синхронизируем с сервером
+        this.gameBoard.socket.emit('card-discarded', {
+            cardId: cardId,
+            player: card.owner,
+            card: {
+                text: card.text,
+                image: card.image
+            }
+        });
+    }
+
+    returnCardFromDiscard(player, cardIndex) {
+        const discardPile = player === 'player1' ? this.player1Discard : this.player2Discard;
+        
+        if (cardIndex < 0 || cardIndex >= discardPile.length) {
+            return;
+        }
+
+        const cardData = discardPile.splice(cardIndex, 1)[0];
+        
+        // Создаем карту и добавляем в руку игрока
+        const cardId = `${player}_returned_${Date.now()}_${Math.random()}`;
+        const card = new Card(cardId, cardData.text, player, cardData.image);
+        this.cards.set(card.id, card);
+        
+        const targetField = player === 'player1' ? this.player1Field : this.player2Field;
+        card.currentField = player;
+        
+        const cardElement = card.createElement();
+        this.setupCardDragAndDrop(cardElement, card);
+        targetField.appendChild(cardElement);
+
+        // Добавляем кнопку сброса к карте
+        this.addDiscardButton(cardElement, card.id);
+
+        this.updateDiscardCounts();
+        
+        // Обновляем отображение сброса
+        this.showDiscardPile(player);
+
+        // Синхронизируем с сервером
+        this.gameBoard.socket.emit('card-returned-from-discard', {
+            player: player,
+            cardIndex: cardIndex,
+            card: {
+                id: card.id,
+                text: card.text,
+                owner: card.owner,
+                field: card.currentField,
+                isFlipped: card.isFlipped,
+                image: card.image
+            }
+        });
+    }
+
+    showCardPreview(card) {
+        // Создаем модальное окно для увеличенного просмотра
+        const previewModal = document.createElement('div');
+        previewModal.className = 'card-preview-modal';
+        previewModal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            cursor: pointer;
+        `;
+
+        const previewCard = document.createElement('div');
+        previewCard.style.cssText = `
+            max-width: 90%;
+            max-height: 90%;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        `;
+
+        if (card.image) {
+            const img = document.createElement('img');
+            img.src = card.image;
+            img.style.cssText = `
+                max-width: 600px;
+                max-height: 800px;
+                width: 100%;
+                height: auto;
+                border-radius: 8px;
+            `;
+            previewCard.appendChild(img);
+        } else {
+            const text = document.createElement('div');
+            text.style.cssText = `
+                font-size: 32px;
+                font-weight: bold;
+                color: #2d3748;
+                padding: 40px;
+                text-align: center;
+                min-width: 300px;
+                min-height: 400px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            text.textContent = card.text;
+            previewCard.appendChild(text);
+        }
+
+        previewModal.appendChild(previewCard);
+        document.body.appendChild(previewModal);
+
+        // Закрытие по клику
+        previewModal.addEventListener('click', () => {
+            previewModal.remove();
         });
     }
 
@@ -894,6 +1147,32 @@ class CardManager {
         // Синхронизация удаления карты
         socket.on('card-removed', (data) => {
             this.removeCardFromServer(data.cardId);
+        });
+
+        // Синхронизация сброса карты
+        socket.on('card-discarded', (data) => {
+            const discardPile = data.player === 'player1' ? this.player1Discard : this.player2Discard;
+            discardPile.push({
+                text: data.card.text,
+                image: data.card.image
+            });
+            this.updateDiscardCounts();
+        });
+
+        // Синхронизация возврата карты из сброса
+        socket.on('card-returned-from-discard', (data) => {
+            const discardPile = data.player === 'player1' ? this.player1Discard : this.player2Discard;
+            discardPile.splice(data.cardIndex, 1);
+            this.updateDiscardCounts();
+            this.createCardFromServer(data.card);
+        });
+
+        // Синхронизация перемешивания колоды
+        socket.on('deck-shuffled', (data) => {
+            const deck = data.player === 'player1' ? this.player1Deck : this.player2Deck;
+            if (deck) {
+                deck.shuffle();
+            }
         });
 
         // Загрузка карт при подключении к комнате
@@ -931,6 +1210,9 @@ class CardManager {
         this.setupCardDragAndDrop(cardElement, card);
         targetField.appendChild(cardElement);
 
+        // Добавляем кнопку сброса к карте
+        this.addDiscardButton(cardElement, card.id);
+
         // Синхронизируем с сервером
         this.gameBoard.socket.emit('card-created', {
             id: card.id,
@@ -941,7 +1223,29 @@ class CardManager {
             image: card.image
         });
 
+        this.updateDeckCounts();
         console.log(`Карта взята: ${cardData.text}, осталось в колоде: ${deck.getCardsCount()}`);
+    }
+
+    addDiscardButton(cardElement, cardId) {
+        const discardBtn = document.createElement('button');
+        discardBtn.className = 'card-control-btn';
+        discardBtn.textContent = '🗑️';
+        discardBtn.title = 'Сбросить карту';
+        discardBtn.style.position = 'absolute';
+        discardBtn.style.top = '5px';
+        discardBtn.style.left = '5px';
+        discardBtn.onclick = (e) => {
+            e.stopPropagation();
+            this.discardCard(cardId);
+            cardElement.remove();
+            this.cards.delete(cardId);
+        };
+        
+        const controls = cardElement.querySelector('.card-controls');
+        if (controls) {
+            controls.appendChild(discardBtn);
+        }
     }
 
     createCardFromServer(data) {
@@ -977,6 +1281,14 @@ class CardManager {
         element.addEventListener('dragend', (e) => {
             element.classList.remove('dragging');
             this.draggedCard = null;
+        });
+
+        // Клик для увеличенного просмотра
+        element.addEventListener('click', (e) => {
+            // Проверяем, что клик не был на кнопке управления
+            if (!e.target.classList.contains('card-control-btn')) {
+                this.showCardPreview(card);
+            }
         });
     }
 

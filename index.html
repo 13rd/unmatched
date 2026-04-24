@@ -50,7 +50,16 @@
         <div class="card-area player-area">
             <div class="player-header">
                 <h3>Ваше поле (Игрок 1)</h3>
-                <button id="drawCardPlayer1" class="draw-card-btn">Взять карту из колоды</button>
+                <div class="deck-controls">
+                    <div class="deck-info">
+                        <button id="drawCardPlayer1" class="draw-card-btn">Взять карту</button>
+                        <button id="shuffleDeckPlayer1" class="shuffle-btn" title="Перемешать колоду">🔀</button>
+                        <span id="deckCountPlayer1" class="deck-count">Колода: 30</span>
+                    </div>
+                    <div class="discard-pile">
+                        <button id="discardPilePlayer1" class="discard-btn" title="Просмотреть сброс">Сброс: 0</button>
+                    </div>
+                </div>
             </div>
             <div id="player1CardField" class="card-field player-field"></div>
         </div>
@@ -59,9 +68,29 @@
         <div class="card-area player-area">
             <div class="player-header">
                 <h3>Ваше поле (Игрок 2)</h3>
-                <button id="drawCardPlayer2" class="draw-card-btn">Взять карту из колоды</button>
+                <div class="deck-controls">
+                    <div class="deck-info">
+                        <button id="drawCardPlayer2" class="draw-card-btn">Взять карту</button>
+                        <button id="shuffleDeckPlayer2" class="shuffle-btn" title="Перемешать колоду">🔀</button>
+                        <span id="deckCountPlayer2" class="deck-count">Колода: 30</span>
+                    </div>
+                    <div class="discard-pile">
+                        <button id="discardPilePlayer2" class="discard-btn" title="Просмотреть сброс">Сброс: 0</button>
+                    </div>
+                </div>
             </div>
             <div id="player2CardField" class="card-field player-field"></div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно для просмотра сброса -->
+    <div id="discardModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Сброшенные карты</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div id="discardGrid" class="discard-grid"></div>
         </div>
     </div>
     

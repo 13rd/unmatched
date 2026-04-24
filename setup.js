@@ -258,26 +258,39 @@ class GameSetup {
             document.getElementById('roomCodeDisplay').style.display = 'block';
             
             // Сохраняем только код комнаты и базовые настройки (БЕЗ колод и изображений)
-            const lightSettings = {
-                player1: {
-                    mainColor: data.settings.player1.mainColor,
-                    mainHP: data.settings.player1.mainHP,
-                    extraColor: data.settings.player1.extraColor,
-                    extraHP: data.settings.player1.extraHP,
-                    extraCount: data.settings.player1.extraCount
-                },
-                player2: {
-                    mainColor: data.settings.player2.mainColor,
-                    mainHP: data.settings.player2.mainHP,
-                    extraColor: data.settings.player2.extraColor,
-                    extraHP: data.settings.player2.extraHP,
-                    extraCount: data.settings.player2.extraCount
-                },
-                points: data.settings.points
-            };
-            
-            sessionStorage.setItem('gameSettings', JSON.stringify(lightSettings));
-            sessionStorage.setItem('roomCode', data.roomCode);
+            try {
+                const lightSettings = {
+                    player1: {
+                        mainColor: data.settings.player1.mainColor,
+                        mainHP: data.settings.player1.mainHP,
+                        extraColor: data.settings.player1.extraColor,
+                        extraHP: data.settings.player1.extraHP,
+                        extraCount: data.settings.player1.extraCount
+                    },
+                    player2: {
+                        mainColor: data.settings.player2.mainColor,
+                        mainHP: data.settings.player2.mainHP,
+                        extraColor: data.settings.player2.extraColor,
+                        extraHP: data.settings.player2.extraHP,
+                        extraCount: data.settings.player2.extraCount
+                    },
+                    // Сохраняем только координаты точек, без изображения
+                    points: data.settings.points,
+                    // Сохраняем флаг наличия фона, но не само изображение
+                    hasBackground: !!data.settings.backgroundImage
+                };
+                
+                sessionStorage.setItem('gameSettings', JSON.stringify(lightSettings));
+                sessionStorage.setItem('roomCode', data.roomCode);
+                
+                // Сохраняем изображение отдельно в IndexedDB или не сохраняем вообще
+                // Оно будет загружено с сервера при необходимости
+                
+            } catch (e) {
+                console.error('Ошибка сохранения настроек:', e);
+                alert('Ошибка сохранения настроек. Данные слишком большие.');
+                return;
+            }
             
             setTimeout(() => {
                 window.location.href = 'index.html';
@@ -288,26 +301,34 @@ class GameSetup {
             this.roomCode = data.roomCode;
             
             // Сохраняем только базовые настройки (БЕЗ колод и изображений)
-            const lightSettings = {
-                player1: {
-                    mainColor: data.settings.player1.mainColor,
-                    mainHP: data.settings.player1.mainHP,
-                    extraColor: data.settings.player1.extraColor,
-                    extraHP: data.settings.player1.extraHP,
-                    extraCount: data.settings.player1.extraCount
-                },
-                player2: {
-                    mainColor: data.settings.player2.mainColor,
-                    mainHP: data.settings.player2.mainHP,
-                    extraColor: data.settings.player2.extraColor,
-                    extraHP: data.settings.player2.extraHP,
-                    extraCount: data.settings.player2.extraCount
-                },
-                points: data.settings.points
-            };
-            
-            sessionStorage.setItem('gameSettings', JSON.stringify(lightSettings));
-            sessionStorage.setItem('roomCode', data.roomCode);
+            try {
+                const lightSettings = {
+                    player1: {
+                        mainColor: data.settings.player1.mainColor,
+                        mainHP: data.settings.player1.mainHP,
+                        extraColor: data.settings.player1.extraColor,
+                        extraHP: data.settings.player1.extraHP,
+                        extraCount: data.settings.player1.extraCount
+                    },
+                    player2: {
+                        mainColor: data.settings.player2.mainColor,
+                        mainHP: data.settings.player2.mainHP,
+                        extraColor: data.settings.player2.extraColor,
+                        extraHP: data.settings.player2.extraHP,
+                        extraCount: data.settings.player2.extraCount
+                    },
+                    points: data.settings.points,
+                    hasBackground: !!data.settings.backgroundImage
+                };
+                
+                sessionStorage.setItem('gameSettings', JSON.stringify(lightSettings));
+                sessionStorage.setItem('roomCode', data.roomCode);
+                
+            } catch (e) {
+                console.error('Ошибка сохранения настроек:', e);
+                alert('Ошибка сохранения настроек. Данные слишком большие.');
+                return;
+            }
             
             alert('Успешно подключились к комнате!');
             window.location.href = 'index.html';
