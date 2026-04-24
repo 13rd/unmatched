@@ -219,7 +219,212 @@ ${pointsArray}
     }
 }
 
-// Инициализация редактора
+// Класс для редактора колод
+class DeckEditor {
+    constructor() {
+        this.backImage = null;
+        this.cards = [];
+        this.maxCards = 30;
+        
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        // Загрузка рубашки
+        document.getElementById('deckBackUpload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('deckBackFileName').textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    this.backImage = event.target.result;
+                    this.updateBackPreview();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Загрузка карт
+        document.getElementById('cardsUpload').addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            
+            if (this.cards.length + files.length > this.maxCards) {
+                alert(`Можно загрузить максимум ${this.maxCards} карт. Сейчас загружено: ${this.cards.length}`);
+                return;
+            }
+
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    this.cards.push({
+                        image: event.target.result,
+                        text: file.name.replace(/\.[^/.]+$/, '') // Имя файла без расширения
+                    });
+                    this.updateCardsGrid();
+                    this.updateCardsCount();
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        // Очистка колоды
+        document.getElementById('clearDeck').addEventListener('click', () => {
+            if (confirm('Очистить всю колоду?')) {
+                this.cards = [];
+                this.backImage = null;
+                this.updateCardsGrid();
+                this.updateCardsCount();
+                this.updateBackPreview();
+                document.getElementById('deckBackFileName').textContent = 'Рубашка не выбрана';
+            }
+        });
+
+        // Экспорт колоды
+        document.getElementById('exportDeck').addEventListener('click', () => {
+            this.exportDeck();
+        });
+
+        // Импорт колоды
+        document.getElementById('importDeck').addEventListener('click', () => {
+            document.getElementById('importDeckFile').click();
+        });
+
+        document.getElementById('importDeckFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const deckData = JSON.parse(event.target.result);
+                        this.importDeck(deckData);
+                    } catch (error) {
+                        alert('Ошибка при загрузке колоды: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+    }
+
+    updateBackPreview() {
+        const preview = document.getElementById('backPreview');
+        if (this.backImage) {
+            preview.innerHTML = `<img src="${this.backImage}" alt="Рубашка">`;
+        } else {
+            preview.innerHTML = '<div class="card-preview-placeholder">Загрузите изображение</div>';
+        }
+    }
+
+    updateCardsGrid() {
+        const grid = document.getElementById('cardsGrid');
+        grid.innerHTML = '';
+
+        this.cards.forEach((card, index) => {
+            const cardItem = document.createElement('div');
+            cardItem.className = 'card-item';
+            
+            const img = document.createElement('img');
+            img.src = card.image;
+            
+            const number = document.createElement('div');
+            number.className = 'card-item-number';
+            number.textContent = index + 1;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'card-item-remove';
+            removeBtn.textContent = '×';
+            removeBtn.onclick = () => this.removeCard(index);
+            
+            cardItem.appendChild(img);
+            cardItem.appendChild(number);
+            cardItem.appendChild(removeBtn);
+            grid.appendChild(cardItem);
+        });
+    }
+
+    updateCardsCount() {
+        document.getElementById('cardsCount').textContent = `Загружено: ${this.cards.length} / ${this.maxCards}`;
+    }
+
+    removeCard(index) {
+        this.cards.splice(index, 1);
+        this.updateCardsGrid();
+        this.updateCardsCount();
+    }
+
+    exportDeck() {
+        if (this.cards.length !== this.maxCards) {
+            alert(`Колода должна содержать ровно ${this.maxCards} карт! Сейчас: ${this.cards.length}`);
+            return;
+        }
+
+        if (!this.backImage) {
+            alert('Загрузите рубашку колоды!');
+            return;
+        }
+
+        const deckData = {
+            backImage: this.backImage,
+            cards: this.cards
+        };
+
+        const jsonString = JSON.stringify(deckData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'deck.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        alert('Колода успешно экспортирована!');
+    }
+
+    importDeck(deckData) {
+        if (!deckData.cards || !Array.isArray(deckData.cards)) {
+            alert('Неверный формат колоды!');
+            return;
+        }
+
+        if (deckData.cards.length !== this.maxCards) {
+            alert(`Колода должна содержать ${this.maxCards} карт!`);
+            return;
+        }
+
+        this.cards = deckData.cards;
+        this.backImage = deckData.backImage || null;
+        
+        this.updateCardsGrid();
+        this.updateCardsCount();
+        this.updateBackPreview();
+        
+        if (this.backImage) {
+            document.getElementById('deckBackFileName').textContent = 'Загружено из файла';
+        }
+
+        alert('Колода успешно импортирована!');
+    }
+}
+
+// Инициализация редакторов
 window.addEventListener('DOMContentLoaded', () => {
-    new PointEditor('editorCanvas');
+    const pointEditor = new PointEditor('editorCanvas');
+    const deckEditor = new DeckEditor();
+
+    // Переключение между вкладками
+    document.getElementById('pointsEditorTab').addEventListener('click', () => {
+        document.getElementById('pointsEditor').style.display = 'block';
+        document.getElementById('deckEditor').style.display = 'none';
+        document.getElementById('pointsEditorTab').classList.add('active');
+        document.getElementById('deckEditorTab').classList.remove('active');
+    });
+
+    document.getElementById('deckEditorTab').addEventListener('click', () => {
+        document.getElementById('pointsEditor').style.display = 'none';
+        document.getElementById('deckEditor').style.display = 'block';
+        document.getElementById('deckEditorTab').classList.add('active');
+        document.getElementById('pointsEditorTab').classList.remove('active');
+    });
 });

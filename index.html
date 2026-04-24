@@ -7,30 +7,61 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Игровое поле</h1>
+    <div class="top-section">
+        <div class="container">
+            <h1>Игровое поле</h1>
+            
+            <canvas id="gameCanvas" width="1200" height="800"></canvas>
+            
+            <div class="controls">
+                <button id="clearBoard">Очистить поле</button>
+                <button id="backToSetup">Вернуться к настройкам</button>
+            </div>
+        </div>
         
-        <canvas id="gameCanvas" width="1200" height="800"></canvas>
-        
-        <div class="controls">
-            <button id="clearBoard">Очистить поле</button>
-            <button id="backToSetup">Вернуться к настройкам</button>
+        <div class="container2">
+            <div class="hp-panel">
+                <h2>Счётчики HP</h2>
+                
+                <div class="player-hp-section">
+                    <h3>Игрок 1</h3>
+                    <div id="player1-chips" class="chips-list"></div>
+                </div>
+                
+                <div class="player-hp-section">
+                    <h3>Игрок 2</h3>
+                    <div id="player2-chips" class="chips-list"></div>
+                </div>
+            </div>
         </div>
     </div>
     
-    <div class="container2">
-        <div class="hp-panel">
-            <h2>Счётчики HP</h2>
-            
-            <div class="player-hp-section">
-                <h3>Игрок 1</h3>
-                <div id="player1-chips" class="chips-list"></div>
+    <!-- Карточные поля -->
+    <div class="cards-container">
+        <h2>Карточные поля</h2>
+        
+        <!-- Общее поле для карт -->
+        <div class="card-area">
+            <h3>Общее поле</h3>
+            <div id="sharedCardField" class="card-field shared-field"></div>
+        </div>
+        
+        <!-- Личное поле игрока 1 -->
+        <div class="card-area player-area">
+            <div class="player-header">
+                <h3>Ваше поле (Игрок 1)</h3>
+                <button id="drawCardPlayer1" class="draw-card-btn">Взять карту из колоды</button>
             </div>
-            
-            <div class="player-hp-section">
-                <h3>Игрок 2</h3>
-                <div id="player2-chips" class="chips-list"></div>
+            <div id="player1CardField" class="card-field player-field"></div>
+        </div>
+        
+        <!-- Личное поле игрока 2 -->
+        <div class="card-area player-area">
+            <div class="player-header">
+                <h3>Ваше поле (Игрок 2)</h3>
+                <button id="drawCardPlayer2" class="draw-card-btn">Взять карту из колоды</button>
             </div>
+            <div id="player2CardField" class="card-field player-field"></div>
         </div>
     </div>
     

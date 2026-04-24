@@ -31,8 +31,22 @@ class GameSetup {
         this.ctx = this.canvas.getContext('2d');
         
         this.settings = {
-            player1: { mainColor: null, mainHP: 14, extraColor: null, extraHP: 1, extraCount: 3 },
-            player2: { mainColor: null, mainHP: 14, extraColor: null, extraHP: 1, extraCount: 3 }
+            player1: { 
+                mainColor: null, 
+                mainHP: 14, 
+                extraColor: null, 
+                extraHP: 1, 
+                extraCount: 3,
+                deck: null // Пользовательская колода
+            },
+            player2: { 
+                mainColor: null, 
+                mainHP: 14, 
+                extraColor: null, 
+                extraHP: 1, 
+                extraCount: 3,
+                deck: null // Пользовательская колода
+            }
         };
         
         this.socket = io();
@@ -142,6 +156,50 @@ class GameSetup {
             }
         });
 
+        // Загрузка колоды игрока 1
+        document.getElementById('player1DeckUpload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const deckData = JSON.parse(event.target.result);
+                        if (this.validateDeck(deckData)) {
+                            this.settings.player1.deck = deckData;
+                            document.getElementById('player1DeckFileName').textContent = file.name;
+                        } else {
+                            alert('Неверный формат колоды! Колода должна содержать 30 карт.');
+                        }
+                    } catch (error) {
+                        alert('Ошибка при загрузке колоды: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // Загрузка колоды игрока 2
+        document.getElementById('player2DeckUpload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const deckData = JSON.parse(event.target.result);
+                        if (this.validateDeck(deckData)) {
+                            this.settings.player2.deck = deckData;
+                            document.getElementById('player2DeckFileName').textContent = file.name;
+                        } else {
+                            alert('Неверный формат колоды! Колода должна содержать 30 карт.');
+                        }
+                    } catch (error) {
+                        alert('Ошибка при загрузке колоды: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
         // Обновление количества фишек
         document.getElementById('setup-player1-extra-count').addEventListener('change', (e) => {
             this.settings.player1.extraCount = parseInt(e.target.value);
@@ -173,14 +231,52 @@ class GameSetup {
         });
     }
 
+    validateDeck(deckData) {
+        // Проверяем, что колода содержит 30 карт
+        if (!deckData.cards || !Array.isArray(deckData.cards)) {
+            return false;
+        }
+        
+        if (deckData.cards.length !== 30) {
+            return false;
+        }
+        
+        // Проверяем, что каждая карта имеет необходимые поля
+        for (const card of deckData.cards) {
+            if (!card.text && !card.image) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
     setupSocketListeners() {
         this.socket.on('room-created', (data) => {
             this.roomCode = data.roomCode;
             document.getElementById('currentRoomCode').textContent = data.roomCode;
             document.getElementById('roomCodeDisplay').style.display = 'block';
             
-            // Сохраняем настройки и переходим к игре
-            sessionStorage.setItem('gameSettings', JSON.stringify(data.settings));
+            // Сохраняем только код комнаты и базовые настройки (БЕЗ колод и изображений)
+            const lightSettings = {
+                player1: {
+                    mainColor: data.settings.player1.mainColor,
+                    mainHP: data.settings.player1.mainHP,
+                    extraColor: data.settings.player1.extraColor,
+                    extraHP: data.settings.player1.extraHP,
+                    extraCount: data.settings.player1.extraCount
+                },
+                player2: {
+                    mainColor: data.settings.player2.mainColor,
+                    mainHP: data.settings.player2.mainHP,
+                    extraColor: data.settings.player2.extraColor,
+                    extraHP: data.settings.player2.extraHP,
+                    extraCount: data.settings.player2.extraCount
+                },
+                points: data.settings.points
+            };
+            
+            sessionStorage.setItem('gameSettings', JSON.stringify(lightSettings));
             sessionStorage.setItem('roomCode', data.roomCode);
             
             setTimeout(() => {
@@ -191,8 +287,26 @@ class GameSetup {
         this.socket.on('room-joined', (data) => {
             this.roomCode = data.roomCode;
             
-            // Сохраняем настройки полученные от сервера
-            sessionStorage.setItem('gameSettings', JSON.stringify(data.settings));
+            // Сохраняем только базовые настройки (БЕЗ колод и изображений)
+            const lightSettings = {
+                player1: {
+                    mainColor: data.settings.player1.mainColor,
+                    mainHP: data.settings.player1.mainHP,
+                    extraColor: data.settings.player1.extraColor,
+                    extraHP: data.settings.player1.extraHP,
+                    extraCount: data.settings.player1.extraCount
+                },
+                player2: {
+                    mainColor: data.settings.player2.mainColor,
+                    mainHP: data.settings.player2.mainHP,
+                    extraColor: data.settings.player2.extraColor,
+                    extraHP: data.settings.player2.extraHP,
+                    extraCount: data.settings.player2.extraCount
+                },
+                points: data.settings.points
+            };
+            
+            sessionStorage.setItem('gameSettings', JSON.stringify(lightSettings));
             sessionStorage.setItem('roomCode', data.roomCode);
             
             alert('Успешно подключились к комнате!');

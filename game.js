@@ -654,8 +654,430 @@ class HPPanel {
     }
 }
 
+// Класс для карты
+class Card {
+    constructor(id, text, owner, image = null) {
+        this.id = id;
+        this.text = text;
+        this.owner = owner; // 'player1', 'player2', или null для общих карт
+        this.image = image; // URL изображения карты
+        this.isFlipped = false; // false = рубашка, true = лицевая сторона
+        this.element = null;
+        this.currentField = null; // 'shared', 'player1', 'player2'
+    }
+
+    createElement() {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.cardId = this.id;
+        
+        const cardInner = document.createElement('div');
+        cardInner.className = 'card-inner';
+        
+        // Лицевая сторона
+        const cardFront = document.createElement('div');
+        cardFront.className = 'card-face card-front';
+        
+        if (this.image) {
+            const img = document.createElement('img');
+            img.src = this.image;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '6px';
+            cardFront.appendChild(img);
+        } else {
+            cardFront.textContent = this.text;
+        }
+        
+        // Рубашка
+        const cardBack = document.createElement('div');
+        cardBack.className = 'card-face card-back';
+        cardBack.textContent = '🎴';
+        
+        cardInner.appendChild(cardFront);
+        cardInner.appendChild(cardBack);
+        card.appendChild(cardInner);
+        
+        // Кнопки управления
+        const controls = document.createElement('div');
+        controls.className = 'card-controls';
+        
+        const flipBtn = document.createElement('button');
+        flipBtn.className = 'card-control-btn';
+        flipBtn.textContent = '↻';
+        flipBtn.title = 'Перевернуть';
+        flipBtn.onclick = (e) => {
+            e.stopPropagation();
+            this.flip();
+        };
+        
+        controls.appendChild(flipBtn);
+        card.appendChild(controls);
+        
+        this.element = card;
+        return card;
+    }
+
+    flip() {
+        this.isFlipped = !this.isFlipped;
+        if (this.element) {
+            if (this.isFlipped) {
+                this.element.classList.add('flipped');
+            } else {
+                this.element.classList.remove('flipped');
+            }
+        }
+        
+        // Синхронизируем с сервером
+        if (window.cardManager) {
+            window.cardManager.syncCardFlip(this.id, this.isFlipped);
+        }
+    }
+
+    setFlipped(flipped) {
+        this.isFlipped = flipped;
+        if (this.element) {
+            if (this.isFlipped) {
+                this.element.classList.add('flipped');
+            } else {
+                this.element.classList.remove('flipped');
+            }
+        }
+    }
+}
+
+// Класс для колоды
+class Deck {
+    constructor(owner, customDeck = null) {
+        this.owner = owner; // 'player1' или 'player2'
+        this.cards = [];
+        this.nextCardId = 0;
+        
+        if (customDeck) {
+            this.loadCustomDeck(customDeck);
+        } else {
+            this.initializeDefaultDeck();
+        }
+    }
+
+    initializeDefaultDeck() {
+        // Создаем стандартную колоду из 30 карт
+        const cardTypes = [
+            'Атака', 'Защита', 'Движение', 'Особая способность', 'Лечение', 'Уклонение'
+        ];
+        
+        for (let i = 0; i < 30; i++) {
+            const type = cardTypes[i % cardTypes.length];
+            const cardText = `${type} ${Math.floor(i / cardTypes.length) + 1}`;
+            this.cards.push({
+                text: cardText,
+                id: `${this.owner}_card_${this.nextCardId++}`,
+                image: null // Для стандартной колоды нет изображений
+            });
+        }
+    }
+
+    loadCustomDeck(customDeck) {
+        // Загружаем пользовательскую колоду
+        if (customDeck.cards && customDeck.cards.length === 30) {
+            this.cards = customDeck.cards.map((card, index) => ({
+                text: card.text || `Карта ${index + 1}`,
+                id: `${this.owner}_card_${this.nextCardId++}`,
+                image: card.image || null
+            }));
+        } else {
+            console.error('Неверный формат колоды, используется стандартная');
+            this.initializeDefaultDeck();
+        }
+    }
+
+    drawCard() {
+        if (this.cards.length === 0) {
+            return null;
+        }
+        return this.cards.shift();
+    }
+
+    getCardsCount() {
+        return this.cards.length;
+    }
+
+    shuffle() {
+        for (let i = this.cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
+        }
+    }
+}
+
+// Класс для управления карточными полями
+class CardManager {
+    constructor(gameBoard) {
+        this.gameBoard = gameBoard;
+        this.cards = new Map(); // id -> Card
+        this.sharedField = document.getElementById('sharedCardField');
+        this.player1Field = document.getElementById('player1CardField');
+        this.player2Field = document.getElementById('player2CardField');
+        
+        // Колоды будут загружены с сервера
+        this.player1Deck = null;
+        this.player2Deck = null;
+        this.decksLoaded = false;
+        
+        this.draggedCard = null;
+        this.currentPlayer = null;
+        
+        this.setupEventListeners();
+        this.setupSocketListeners();
+        
+        // Запрашиваем колоды с сервера
+        this.requestDecks();
+    }
+
+    requestDecks() {
+        // Запрашиваем колоды у сервера
+        this.gameBoard.socket.emit('request-decks');
+    }
+
+    loadDecks(decksData) {
+        // Загружаем колоды с сервера
+        this.player1Deck = new Deck('player1', decksData.player1);
+        this.player2Deck = new Deck('player2', decksData.player2);
+        this.decksLoaded = true;
+        console.log('Колоды загружены с сервера');
+    }
+
+    setupEventListeners() {
+        // Кнопки взятия карт
+        document.getElementById('drawCardPlayer1').addEventListener('click', () => {
+            this.drawCard('player1');
+        });
+
+        document.getElementById('drawCardPlayer2').addEventListener('click', () => {
+            this.drawCard('player2');
+        });
+
+        // Drag and drop для полей
+        [this.sharedField, this.player1Field, this.player2Field].forEach(field => {
+            field.addEventListener('dragover', (e) => this.handleDragOver(e));
+            field.addEventListener('drop', (e) => this.handleDrop(e));
+        });
+    }
+
+    setupSocketListeners() {
+        const socket = this.gameBoard.socket;
+
+        // Получение колод с сервера
+        socket.on('decks-data', (decksData) => {
+            this.loadDecks(decksData);
+        });
+
+        // Синхронизация создания карты
+        socket.on('card-created', (data) => {
+            this.createCardFromServer(data);
+        });
+
+        // Синхронизация перемещения карты
+        socket.on('card-moved', (data) => {
+            this.moveCardFromServer(data.cardId, data.targetField);
+        });
+
+        // Синхронизация переворачивания карты
+        socket.on('card-flipped', (data) => {
+            const card = this.cards.get(data.cardId);
+            if (card) {
+                card.setFlipped(data.isFlipped);
+            }
+        });
+
+        // Синхронизация удаления карты
+        socket.on('card-removed', (data) => {
+            this.removeCardFromServer(data.cardId);
+        });
+
+        // Загрузка карт при подключении к комнате
+        socket.on('room-joined', (data) => {
+            if (data.cards && data.cards.length > 0) {
+                data.cards.forEach(cardData => {
+                    this.createCardFromServer(cardData);
+                });
+            }
+        });
+    }
+
+    drawCard(player) {
+        // Проверяем, загружены ли колоды
+        if (!this.decksLoaded) {
+            alert('Колоды еще загружаются, подождите...');
+            return;
+        }
+
+        const deck = player === 'player1' ? this.player1Deck : this.player2Deck;
+        const cardData = deck.drawCard();
+        
+        if (!cardData) {
+            alert('Колода пуста!');
+            return;
+        }
+
+        const card = new Card(cardData.id, cardData.text, player, cardData.image);
+        this.cards.set(card.id, card);
+        
+        const targetField = player === 'player1' ? this.player1Field : this.player2Field;
+        card.currentField = player;
+        
+        const cardElement = card.createElement();
+        this.setupCardDragAndDrop(cardElement, card);
+        targetField.appendChild(cardElement);
+
+        // Синхронизируем с сервером
+        this.gameBoard.socket.emit('card-created', {
+            id: card.id,
+            text: card.text,
+            owner: card.owner,
+            field: card.currentField,
+            isFlipped: card.isFlipped,
+            image: card.image
+        });
+
+        console.log(`Карта взята: ${cardData.text}, осталось в колоде: ${deck.getCardsCount()}`);
+    }
+
+    createCardFromServer(data) {
+        // Проверяем, не существует ли уже карта
+        if (this.cards.has(data.id)) {
+            return;
+        }
+
+        const card = new Card(data.id, data.text, data.owner, data.image);
+        card.isFlipped = data.isFlipped;
+        card.currentField = data.field;
+        this.cards.set(card.id, card);
+
+        const targetField = this.getFieldElement(data.field);
+        const cardElement = card.createElement();
+        this.setupCardDragAndDrop(cardElement, card);
+        targetField.appendChild(cardElement);
+
+        if (card.isFlipped) {
+            card.setFlipped(true);
+        }
+    }
+
+    setupCardDragAndDrop(element, card) {
+        element.draggable = true;
+
+        element.addEventListener('dragstart', (e) => {
+            this.draggedCard = card;
+            element.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        element.addEventListener('dragend', (e) => {
+            element.classList.remove('dragging');
+            this.draggedCard = null;
+        });
+    }
+
+    handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    }
+
+    handleDrop(e) {
+        e.preventDefault();
+        
+        if (!this.draggedCard) return;
+
+        const targetField = e.currentTarget;
+        const targetFieldName = this.getFieldName(targetField);
+
+        // Проверяем права на перемещение
+        if (!this.canMoveCard(this.draggedCard, targetFieldName)) {
+            alert('Вы не можете переместить эту карту сюда!');
+            return;
+        }
+
+        // Перемещаем карту
+        this.moveCard(this.draggedCard.id, targetFieldName);
+    }
+
+    canMoveCard(card, targetField) {
+        // Из личного поля можно перемещать только на общее поле
+        if (card.currentField === 'player1' || card.currentField === 'player2') {
+            return targetField === 'shared';
+        }
+        
+        // С общего поля можно перемещать обратно в свое личное поле
+        if (card.currentField === 'shared') {
+            return targetField === card.owner;
+        }
+
+        return false;
+    }
+
+    moveCard(cardId, targetField) {
+        const card = this.cards.get(cardId);
+        if (!card || !card.element) return;
+
+        const targetFieldElement = this.getFieldElement(targetField);
+        targetFieldElement.appendChild(card.element);
+        card.currentField = targetField;
+
+        // Синхронизируем с сервером
+        this.gameBoard.socket.emit('card-moved', {
+            cardId: cardId,
+            targetField: targetField
+        });
+    }
+
+    moveCardFromServer(cardId, targetField) {
+        const card = this.cards.get(cardId);
+        if (!card || !card.element) return;
+
+        const targetFieldElement = this.getFieldElement(targetField);
+        targetFieldElement.appendChild(card.element);
+        card.currentField = targetField;
+    }
+
+    syncCardFlip(cardId, isFlipped) {
+        this.gameBoard.socket.emit('card-flipped', {
+            cardId: cardId,
+            isFlipped: isFlipped
+        });
+    }
+
+    removeCardFromServer(cardId) {
+        const card = this.cards.get(cardId);
+        if (card && card.element) {
+            card.element.remove();
+        }
+        this.cards.delete(cardId);
+    }
+
+    getFieldElement(fieldName) {
+        switch (fieldName) {
+            case 'shared': return this.sharedField;
+            case 'player1': return this.player1Field;
+            case 'player2': return this.player2Field;
+            default: return this.sharedField;
+        }
+    }
+
+    getFieldName(fieldElement) {
+        if (fieldElement === this.sharedField) return 'shared';
+        if (fieldElement === this.player1Field) return 'player1';
+        if (fieldElement === this.player2Field) return 'player2';
+        return 'shared';
+    }
+}
+
 // Инициализация игры
 window.addEventListener('DOMContentLoaded', () => {
     const gameBoard = new GameBoard('gameCanvas');
     // Панель HP будет инициализирована автоматически после создания/загрузки фишек
+    
+    // Инициализируем карточный менеджер
+    window.cardManager = new CardManager(gameBoard);
 });

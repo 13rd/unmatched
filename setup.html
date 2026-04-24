@@ -51,6 +51,32 @@
             <canvas id="previewCanvas" width="600" height="400"></canvas>
         </div>
         
+        <!-- Загрузка колод -->
+        <div class="setup-section">
+            <h2>Колоды карт</h2>
+            
+            <div class="deck-upload-group">
+                <div class="deck-upload">
+                    <h4>Колода Игрока 1</h4>
+                    <label for="player1DeckUpload" class="btn">Загрузить колоду (JSON)</label>
+                    <input type="file" id="player1DeckUpload" accept=".json" style="display: none;">
+                    <span id="player1DeckFileName">Стандартная колода (30 карт)</span>
+                </div>
+                
+                <div class="deck-upload">
+                    <h4>Колода Игрока 2</h4>
+                    <label for="player2DeckUpload" class="btn">Загрузить колоду (JSON)</label>
+                    <input type="file" id="player2DeckUpload" accept=".json" style="display: none;">
+                    <span id="player2DeckFileName">Стандартная колода (30 карт)</span>
+                </div>
+            </div>
+            
+            <div class="deck-info">
+                <p><strong>Формат колоды:</strong> JSON файл с 30 картами</p>
+                <p>Используйте <a href="editor.html" target="_blank">Редактор колод</a> для создания своих колод</p>
+            </div>
+        </div>
+        
         <!-- Настройки игроков -->
         <div class="setup-section">
             <h2>Настройки игроков</h2>

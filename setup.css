@@ -164,6 +164,79 @@ h3 {
 }
 
 .btn-start {
+    padding: 15px 40px;
+    font-size: 18px;
+    background: #38a169;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: bold;
+}
+
+.btn-start:hover {
+    background: #2f855a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(56, 161, 105, 0.4);
+}
+
+/* Стили для загрузки колод */
+.deck-upload-group {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+
+.deck-upload {
+    flex: 1;
+    padding: 20px;
+    background: #f7fafc;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+}
+
+.deck-upload h4 {
+    margin-bottom: 15px;
+    color: #2d3748;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.deck-upload .btn {
+    margin-bottom: 10px;
+}
+
+.deck-upload span {
+    display: block;
+    color: #718096;
+    font-size: 14px;
+}
+
+.deck-info {
+    padding: 15px;
+    background: #edf2f7;
+    border-radius: 6px;
+    border-left: 4px solid #667eea;
+}
+
+.deck-info p {
+    margin: 5px 0;
+    color: #4a5568;
+    font-size: 14px;
+}
+
+.deck-info a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.deck-info a:hover {
+    text-decoration: underline;
+}
+
+.btn-start {
     padding: 15px 60px;
     font-size: 20px;
     border: none;

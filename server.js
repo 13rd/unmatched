@@ -52,7 +52,7 @@ io.on('connection', (socket) => {
         const roomCode = generateRoomCode();
         
         rooms.set(roomCode, {
-            settings: settings,
+            settings: settings, // Храним полные настройки с колодами на сервере
             chips: [],
             players: [socket.id],
             createdAt: Date.now()
@@ -62,7 +62,29 @@ io.on('connection', (socket) => {
         socket.roomCode = roomCode;
         
         console.log(`Комната создана: ${roomCode}`);
-        socket.emit('room-created', { roomCode, settings });
+        
+        // Отправляем клиенту только базовые настройки (БЕЗ колод)
+        socket.emit('room-created', { 
+            roomCode, 
+            settings: {
+                backgroundImage: settings.backgroundImage,
+                points: settings.points,
+                player1: {
+                    mainColor: settings.player1.mainColor,
+                    mainHP: settings.player1.mainHP,
+                    extraColor: settings.player1.extraColor,
+                    extraHP: settings.player1.extraHP,
+                    extraCount: settings.player1.extraCount
+                },
+                player2: {
+                    mainColor: settings.player2.mainColor,
+                    mainHP: settings.player2.mainHP,
+                    extraColor: settings.player2.extraColor,
+                    extraHP: settings.player2.extraHP,
+                    extraCount: settings.player2.extraCount
+                }
+            }
+        });
     });
 
     // Подключение к существующей комнате
@@ -80,15 +102,45 @@ io.on('connection', (socket) => {
         
         console.log(`Игрок ${socket.id} присоединился к комнате ${roomCode}`);
         
-        // Отправляем текущее состояние игры новому игроку
+        // Отправляем текущее состояние игры новому игроку (БЕЗ колод)
         socket.emit('room-joined', {
             roomCode,
-            settings: room.settings,
-            chips: room.chips
+            settings: {
+                backgroundImage: room.settings.backgroundImage,
+                points: room.settings.points,
+                player1: {
+                    mainColor: room.settings.player1.mainColor,
+                    mainHP: room.settings.player1.mainHP,
+                    extraColor: room.settings.player1.extraColor,
+                    extraHP: room.settings.player1.extraHP,
+                    extraCount: room.settings.player1.extraCount
+                },
+                player2: {
+                    mainColor: room.settings.player2.mainColor,
+                    mainHP: room.settings.player2.mainHP,
+                    extraColor: room.settings.player2.extraColor,
+                    extraHP: room.settings.player2.extraHP,
+                    extraCount: room.settings.player2.extraCount
+                }
+            },
+            chips: room.chips,
+            cards: room.cards || []
         });
         
         // Уведомляем других игроков о новом подключении
         socket.to(roomCode).emit('player-joined', socket.id);
+    });
+
+    // Запрос колод
+    socket.on('request-decks', () => {
+        const room = rooms.get(socket.roomCode);
+        if (!room) return;
+        
+        // Отправляем колоды клиенту
+        socket.emit('decks-data', {
+            player1: room.settings.player1.deck || null,
+            player2: room.settings.player2.deck || null
+        });
     });
 
     // Синхронизация перемещения фишки
@@ -158,6 +210,71 @@ io.on('connection', (socket) => {
         
         // Отправляем всем в комнате
         socket.to(socket.roomCode).emit('board-cleared');
+    });
+
+    // Синхронизация создания карты
+    socket.on('card-created', (data) => {
+        const room = rooms.get(socket.roomCode);
+        if (!room) return;
+        
+        // Инициализируем массив карт если его нет
+        if (!room.cards) {
+            room.cards = [];
+        }
+        
+        // Добавляем карту в комнату
+        room.cards.push(data);
+        
+        // Отправляем всем остальным в комнате
+        socket.to(socket.roomCode).emit('card-created', data);
+    });
+
+    // Синхронизация перемещения карты
+    socket.on('card-moved', (data) => {
+        const room = rooms.get(socket.roomCode);
+        if (!room) return;
+        
+        // Обновляем позицию карты
+        if (room.cards) {
+            const card = room.cards.find(c => c.id === data.cardId);
+            if (card) {
+                card.field = data.targetField;
+            }
+        }
+        
+        // Отправляем всем остальным в комнате
+        socket.to(socket.roomCode).emit('card-moved', data);
+    });
+
+    // Синхронизация переворачивания карты
+    socket.on('card-flipped', (data) => {
+        const room = rooms.get(socket.roomCode);
+        if (!room) return;
+        
+        // Обновляем состояние карты
+        if (room.cards) {
+            const card = room.cards.find(c => c.id === data.cardId);
+            if (card) {
+                card.isFlipped = data.isFlipped;
+            }
+        }
+        
+        // Отправляем всем остальным в комнате
+        socket.to(socket.roomCode).emit('card-flipped', data);
+    });
+
+    // Синхронизация удаления карты
+    socket.on('card-removed', (data) => {
+        const room = rooms.get(socket.roomCode);
+        if (!room) return;
+        
+        // Удаляем карту из комнаты
+        if (room.cards) {
+            room.cards = room.cards.filter(c => c.id !== data.cardId);
+        }
+        
+        // Отправляем всем остальным в комнате
+        socket.to(socket.roomCode).emit('card-removed', data);
     });
 
     // Отключение игрока
