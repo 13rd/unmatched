@@ -194,7 +194,10 @@ class GameBoard {
                 this.isInitialized = true;
             }
             
-            this.updatePlayerRoleUI();
+            // Обновляем UI после небольшой задержки
+            setTimeout(() => {
+                this.updatePlayerRoleUI();
+            }, 100);
         });
 
         // Успешное подключение к комнате
@@ -212,7 +215,10 @@ class GameBoard {
                 this.isInitialized = true;
             }
             
-            this.updatePlayerRoleUI();
+            // Обновляем UI после небольшой задержки, чтобы DOM был готов
+            setTimeout(() => {
+                this.updatePlayerRoleUI();
+            }, 100);
         });
         
         // Получение фонового изображения с сервера
@@ -299,8 +305,14 @@ class GameBoard {
         const usernameElement = document.getElementById('currentUsername');
         const roleElement = document.getElementById('currentRole');
         
+        console.log('Обновление UI для роли:', this.playerRole);
+        console.log('Username element:', usernameElement);
+        console.log('Role element:', roleElement);
+        
         if (usernameElement) {
             usernameElement.textContent = `Игрок: ${this.username}`;
+        } else {
+            console.error('Элемент currentUsername не найден!');
         }
         
         if (roleElement) {
@@ -310,11 +322,14 @@ class GameBoard {
                 'spectator': 'Наблюдатель'
             };
             roleElement.textContent = `Роль: ${roleNames[this.playerRole] || 'Неизвестно'}`;
+        } else {
+            console.error('Элемент currentRole не найден!');
         }
         
-        // Обработчик выхода
+        // Обработчик выхода (добавляем только один раз)
         const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
+        if (logoutBtn && !logoutBtn.hasAttribute('data-listener')) {
+            logoutBtn.setAttribute('data-listener', 'true');
             logoutBtn.addEventListener('click', () => {
                 if (confirm('Вы уверены, что хотите выйти?')) {
                     localStorage.removeItem('username');
@@ -326,31 +341,40 @@ class GameBoard {
             });
         }
         
+        console.log('Player1 area:', player1Area);
+        console.log('Player2 area:', player2Area);
+        
         if (this.playerRole === 'player1') {
             // Игрок 1 видит свои карты, но не видит карты игрока 2
             if (player1Area) {
                 player1Area.classList.remove('hidden-cards');
-                player1Area.querySelector('h3').textContent = 'Ваше поле (Игрок 1)';
+                const h3 = player1Area.querySelector('h3');
+                if (h3) h3.textContent = 'Ваше поле (Игрок 1)';
             }
             if (player2Area) {
                 player2Area.classList.add('hidden-cards');
-                player2Area.querySelector('h3').textContent = 'Поле противника (Игрок 2)';
+                const h3 = player2Area.querySelector('h3');
+                if (h3) h3.textContent = 'Поле противника (Игрок 2)';
             }
         } else if (this.playerRole === 'player2') {
             // Игрок 2 видит свои карты, но не видит карты игрока 1
             if (player1Area) {
                 player1Area.classList.add('hidden-cards');
-                player1Area.querySelector('h3').textContent = 'Поле противника (Игрок 1)';
+                const h3 = player1Area.querySelector('h3');
+                if (h3) h3.textContent = 'Поле противника (Игрок 1)';
             }
             if (player2Area) {
                 player2Area.classList.remove('hidden-cards');
-                player2Area.querySelector('h3').textContent = 'Ваше поле (Игрок 2)';
+                const h3 = player2Area.querySelector('h3');
+                if (h3) h3.textContent = 'Ваше поле (Игрок 2)';
             }
         } else {
             // Наблюдатель видит все
             if (player1Area) player1Area.classList.remove('hidden-cards');
             if (player2Area) player2Area.classList.remove('hidden-cards');
         }
+        
+        console.log('UI обновлен для роли:', this.playerRole);
     }
 
     loadChipsFromServer(chipsData) {
