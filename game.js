@@ -381,6 +381,8 @@ class GameBoard {
         this.chips = [];
         this.points.forEach(point => point.chip = null);
         
+        console.log('Загрузка фишек с сервера:', chipsData.length);
+        
         chipsData.forEach(chipData => {
             const chip = new Chip(
                 chipData.x,
@@ -411,12 +413,16 @@ class GameBoard {
             this.hpPanel.renderChips();
         }
         
+        // Перерисовываем canvas
         this.draw();
     }
 
     createPlayerChips(settings) {
         const freePoints = this.points.filter(p => !p.chip);
         let pointIndex = 0;
+        
+        console.log('Создание фишек игроков. Свободных точек:', freePoints.length);
+        console.log('Настройки:', settings);
         
         // Создаем главную фишку игрока 1
         if (pointIndex < freePoints.length) {
@@ -426,6 +432,7 @@ class GameBoard {
             chip.maxHp = settings.player1.mainHP;
             this.chips.push(chip);
             point.attachChip(chip);
+            console.log('Создана главная фишка игрока 1');
         }
         
         // Создаем дополнительные фишки игрока 1
@@ -436,6 +443,7 @@ class GameBoard {
             chip.maxHp = settings.player1.extraHP;
             this.chips.push(chip);
             point.attachChip(chip);
+            console.log(`Создана дополнительная фишка игрока 1 #${i+1}`);
         }
         
         // Создаем главную фишку игрока 2
@@ -446,6 +454,7 @@ class GameBoard {
             chip.maxHp = settings.player2.mainHP;
             this.chips.push(chip);
             point.attachChip(chip);
+            console.log('Создана главная фишка игрока 2');
         }
         
         // Создаем дополнительные фишки игрока 2
@@ -456,9 +465,10 @@ class GameBoard {
             chip.maxHp = settings.player2.extraHP;
             this.chips.push(chip);
             point.attachChip(chip);
+            console.log(`Создана дополнительная фишка игрока 2 #${i+1}`);
         }
         
-        console.log('Создано фишек:', this.chips.length);
+        console.log('Всего создано фишек:', this.chips.length);
         
         // Отправляем созданные фишки на сервер
         const chipsData = this.chips.map(chip => ({
@@ -481,6 +491,7 @@ class GameBoard {
             this.hpPanel.renderChips();
         }
         
+        // Перерисовываем canvas
         this.draw();
     }
 

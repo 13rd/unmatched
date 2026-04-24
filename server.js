@@ -73,17 +73,13 @@ io.on('connection', (socket) => {
             socket.username = username;
             socket.isAuthenticated = true;
             
-            // Если у пользователя была комната, переподключаем его
+            // Если у пользователя была комната, НЕ переподключаем автоматически
+            // Пусть клиент сам отправит join-room
             if (existingUser.roomCode) {
                 const room = rooms.get(existingUser.roomCode);
                 if (room) {
-                    socket.roomCode = existingUser.roomCode;
-                    socket.join(existingUser.roomCode);
-                    
-                    // Восстанавливаем роль игрока
-                    socket.playerRole = room.playerRoles[userId];
-                    
-                    console.log(`Пользователь ${username} переподключен к комнате ${existingUser.roomCode} как ${socket.playerRole}`);
+                    // Просто сохраняем информацию, но не присоединяем
+                    console.log(`Пользователь ${username} имеет сохраненную комнату ${existingUser.roomCode}`);
                 }
             }
         } else {
