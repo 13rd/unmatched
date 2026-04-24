@@ -308,22 +308,22 @@ class GameBoard {
         }
     }
 
-    addRandomChip() {
-        const colors = ['#e53e3e', '#3182ce', '#38a169', '#d69e2e', '#805ad5', '#dd6b20'];
-        const color = colors[Math.floor(Math.random() * colors.length)];
+    // addRandomChip() {
+    //     const colors = ['#e53e3e', '#3182ce', '#38a169', '#d69e2e', '#805ad5', '#dd6b20'];
+    //     const color = colors[Math.floor(Math.random() * colors.length)];
         
-        // Находим свободную точку
-        const freePoints = this.points.filter(p => !p.chip);
-        if (freePoints.length > 0) {
-            const randomPoint = freePoints[Math.floor(Math.random() * freePoints.length)];
-            const chip = new Chip(randomPoint.x, randomPoint.y, color, this.chips.length);
-            this.chips.push(chip);
-            randomPoint.attachChip(chip);
-            this.draw();
-        } else {
-            alert('Нет свободных точек!');
-        }
-    }
+    //     // Находим свободную точку
+    //     const freePoints = this.points.filter(p => !p.chip);
+    //     if (freePoints.length > 0) {
+    //         const randomPoint = freePoints[Math.floor(Math.random() * freePoints.length)];
+    //         const chip = new Chip(randomPoint.x, randomPoint.y, color, this.chips.length);
+    //         this.chips.push(chip);
+    //         randomPoint.attachChip(chip);
+    //         this.draw();
+    //     } else {
+    //         alert('Нет свободных точек!');
+    //     }
+    // }
 
     clearBoard() {
         this.chips = [];
@@ -430,7 +430,7 @@ class HPPanel {
         plusBtn.className = 'hp-btn plus';
         plusBtn.textContent = '+';
         plusBtn.addEventListener('click', () => {
-            if (chip.hp < chip.maxHp) {
+            if (chip.hp < 20) {
                 chip.hp++;
                 this.updateHP(chip, hpValue);
             }

@@ -31,8 +31,8 @@ class GameSetup {
         this.ctx = this.canvas.getContext('2d');
         
         this.settings = {
-            player1: { mainColor: null, extraColor: null, extraCount: 3 },
-            player2: { mainColor: null, extraColor: null, extraCount: 3 }
+            player1: { mainColor: null, mainHP: 14, extraColor: null, extraHP: 1, extraCount: 3 },
+            player2: { mainColor: null, mainHP: 14, extraColor: null, extraHP: 1, extraCount: 3 }
         };
         
         this.initializeColorPickers();
@@ -120,6 +120,22 @@ class GameSetup {
 
         document.getElementById('setup-player2-extra-count').addEventListener('change', (e) => {
             this.settings.player2.extraCount = parseInt(e.target.value);
+        });
+
+        document.getElementById('setup-player1-main-hp').addEventListener('change', (e) => {
+            this.settings.player1.mainHP = parseInt(e.target.value);
+        });
+
+        document.getElementById('setup-player1-extra-hp').addEventListener('change', (e) => {
+            this.settings.player1.extraHP = parseInt(e.target.value);
+        });
+
+        document.getElementById('setup-player2-main-hp').addEventListener('change', (e) => {
+            this.settings.player2.mainHP = parseInt(e.target.value);
+        });
+
+        document.getElementById('setup-player2-extra-hp').addEventListener('change', (e) => {
+            this.settings.player2.extraHP = parseInt(e.target.value);
         });
 
         // Кнопка старта игры

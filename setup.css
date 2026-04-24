@@ -116,13 +116,13 @@ h3 {
 
 .color-picker {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 8px;
     margin-bottom: 15px;
 }
 
 .color-option {
-    width: 100%;
+    width: 60px;
     aspect-ratio: 1;
     border-radius: 50%;
     cursor: pointer;
