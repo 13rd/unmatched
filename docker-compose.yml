@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  unmatched-game:
+    build: .
+    container_name: unmatched-game
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    restart: unless-stopped
+    volumes:
+      # Монтируем только необходимые файлы для логов (опционально)
+      - ./logs:/app/logs
+    networks:
+      - unmatched-network
+
+networks:
+  unmatched-network:
+    driver: bridge
