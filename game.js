@@ -116,6 +116,7 @@ class GameBoard {
         this.draggedChip = null;
         this.snapDistance = 80;
         this.hpPanel = null;
+        this.playerRole = null; // 'player1', 'player2', или 'spectator'
         
         // WebSocket подключение
         this.socket = io();
@@ -167,17 +168,22 @@ class GameBoard {
         // Комната создана (создатель комнаты)
         this.socket.on('room-created', (data) => {
             console.log('Комната создана:', data.roomCode);
+            this.playerRole = data.playerRole || 'player1';
             
             if (!this.isInitialized) {
                 // Создаем фишки для новой комнаты
                 this.createPlayerChips(this.settings);
                 this.isInitialized = true;
             }
+            
+            this.updatePlayerRoleUI();
         });
 
         // Успешное подключение к комнате
         this.socket.on('room-joined', (data) => {
             console.log('Подключились к комнате:', data.roomCode);
+            this.playerRole = data.playerRole;
+            console.log('Роль игрока:', this.playerRole);
             
             // Если есть сохраненные фишки, загружаем их
             if (data.chips && data.chips.length > 0) {
@@ -187,6 +193,8 @@ class GameBoard {
                 this.createPlayerChips(this.settings);
                 this.isInitialized = true;
             }
+            
+            this.updatePlayerRoleUI();
         });
         
         // Получение фонового изображения с сервера
@@ -262,6 +270,38 @@ class GameBoard {
             }
             this.draw();
         });
+    }
+
+    updatePlayerRoleUI() {
+        // Обновляем UI в зависимости от роли игрока
+        const player1Area = document.querySelector('.card-area.player-area:nth-of-type(2)');
+        const player2Area = document.querySelector('.card-area.player-area:nth-of-type(3)');
+        
+        if (this.playerRole === 'player1') {
+            // Игрок 1 видит свои карты, но не видит карты игрока 2
+            if (player1Area) {
+                player1Area.classList.remove('hidden-cards');
+                player1Area.querySelector('h3').textContent = 'Ваше поле (Игрок 1)';
+            }
+            if (player2Area) {
+                player2Area.classList.add('hidden-cards');
+                player2Area.querySelector('h3').textContent = 'Поле противника (Игрок 2)';
+            }
+        } else if (this.playerRole === 'player2') {
+            // Игрок 2 видит свои карты, но не видит карты игрока 1
+            if (player1Area) {
+                player1Area.classList.add('hidden-cards');
+                player1Area.querySelector('h3').textContent = 'Поле противника (Игрок 1)';
+            }
+            if (player2Area) {
+                player2Area.classList.remove('hidden-cards');
+                player2Area.querySelector('h3').textContent = 'Ваше поле (Игрок 2)';
+            }
+        } else {
+            // Наблюдатель видит все
+            if (player1Area) player1Area.classList.remove('hidden-cards');
+            if (player2Area) player2Area.classList.remove('hidden-cards');
+        }
     }
 
     loadChipsFromServer(chipsData) {
@@ -838,6 +878,7 @@ class CardManager {
         
         this.draggedCard = null;
         this.currentPlayer = null;
+        this.currentDiscardPlayer = null;
         
         this.setupEventListeners();
         this.setupSocketListeners();
@@ -1026,6 +1067,13 @@ class CardManager {
         card.currentField = player;
         
         const cardElement = card.createElement();
+        
+        // Проверяем, должна ли карта быть скрыта
+        const shouldHide = this.shouldHideCard(card);
+        if (shouldHide) {
+            cardElement.classList.add('hidden-card');
+        }
+        
         this.setupCardDragAndDrop(cardElement, card);
         targetField.appendChild(cardElement);
 
@@ -1207,6 +1255,13 @@ class CardManager {
         card.currentField = player;
         
         const cardElement = card.createElement();
+        
+        // Проверяем, должна ли карта быть скрыта
+        const shouldHide = this.shouldHideCard(card);
+        if (shouldHide) {
+            cardElement.classList.add('hidden-card');
+        }
+        
         this.setupCardDragAndDrop(cardElement, card);
         targetField.appendChild(cardElement);
 
@@ -1261,12 +1316,41 @@ class CardManager {
 
         const targetField = this.getFieldElement(data.field);
         const cardElement = card.createElement();
+        
+        // Проверяем, должна ли карта быть скрыта для текущего игрока
+        const shouldHide = this.shouldHideCard(card);
+        if (shouldHide) {
+            cardElement.classList.add('hidden-card');
+        }
+        
         this.setupCardDragAndDrop(cardElement, card);
         targetField.appendChild(cardElement);
 
         if (card.isFlipped) {
             card.setFlipped(true);
         }
+    }
+
+    shouldHideCard(card) {
+        const playerRole = this.gameBoard.playerRole;
+        
+        // Если карта на общем поле, все видят
+        if (card.currentField === 'shared') {
+            return false;
+        }
+        
+        // Если игрок 1, скрываем карты игрока 2
+        if (playerRole === 'player1' && card.currentField === 'player2') {
+            return true;
+        }
+        
+        // Если игрок 2, скрываем карты игрока 1
+        if (playerRole === 'player2' && card.currentField === 'player1') {
+            return true;
+        }
+        
+        // Наблюдатели видят все
+        return false;
     }
 
     setupCardDragAndDrop(element, card) {
@@ -1351,6 +1435,14 @@ class CardManager {
         const targetFieldElement = this.getFieldElement(targetField);
         targetFieldElement.appendChild(card.element);
         card.currentField = targetField;
+        
+        // Обновляем видимость карты при перемещении
+        const shouldHide = this.shouldHideCard(card);
+        if (shouldHide) {
+            card.element.classList.add('hidden-card');
+        } else {
+            card.element.classList.remove('hidden-card');
+        }
     }
 
     syncCardFlip(cardId, isFlipped) {

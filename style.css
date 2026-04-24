@@ -548,3 +548,33 @@ button:active {
     font-size: 14px;
     color: #718096;
 }
+
+/* Скрытые карты противника */
+.hidden-cards .card-field {
+    position: relative;
+}
+
+.hidden-card {
+    position: relative;
+    filter: blur(8px);
+    pointer-events: none;
+}
+
+.hidden-card::after {
+    content: '🔒';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 32px;
+    filter: blur(0);
+    z-index: 100;
+}
+
+.hidden-card .card-controls {
+    display: none;
+}
+
+.hidden-card .card-inner {
+    pointer-events: none;
+}

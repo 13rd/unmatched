@@ -55,17 +55,20 @@ io.on('connection', (socket) => {
             settings: settings, // Храним полные настройки с колодами на сервере
             chips: [],
             players: [socket.id],
+            playerRoles: { [socket.id]: 'player1' },
             createdAt: Date.now()
         });
         
         socket.join(roomCode);
         socket.roomCode = roomCode;
+        socket.playerRole = 'player1';
         
         console.log(`Комната создана: ${roomCode}`);
         
         // Отправляем клиенту только базовые настройки (БЕЗ колод)
         socket.emit('room-created', { 
-            roomCode, 
+            roomCode,
+            playerRole: 'player1',
             settings: {
                 backgroundImage: settings.backgroundImage,
                 points: settings.points,
@@ -98,13 +101,30 @@ io.on('connection', (socket) => {
         
         socket.join(roomCode);
         socket.roomCode = roomCode;
-        room.players.push(socket.id);
         
-        console.log(`Игрок ${socket.id} присоединился к комнате ${roomCode}`);
+        // Определяем роль игрока
+        let playerRole = null;
+        if (room.players.length === 0) {
+            playerRole = 'player1';
+            room.playerRoles = { [socket.id]: 'player1' };
+        } else if (room.players.length === 1) {
+            playerRole = 'player2';
+            room.playerRoles[socket.id] = 'player2';
+        } else {
+            // Если уже 2 игрока, назначаем наблюдателя
+            playerRole = 'spectator';
+            room.playerRoles[socket.id] = 'spectator';
+        }
+        
+        room.players.push(socket.id);
+        socket.playerRole = playerRole;
+        
+        console.log(`Игрок ${socket.id} присоединился к комнате ${roomCode} как ${playerRole}`);
         
         // Отправляем текущее состояние игры новому игроку (БЕЗ колод)
         socket.emit('room-joined', {
             roomCode,
+            playerRole: playerRole,
             settings: {
                 backgroundImage: room.settings.backgroundImage,
                 points: room.settings.points,
