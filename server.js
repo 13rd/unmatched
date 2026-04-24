@@ -144,7 +144,8 @@ io.on('connection', (socket) => {
                 }
             },
             chips: room.chips,
-            cards: room.cards || []
+            cards: room.cards || [],
+            discardPiles: room.discardPiles || { player1: [], player2: [] }
         });
         
         // Уведомляем других игроков о новом подключении
@@ -321,6 +322,11 @@ io.on('connection', (socket) => {
         
         // Добавляем карту в сброс
         room.discardPiles[data.player].push(data.card);
+        
+        // Удаляем карту из активных карт комнаты
+        if (room.cards) {
+            room.cards = room.cards.filter(c => c.id !== data.cardId);
+        }
         
         // Отправляем всем остальным в комнате
         socket.to(socket.roomCode).emit('card-discarded', data);

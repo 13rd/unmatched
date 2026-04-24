@@ -1230,6 +1230,13 @@ class CardManager {
                     this.createCardFromServer(cardData);
                 });
             }
+            
+            // Загружаем сброшенные карты если они есть
+            if (data.discardPiles) {
+                this.player1Discard = data.discardPiles.player1 || [];
+                this.player2Discard = data.discardPiles.player2 || [];
+                this.updateDiscardCounts();
+            }
         });
     }
 
@@ -1288,13 +1295,16 @@ class CardManager {
         discardBtn.textContent = '🗑️';
         discardBtn.title = 'Сбросить карту';
         discardBtn.style.position = 'absolute';
-        discardBtn.style.top = '5px';
-        discardBtn.style.left = '5px';
+        discardBtn.style.top = '30px';
+        discardBtn.style.left = '0px';
         discardBtn.onclick = (e) => {
             e.stopPropagation();
             this.discardCard(cardId);
+            // Удаляем карту локально
             cardElement.remove();
             this.cards.delete(cardId);
+            // Отправляем событие удаления на сервер
+            this.gameBoard.socket.emit('card-removed', { cardId: cardId });
         };
         
         const controls = cardElement.querySelector('.card-controls');
@@ -1302,6 +1312,7 @@ class CardManager {
             controls.appendChild(discardBtn);
         }
     }
+    
 
     createCardFromServer(data) {
         // Проверяем, не существует ли уже карта
