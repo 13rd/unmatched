@@ -12,13 +12,79 @@
         
         <!-- Переключатель режимов -->
         <div class="mode-tabs">
-            <button id="pointsEditorTab" class="tab-btn active">Редактор точек</button>
+            <button id="pointsEditorTab" class="tab-btn">Редактор точек</button>
             <button id="deckEditorTab" class="tab-btn">Редактор колод</button>
             <button id="characterEditorTab" class="tab-btn">Редактор персонажей</button>
+            <button id="mapEditorTab" class="tab-btn active">Редактор карт</button>
+        </div>
+        
+        <!-- Редактор карт (составных) -->
+        <div id="mapEditor" class="editor-section">
+            <div class="map-controls">
+                <h2>Создание и редактирование карт</h2>
+                
+                <!-- Имя карты -->
+                <div class="map-name-section">
+                    <label for="mapName">Название карты:</label>
+                    <input type="text" id="mapName" placeholder="Введите название карты" class="text-input">
+                </div>
+                
+                <!-- Загрузка фона -->
+                <div class="map-background-section">
+                    <h3>Фоновое изображение</h3>
+                    <div class="file-upload">
+                        <label for="mapBackgroundUpload" class="btn">Загрузить фон</label>
+                        <input type="file" id="mapBackgroundUpload" accept="image/*" style="display: none;">
+                        <span id="mapBackgroundFileName">Файл не выбран</span>
+                    </div>
+                </div>
+                
+                <!-- Canvas для редактирования точек -->
+                <div class="map-canvas-section">
+                    <h3>Расстановка точек</h3>
+                    <div class="map-mode-switch">
+                        <button id="mapAddMode" class="btn active">Добавить точки</button>
+                        <button id="mapDeleteMode" class="btn">Удалить точки</button>
+                        <button id="mapMoveMode" class="btn">Переместить точки</button>
+                    </div>
+                    <canvas id="mapEditorCanvas" width="1200" height="800"></canvas>
+                    <div class="map-info">
+                        <span>Точек на карте: <strong id="mapPointCount">0</strong></span>
+                    </div>
+                </div>
+                
+                <!-- Действия -->
+                <div class="map-actions">
+                    <button id="clearMap" class="btn btn-warning">Очистить всё</button>
+                    <button id="saveMap" class="btn btn-success">Сохранить карту</button>
+                    <button id="loadMap" class="btn">Загрузить карту</button>
+                    <input type="file" id="loadMapFile" accept=".json" style="display: none;">
+                </div>
+                
+                <!-- Список сохранённых карт -->
+                <div class="saved-maps-section">
+                    <h3>Сохранённые карты</h3>
+                    <div id="savedMapsList" class="saved-maps-list">
+                        <p class="loading-message">Загрузка карт...</p>
+                    </div>
+                </div>
+                
+                <div class="instructions">
+                    <h3>Инструкция:</h3>
+                    <ul>
+                        <li>Введите название карты</li>
+                        <li>Загрузите фоновое изображение</li>
+                        <li>Расставьте точки на карте (клик по canvas)</li>
+                        <li>Используйте режим перемещения для изменения позиций точек</li>
+                        <li>Сохраните карту - она будет доступна при создании игры</li>
+                        <li>Сохранённые карты можно редактировать</li>
+                    </ul>
+                </div>
+            </div>
         </div>
         
         <!-- Редактор точек -->
-        <div id="pointsEditor" class="editor-section">
+        <div id="pointsEditor" class="editor-section" style="display: none;">
             <div class="controls-top">
                 <div class="file-upload">
                     <label for="imageUpload" class="btn">Загрузить фон</label>

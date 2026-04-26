@@ -43,6 +43,10 @@ class GameSetup {
         this.selectedCharacter1 = null;
         this.selectedCharacter2 = null;
         
+        this.availableMaps = [];
+        this.selectedMap = null;
+        this.useCustomMap = false;
+        
         this.socket = io();
         this.roomCode = null;
         this.isCreator = false;
@@ -54,6 +58,7 @@ class GameSetup {
         this.checkAuth();
         
         this.loadCharacters();
+        this.loadMaps();
         this.setupEventListeners();
         this.setupSocketListeners();
     }
@@ -85,6 +90,107 @@ class GameSetup {
             console.error('Ошибка загрузки персонажей:', error);
             this.showCharacterError();
         }
+    }
+
+    async loadMaps() {
+        try {
+            const response = await fetch('/api/maps');
+            const maps = await response.json();
+            this.availableMaps = maps;
+            this.renderMapsGallery();
+        } catch (error) {
+            console.error('Ошибка загрузки карт:', error);
+            this.showMapsError();
+        }
+    }
+
+    renderMapsGallery() {
+        const container = document.getElementById('savedMapsGallery');
+        
+        if (this.availableMaps.length === 0) {
+            container.innerHTML = '<div class="error-message">Карты не найдены. Создайте карты в редакторе.</div>';
+            return;
+        }
+
+        container.innerHTML = '';
+        
+        this.availableMaps.forEach((map, index) => {
+            const card = document.createElement('div');
+            card.className = 'map-card';
+            card.dataset.mapIndex = index;
+            
+            const preview = document.createElement('div');
+            preview.className = 'map-card-preview';
+            
+            if (map.backgroundImage) {
+                const img = document.createElement('img');
+                img.src = map.backgroundImage;
+                img.alt = map.name;
+                preview.appendChild(img);
+            } else {
+                preview.textContent = '🗺️';
+                preview.style.fontSize = '48px';
+            }
+            
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'map-card-name';
+            nameDiv.textContent = map.name;
+            
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'map-card-info';
+            infoDiv.textContent = `Точек: ${map.points ? map.points.length : 0}`;
+            
+            card.appendChild(preview);
+            card.appendChild(nameDiv);
+            card.appendChild(infoDiv);
+            
+            card.addEventListener('click', () => {
+                this.selectMap(index);
+            });
+            
+            container.appendChild(card);
+        });
+    }
+
+    selectMap(mapIndex) {
+        const map = this.availableMaps[mapIndex];
+        this.selectedMap = map;
+        
+        // Устанавливаем данные карты
+        this.backgroundImageData = map.backgroundImage;
+        this.pointsData = map.points;
+        
+        // Загружаем изображение для превью
+        if (map.backgroundImage) {
+            this.backgroundImage = new Image();
+            this.backgroundImage.onload = () => this.drawPreview();
+            this.backgroundImage.src = map.backgroundImage;
+        }
+        
+        // Обновляем визуальное выделение
+        const container = document.getElementById('savedMapsGallery');
+        container.querySelectorAll('.map-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        container.querySelector(`[data-map-index="${mapIndex}"]`).classList.add('selected');
+
+        // Обновляем информацию о выбранной карте
+        this.updateSelectedMapInfo(map);
+    }
+
+    updateSelectedMapInfo(map) {
+        const infoContainer = document.getElementById('selectedMapInfo');
+        infoContainer.classList.add('has-map');
+        
+        infoContainer.innerHTML = `
+            <p><strong>Выбрана карта:</strong> ${map.name}</p>
+            <p><strong>Точек на карте:</strong> ${map.points ? map.points.length : 0}</p>
+        `;
+    }
+
+    showMapsError() {
+        document.getElementById('savedMapsGallery').innerHTML = 
+            '<div class="error-message">Ошибка загрузки карт</div>';
     }
 
     renderCharacterGalleries() {
@@ -218,7 +324,24 @@ class GameSetup {
             }
         });
 
-        // Загрузка фона
+        // Переключение между готовыми картами и загрузкой своей
+        document.getElementById('savedMapsTab').addEventListener('click', () => {
+            this.useCustomMap = false;
+            document.getElementById('savedMapsSection').style.display = 'block';
+            document.getElementById('customMapSection').style.display = 'none';
+            document.getElementById('savedMapsTab').classList.add('active');
+            document.getElementById('customMapTab').classList.remove('active');
+        });
+
+        document.getElementById('customMapTab').addEventListener('click', () => {
+            this.useCustomMap = true;
+            document.getElementById('savedMapsSection').style.display = 'none';
+            document.getElementById('customMapSection').style.display = 'block';
+            document.getElementById('customMapTab').classList.add('active');
+            document.getElementById('savedMapsTab').classList.remove('active');
+        });
+
+        // Загрузка фона (для кастомной карты)
         document.getElementById('setupBackgroundUpload').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
@@ -372,14 +495,22 @@ class GameSetup {
 
         // Проверяем, что все настройки заполнены (только для создателя)
         if (this.isCreator) {
-            if (!this.backgroundImageData) {
-                alert('Загрузите фоновое изображение!');
+            // Проверяем карту
+            if (!this.useCustomMap && !this.selectedMap) {
+                alert('Выберите карту из списка или загрузите свою!');
                 return;
             }
+            
+            if (this.useCustomMap) {
+                if (!this.backgroundImageData) {
+                    alert('Загрузите фоновое изображение!');
+                    return;
+                }
 
-            if (!this.pointsData) {
-                alert('Загрузите точки!');
-                return;
+                if (!this.pointsData) {
+                    alert('Загрузите точки!');
+                    return;
+                }
             }
 
             if (!this.settings.player1.character) {
@@ -409,6 +540,7 @@ class GameSetup {
         } else {
             alert('Выберите режим игры: создать комнату или присоединиться');
         }
+    
     }
 }
 

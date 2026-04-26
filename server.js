@@ -40,6 +40,29 @@ app.get('/api/characters', async (req, res) => {
     }
 });
 
+// API для получения списка карт
+app.get('/api/maps', async (req, res) => {
+    try {
+        const mapsDir = path.join(__dirname, 'maps', 'saved_maps');
+        const files = await fs.readdir(mapsDir);
+        const jsonFiles = files.filter(file => file.endsWith('.json'));
+        
+        const maps = [];
+        for (const file of jsonFiles) {
+            const filePath = path.join(mapsDir, file);
+            const data = await fs.readFile(filePath, 'utf8');
+            const map = JSON.parse(data);
+            map.filename = file;
+            maps.push(map);
+        }
+        
+        res.json(maps);
+    } catch (error) {
+        console.error('Ошибка загрузки карт:', error);
+        res.json([]);
+    }
+});
+
 // Хранилище игровых комнат
 const rooms = new Map();
 // Хранилище пользователей (userId -> { socketId, username, roomCode })

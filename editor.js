@@ -841,37 +841,386 @@ class CharacterEditor {
     }
 }
 
+// Класс для редактора карт
+class MapEditor {
+    constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.points = [];
+        this.backgroundImage = null;
+        this.backgroundImageData = null;
+        this.mode = 'add'; // 'add', 'delete', 'move'
+        this.mapName = '';
+        this.draggedPoint = null;
+        this.savedMaps = [];
+        
+        this.setupEventListeners();
+        this.loadSavedMaps();
+        this.draw();
+    }
+
+    setupEventListeners() {
+        // Загрузка фона
+        document.getElementById('mapBackgroundUpload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('mapBackgroundFileName').textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    this.backgroundImageData = event.target.result;
+                    this.backgroundImage = new Image();
+                    this.backgroundImage.onload = () => this.draw();
+                    this.backgroundImage.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Имя карты
+        document.getElementById('mapName').addEventListener('input', (e) => {
+            this.mapName = e.target.value;
+        });
+
+        // Клик по canvas
+        this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+        this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+        this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+
+        // Переключение режимов
+        document.getElementById('mapAddMode').addEventListener('click', () => {
+            this.mode = 'add';
+            this.canvas.style.cursor = 'crosshair';
+            document.getElementById('mapAddMode').classList.add('active');
+            document.getElementById('mapDeleteMode').classList.remove('active');
+            document.getElementById('mapMoveMode').classList.remove('active');
+        });
+
+        document.getElementById('mapDeleteMode').addEventListener('click', () => {
+            this.mode = 'delete';
+            this.canvas.style.cursor = 'pointer';
+            document.getElementById('mapDeleteMode').classList.add('active');
+            document.getElementById('mapAddMode').classList.remove('active');
+            document.getElementById('mapMoveMode').classList.remove('active');
+        });
+
+        document.getElementById('mapMoveMode').addEventListener('click', () => {
+            this.mode = 'move';
+            this.canvas.style.cursor = 'move';
+            document.getElementById('mapMoveMode').classList.add('active');
+            document.getElementById('mapAddMode').classList.remove('active');
+            document.getElementById('mapDeleteMode').classList.remove('active');
+        });
+
+        // Очистка
+        document.getElementById('clearMap').addEventListener('click', () => {
+            if (confirm('Очистить всю карту?')) {
+                this.points = [];
+                this.backgroundImage = null;
+                this.backgroundImageData = null;
+                this.mapName = '';
+                document.getElementById('mapName').value = '';
+                document.getElementById('mapBackgroundFileName').textContent = 'Файл не выбран';
+                this.updatePointCount();
+                this.draw();
+            }
+        });
+
+        // Сохранение
+        document.getElementById('saveMap').addEventListener('click', () => {
+            this.saveMap();
+        });
+
+        // Загрузка
+        document.getElementById('loadMap').addEventListener('click', () => {
+            document.getElementById('loadMapFile').click();
+        });
+
+        document.getElementById('loadMapFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const mapData = JSON.parse(event.target.result);
+                        this.loadMapData(mapData);
+                    } catch (error) {
+                        alert('Ошибка при загрузке карты: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+    }
+
+    getMousePos(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        return {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+        };
+    }
+
+    handleMouseDown(e) {
+        const pos = this.getMousePos(e);
+
+        if (this.mode === 'add') {
+            // Добавляем новую точку
+            this.points.push({
+                x: Math.round(pos.x),
+                y: Math.round(pos.y),
+                id: this.points.length
+            });
+            this.updatePointCount();
+            this.draw();
+        } else if (this.mode === 'delete') {
+            // Удаляем точку
+            const pointIndex = this.findPointAt(pos.x, pos.y);
+            if (pointIndex !== -1) {
+                this.points.splice(pointIndex, 1);
+                // Обновляем ID
+                this.points.forEach((point, index) => {
+                    point.id = index;
+                });
+                this.updatePointCount();
+                this.draw();
+            }
+        } else if (this.mode === 'move') {
+            // Начинаем перетаскивание
+            const pointIndex = this.findPointAt(pos.x, pos.y);
+            if (pointIndex !== -1) {
+                this.draggedPoint = this.points[pointIndex];
+            }
+        }
+    }
+
+    handleMouseMove(e) {
+        const pos = this.getMousePos(e);
+
+        if (this.mode === 'move' && this.draggedPoint) {
+            this.draggedPoint.x = Math.round(pos.x);
+            this.draggedPoint.y = Math.round(pos.y);
+            this.draw();
+        } else if (this.mode === 'delete') {
+            // Подсвечиваем точку при наведении
+            const pointIndex = this.findPointAt(pos.x, pos.y);
+            this.points.forEach((point, index) => {
+                point.isHovered = index === pointIndex;
+            });
+            this.draw();
+        }
+    }
+
+    handleMouseUp(e) {
+        this.draggedPoint = null;
+    }
+
+    findPointAt(x, y) {
+        const radius = 15;
+        for (let i = this.points.length - 1; i >= 0; i--) {
+            const point = this.points[i];
+            const dx = x - point.x;
+            const dy = y - point.y;
+            if (Math.sqrt(dx * dx + dy * dy) <= radius) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    updatePointCount() {
+        document.getElementById('mapPointCount').textContent = this.points.length;
+    }
+
+    draw() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Рисуем фон
+        if (this.backgroundImage && this.backgroundImage.complete) {
+            this.ctx.drawImage(this.backgroundImage, 0, 0, this.canvas.width, this.canvas.height);
+        } else {
+            this.ctx.fillStyle = '#f5f5f5';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+
+        // Рисуем точки
+        this.points.forEach(point => {
+            this.ctx.beginPath();
+            this.ctx.arc(point.x, point.y, 15, 0, Math.PI * 2);
+            this.ctx.fillStyle = point.isHovered ? '#e53e3e' : '#4a5568';
+            this.ctx.fill();
+            this.ctx.strokeStyle = '#1a202c';
+            this.ctx.lineWidth = 2;
+            this.ctx.stroke();
+
+            // Номер точки
+            this.ctx.fillStyle = 'white';
+            this.ctx.font = 'bold 12px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText(point.id + 1, point.x, point.y);
+        });
+    }
+
+    saveMap() {
+        if (!this.mapName.trim()) {
+            alert('Введите название карты!');
+            return;
+        }
+
+        if (!this.backgroundImageData) {
+            alert('Загрузите фоновое изображение!');
+            return;
+        }
+
+        if (this.points.length === 0) {
+            alert('Добавьте хотя бы одну точку!');
+            return;
+        }
+
+        const mapData = {
+            name: this.mapName,
+            backgroundImage: this.backgroundImageData,
+            points: this.points.map(p => ({ x: p.x, y: p.y }))
+        };
+
+        const jsonString = JSON.stringify(mapData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${this.mapName.toLowerCase().replace(/\s+/g, '_')}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        alert('Карта успешно сохранена! Сохраните файл в папку maps/saved_maps/');
+    }
+
+    loadMapData(mapData) {
+        this.mapName = mapData.name || '';
+        this.backgroundImageData = mapData.backgroundImage;
+        this.points = mapData.points.map((p, index) => ({
+            x: p.x,
+            y: p.y,
+            id: index
+        }));
+
+        document.getElementById('mapName').value = this.mapName;
+        
+        if (this.backgroundImageData) {
+            this.backgroundImage = new Image();
+            this.backgroundImage.onload = () => this.draw();
+            this.backgroundImage.src = this.backgroundImageData;
+            document.getElementById('mapBackgroundFileName').textContent = 'Загружено из файла';
+        }
+
+        this.updatePointCount();
+        alert('Карта успешно загружена!');
+    }
+
+    async loadSavedMaps() {
+        try {
+            const response = await fetch('/api/maps');
+            const maps = await response.json();
+            this.savedMaps = maps;
+            this.renderSavedMaps();
+        } catch (error) {
+            console.error('Ошибка загрузки карт:', error);
+            document.getElementById('savedMapsList').innerHTML = 
+                '<p class="loading-message">Ошибка загрузки карт</p>';
+        }
+    }
+
+    renderSavedMaps() {
+        const container = document.getElementById('savedMapsList');
+        
+        if (this.savedMaps.length === 0) {
+            container.innerHTML = '<p class="loading-message">Нет сохранённых карт</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        
+        this.savedMaps.forEach(map => {
+            const card = document.createElement('div');
+            card.className = 'saved-map-card';
+            
+            card.innerHTML = `
+                <h4>${map.name}</h4>
+                <p>Точек: ${map.points ? map.points.length : 0}</p>
+                <div class="map-actions-buttons">
+                    <button class="btn" onclick="window.mapEditor.loadMapFromList('${map.filename}')">Редактировать</button>
+                </div>
+            `;
+            
+            container.appendChild(card);
+        });
+    }
+
+    async loadMapFromList(filename) {
+        try {
+            const response = await fetch(`/maps/saved_maps/${filename}`);
+            const mapData = await response.json();
+            this.loadMapData(mapData);
+        } catch (error) {
+            alert('Ошибка загрузки карты: ' + error.message);
+        }
+    }
+}
+
 // Инициализация редакторов
 window.addEventListener('DOMContentLoaded', () => {
     const pointEditor = new PointEditor('editorCanvas');
     const deckEditor = new DeckEditor();
     const characterEditor = new CharacterEditor();
+    const mapEditor = new MapEditor('mapEditorCanvas');
+    
+    // Делаем mapEditor глобальным для доступа из HTML
+    window.mapEditor = mapEditor;
 
     // Переключение между вкладками
+    document.getElementById('mapEditorTab').addEventListener('click', () => {
+        document.getElementById('mapEditor').style.display = 'block';
+        document.getElementById('pointsEditor').style.display = 'none';
+        document.getElementById('deckEditor').style.display = 'none';
+        document.getElementById('characterEditor').style.display = 'none';
+        document.getElementById('mapEditorTab').classList.add('active');
+        document.getElementById('pointsEditorTab').classList.remove('active');
+        document.getElementById('deckEditorTab').classList.remove('active');
+        document.getElementById('characterEditorTab').classList.remove('active');
+    });
+
     document.getElementById('pointsEditorTab').addEventListener('click', () => {
         document.getElementById('pointsEditor').style.display = 'block';
         document.getElementById('deckEditor').style.display = 'none';
         document.getElementById('characterEditor').style.display = 'none';
+        document.getElementById('mapEditor').style.display = 'none';
         document.getElementById('pointsEditorTab').classList.add('active');
         document.getElementById('deckEditorTab').classList.remove('active');
         document.getElementById('characterEditorTab').classList.remove('active');
+        document.getElementById('mapEditorTab').classList.remove('active');
     });
 
     document.getElementById('deckEditorTab').addEventListener('click', () => {
         document.getElementById('pointsEditor').style.display = 'none';
         document.getElementById('deckEditor').style.display = 'block';
         document.getElementById('characterEditor').style.display = 'none';
+        document.getElementById('mapEditor').style.display = 'none';
         document.getElementById('deckEditorTab').classList.add('active');
         document.getElementById('pointsEditorTab').classList.remove('active');
         document.getElementById('characterEditorTab').classList.remove('active');
+        document.getElementById('mapEditorTab').classList.remove('active');
     });
 
     document.getElementById('characterEditorTab').addEventListener('click', () => {
         document.getElementById('pointsEditor').style.display = 'none';
         document.getElementById('deckEditor').style.display = 'none';
         document.getElementById('characterEditor').style.display = 'block';
+        document.getElementById('mapEditor').style.display = 'none';
         document.getElementById('characterEditorTab').classList.add('active');
         document.getElementById('pointsEditorTab').classList.remove('active');
         document.getElementById('deckEditorTab').classList.remove('active');
+        document.getElementById('mapEditorTab').classList.remove('active');
     });
 });

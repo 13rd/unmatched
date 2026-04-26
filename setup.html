@@ -35,25 +35,47 @@
             </div>
         </div>
         
-        <!-- Загрузка поля и точек -->
+        <!-- Выбор игрового поля -->
         <div class="setup-section">
             <h2>Игровое поле</h2>
             
-            <div class="file-upload-group">
-                <div class="file-upload">
-                    <label for="setupBackgroundUpload" class="btn">Загрузить фон</label>
-                    <input type="file" id="setupBackgroundUpload" accept="image/*" style="display: none;">
-                    <span id="backgroundFileName">Файл не выбран</span>
+            <div class="map-selection-tabs">
+                <button id="savedMapsTab" class="map-tab-btn active">Готовые карты</button>
+                <button id="customMapTab" class="map-tab-btn">Загрузить свою карту</button>
+            </div>
+            
+            <!-- Готовые карты -->
+            <div id="savedMapsSection" class="map-section">
+                <div id="savedMapsGallery" class="maps-gallery">
+                    <div class="loading-message">Загрузка карт...</div>
                 </div>
-                
-                <div class="file-upload">
-                    <label for="setupPointsUpload" class="btn">Загрузить точки (JSON)</label>
-                    <input type="file" id="setupPointsUpload" accept=".json" style="display: none;">
-                    <span id="pointsFileName">Файл не выбран</span>
+                <div id="selectedMapInfo" class="selected-map-info">
+                    <p>Карта не выбрана</p>
                 </div>
             </div>
             
-            <canvas id="previewCanvas" width="600" height="400"></canvas>
+            <!-- Загрузка своей карты -->
+            <div id="customMapSection" class="map-section" style="display: none;">
+                <div class="file-upload-group">
+                    <div class="file-upload">
+                        <label for="setupBackgroundUpload" class="btn">Загрузить фон</label>
+                        <input type="file" id="setupBackgroundUpload" accept="image/*" style="display: none;">
+                        <span id="backgroundFileName">Файл не выбран</span>
+                    </div>
+                    
+                    <div class="file-upload">
+                        <label for="setupPointsUpload" class="btn">Загрузить точки (JSON)</label>
+                        <input type="file" id="setupPointsUpload" accept=".json" style="display: none;">
+                        <span id="pointsFileName">Файл не выбран</span>
+                    </div>
+                </div>
+                
+                <canvas id="previewCanvas" width="600" height="400"></canvas>
+            </div>
+            
+            <div class="map-info">
+                <p>Используйте <a href="editor.html" target="_blank">Редактор карт</a> для создания своих карт</p>
+            </div>
         </div>
         
         <!-- Выбор персонажей -->
