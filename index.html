@@ -10,13 +10,15 @@
     <div class="user-info">
         <span id="currentUsername"></span>
         <span id="currentRole"></span>
+        <div class="room-code-display">
+            <span id="roomCodeText">Комната: </span>
+            <button id="copyRoomCode" class="copy-btn" title="Копировать код комнаты">📋</button>
+        </div>
         <button id="logoutBtn" class="logout-btn">Выйти</button>
     </div>
     
     <div class="top-section">
         <div class="container">
-            <h1 id="roomNumber">Комната номер: </h1>
-            
             <canvas id="gameCanvas" width="1200" height="800"></canvas>
             
             <div class="controls">

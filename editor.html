@@ -14,6 +14,7 @@
         <div class="mode-tabs">
             <button id="pointsEditorTab" class="tab-btn active">Редактор точек</button>
             <button id="deckEditorTab" class="tab-btn">Редактор колод</button>
+            <button id="characterEditorTab" class="tab-btn">Редактор персонажей</button>
         </div>
         
         <!-- Редактор точек -->
@@ -102,6 +103,120 @@
                         <li>Проверьте превью карт в сетке</li>
                         <li>Экспортируйте колоду в JSON формат</li>
                         <li>Используйте JSON файл в настройках игры</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Редактор персонажей -->
+        <div id="characterEditor" class="editor-section" style="display: none;">
+            <div class="character-controls">
+                <h2>Создание персонажа</h2>
+                
+                <!-- Имя персонажа -->
+                <div class="character-name-section">
+                    <label for="characterName">Имя персонажа:</label>
+                    <input type="text" id="characterName" placeholder="Введите имя персонажа" class="text-input">
+                </div>
+                
+                <!-- Колода персонажа -->
+                <div class="character-deck-section">
+                    <h3>Колода персонажа (30 карт)</h3>
+                    
+                    <div class="deck-upload-options">
+                        <button id="loadDeckFromJSON" class="btn">Загрузить колоду из JSON</button>
+                        <input type="file" id="deckJSONUpload" accept=".json" style="display: none;">
+                        <span>или</span>
+                        <button id="loadDeckFromImages" class="btn">Загрузить картами</button>
+                    </div>
+                    
+                    <div id="deckImagesSection" style="display: none;">
+                        <div class="file-upload">
+                            <label for="charDeckBackUpload" class="btn">Загрузить рубашку колоды</label>
+                            <input type="file" id="charDeckBackUpload" accept="image/*" style="display: none;">
+                            <span id="charDeckBackFileName">Рубашка не выбрана</span>
+                        </div>
+                        
+                        <div class="file-upload">
+                            <label for="charCardsUpload" class="btn">Загрузить 30 изображений карт</label>
+                            <input type="file" id="charCardsUpload" accept="image/*" multiple style="display: none;">
+                            <span id="charCardsCount">Загружено: 0 / 30</span>
+                        </div>
+                        
+                        <div id="charCardsGrid" class="cards-grid-small"></div>
+                    </div>
+                    
+                    <div id="deckStatus" class="deck-status">Колода не загружена</div>
+                </div>
+                
+                <!-- Главный токен -->
+                <div class="character-main-token-section">
+                    <h3>Главный токен</h3>
+                    
+                    <div class="token-config">
+                        <div class="file-upload">
+                            <label for="mainTokenImage" class="btn">Загрузить изображение</label>
+                            <input type="file" id="mainTokenImage" accept="image/*" style="display: none;">
+                            <span id="mainTokenImageName">Изображение не выбрано</span>
+                        </div>
+                        
+                        <div class="token-preview">
+                            <div id="mainTokenPreview" class="token-preview-circle">
+                                <div class="token-preview-placeholder">Загрузите изображение</div>
+                            </div>
+                        </div>
+                        
+                        <div class="token-settings">
+                            <div class="setting-group">
+                                <label for="mainTokenColor">Цвет токена:</label>
+                                <input type="color" id="mainTokenColor" value="#ff0000">
+                            </div>
+                            
+                            <div class="setting-group">
+                                <label for="mainTokenHP">HP (по умолчанию):</label>
+                                <input type="number" id="mainTokenHP" min="1" max="50" value="14">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Дополнительные токены -->
+                <div class="character-extra-tokens-section">
+                    <h3>Дополнительные токены</h3>
+                    
+                    <div class="setting-group">
+                        <label for="extraTokensCount">Количество дополнительных токенов:</label>
+                        <input type="number" id="extraTokensCount" min="0" max="10" value="3">
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="extraTokenHP">HP дополнительных токенов (по умолчанию):</label>
+                        <input type="number" id="extraTokenHP" min="1" max="20" value="1">
+                    </div>
+                    
+                    <div id="extraTokensContainer" class="extra-tokens-container">
+                        <!-- Динамически генерируемые поля для каждого дополнительного токена -->
+                    </div>
+                </div>
+                
+                <!-- Действия -->
+                <div class="character-actions">
+                    <button id="clearCharacter" class="btn btn-warning">Очистить всё</button>
+                    <button id="exportCharacter" class="btn btn-success">Экспортировать персонажа (JSON)</button>
+                    <button id="importCharacter" class="btn">Импортировать персонажа (JSON)</button>
+                    <input type="file" id="importCharacterFile" accept=".json" style="display: none;">
+                </div>
+                
+                <div class="instructions">
+                    <h3>Инструкция:</h3>
+                    <ul>
+                        <li>Введите имя персонажа</li>
+                        <li>Загрузите колоду из JSON или создайте из изображений</li>
+                        <li>Загрузите изображение для главного токена и выберите цвет</li>
+                        <li>Укажите количество дополнительных токенов</li>
+                        <li>Загрузите изображения для каждого дополнительного токена</li>
+                        <li>Экспортируйте персонажа в JSON формат</li>
+                        <li>Сохраните файл в папку heroes/characters/</li>
                     </ul>
                 </div>
             </div>

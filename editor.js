@@ -408,23 +408,470 @@ class DeckEditor {
     }
 }
 
+// Класс для редактора персонажей
+class CharacterEditor {
+    constructor() {
+        this.characterName = '';
+        this.deck = null; // { backImage, cards }
+        this.mainToken = {
+            image: null,
+            color: '#ff0000',
+            hp: 14
+        };
+        this.extraTokens = [];
+        this.extraTokensCount = 3;
+        this.extraTokenHP = 1;
+        
+        this.setupEventListeners();
+        this.updateExtraTokensFields();
+    }
+
+    setupEventListeners() {
+        // Имя персонажа
+        document.getElementById('characterName').addEventListener('input', (e) => {
+            this.characterName = e.target.value;
+        });
+
+        // Загрузка колоды из JSON
+        document.getElementById('loadDeckFromJSON').addEventListener('click', () => {
+            document.getElementById('deckJSONUpload').click();
+        });
+
+        document.getElementById('deckJSONUpload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const deckData = JSON.parse(event.target.result);
+                        if (this.validateDeck(deckData)) {
+                            this.deck = deckData;
+                            this.updateDeckStatus(true);
+                            document.getElementById('deckImagesSection').style.display = 'none';
+                        }
+                    } catch (error) {
+                        alert('Ошибка при загрузке колоды: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // Загрузка колоды картами
+        document.getElementById('loadDeckFromImages').addEventListener('click', () => {
+            document.getElementById('deckImagesSection').style.display = 'block';
+        });
+
+        // Загрузка рубашки колоды для карт
+        document.getElementById('charDeckBackUpload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('charDeckBackFileName').textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    if (!this.deck) {
+                        this.deck = { backImage: null, cards: [] };
+                    }
+                    this.deck.backImage = event.target.result;
+                    this.checkDeckComplete();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Загрузка карт колоды
+        document.getElementById('charCardsUpload').addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            
+            if (!this.deck) {
+                this.deck = { backImage: null, cards: [] };
+            }
+
+            if (this.deck.cards.length + files.length > 30) {
+                alert(`Можно загрузить максимум 30 карт. Сейчас загружено: ${this.deck.cards.length}`);
+                return;
+            }
+
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    this.deck.cards.push({
+                        image: event.target.result,
+                        text: file.name.replace(/\.[^/.]+$/, '')
+                    });
+                    this.updateCharCardsGrid();
+                    this.updateCharCardsCount();
+                    this.checkDeckComplete();
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        // Главный токен - изображение
+        document.getElementById('mainTokenImage').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('mainTokenImageName').textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    this.mainToken.image = event.target.result;
+                    this.updateMainTokenPreview();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Главный токен - цвет
+        document.getElementById('mainTokenColor').addEventListener('change', (e) => {
+            this.mainToken.color = e.target.value;
+            this.updateMainTokenPreview();
+        });
+
+        // Главный токен - HP
+        document.getElementById('mainTokenHP').addEventListener('change', (e) => {
+            this.mainToken.hp = parseInt(e.target.value);
+        });
+
+        // Количество дополнительных токенов
+        document.getElementById('extraTokensCount').addEventListener('change', (e) => {
+            this.extraTokensCount = parseInt(e.target.value);
+            this.updateExtraTokensFields();
+        });
+
+        // HP дополнительных токенов
+        document.getElementById('extraTokenHP').addEventListener('change', (e) => {
+            this.extraTokenHP = parseInt(e.target.value);
+        });
+
+        // Очистить всё
+        document.getElementById('clearCharacter').addEventListener('click', () => {
+            if (confirm('Очистить все данные персонажа?')) {
+                this.clearAll();
+            }
+        });
+
+        // Экспорт персонажа
+        document.getElementById('exportCharacter').addEventListener('click', () => {
+            this.exportCharacter();
+        });
+
+        // Импорт персонажа
+        document.getElementById('importCharacter').addEventListener('click', () => {
+            document.getElementById('importCharacterFile').click();
+        });
+
+        document.getElementById('importCharacterFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const characterData = JSON.parse(event.target.result);
+                        this.importCharacter(characterData);
+                    } catch (error) {
+                        alert('Ошибка при загрузке персонажа: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+    }
+
+    validateDeck(deckData) {
+        if (!deckData.cards || !Array.isArray(deckData.cards)) {
+            alert('Неверный формат колоды!');
+            return false;
+        }
+        if (deckData.cards.length !== 30) {
+            alert('Колода должна содержать 30 карт!');
+            return false;
+        }
+        return true;
+    }
+
+    updateDeckStatus(loaded) {
+        const status = document.getElementById('deckStatus');
+        if (loaded) {
+            status.textContent = 'Колода загружена (30 карт)';
+            status.classList.add('loaded');
+        } else {
+            status.textContent = 'Колода не загружена';
+            status.classList.remove('loaded');
+        }
+    }
+
+    checkDeckComplete() {
+        if (this.deck && this.deck.backImage && this.deck.cards.length === 30) {
+            this.updateDeckStatus(true);
+        }
+    }
+
+    updateCharCardsGrid() {
+        const grid = document.getElementById('charCardsGrid');
+        grid.innerHTML = '';
+
+        if (this.deck && this.deck.cards) {
+            this.deck.cards.forEach((card, index) => {
+                const cardItem = document.createElement('div');
+                cardItem.className = 'card-item';
+                
+                const img = document.createElement('img');
+                img.src = card.image;
+                
+                const number = document.createElement('div');
+                number.className = 'card-item-number';
+                number.textContent = index + 1;
+                
+                cardItem.appendChild(img);
+                cardItem.appendChild(number);
+                grid.appendChild(cardItem);
+            });
+        }
+    }
+
+    updateCharCardsCount() {
+        const count = this.deck ? this.deck.cards.length : 0;
+        document.getElementById('charCardsCount').textContent = `Загружено: ${count} / 30`;
+    }
+
+    updateMainTokenPreview() {
+        const preview = document.getElementById('mainTokenPreview');
+        if (this.mainToken.image) {
+            preview.style.backgroundColor = this.mainToken.color;
+            preview.innerHTML = `<img src="${this.mainToken.image}" alt="Главный токен">`;
+        } else {
+            preview.style.backgroundColor = '#fff';
+            preview.innerHTML = '<div class="token-preview-placeholder">Загрузите изображение</div>';
+        }
+    }
+
+    updateExtraTokensFields() {
+        const container = document.getElementById('extraTokensContainer');
+        container.innerHTML = '';
+
+        // Обновляем массив дополнительных токенов
+        while (this.extraTokens.length < this.extraTokensCount) {
+            this.extraTokens.push({
+                image: null,
+                color: '#0000ff'
+            });
+        }
+        while (this.extraTokens.length > this.extraTokensCount) {
+            this.extraTokens.pop();
+        }
+
+        // Создаём поля для каждого дополнительного токена
+        this.extraTokens.forEach((token, index) => {
+            const tokenItem = document.createElement('div');
+            tokenItem.className = 'extra-token-item';
+            
+            tokenItem.innerHTML = `
+                <h4>Дополнительный токен ${index + 1}</h4>
+                <div class="extra-token-config">
+                    <div class="extra-token-preview" id="extraTokenPreview${index}">
+                        <div class="token-preview-placeholder">Загрузите изображение</div>
+                    </div>
+                    <div class="token-settings">
+                        <div class="setting-group">
+                            <label>Изображение:</label>
+                            <input type="file" id="extraTokenImage${index}" accept="image/*" style="display: none;">
+                            <label for="extraTokenImage${index}" class="btn">Загрузить изображение</label>
+                            <span id="extraTokenImageName${index}">Не выбрано</span>
+                        </div>
+                        <div class="setting-group">
+                            <label for="extraTokenColor${index}">Цвет токена:</label>
+                            <input type="color" id="extraTokenColor${index}" value="${token.color}">
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(tokenItem);
+
+            // Добавляем обработчики для этого токена
+            document.getElementById(`extraTokenImage${index}`).addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    document.getElementById(`extraTokenImageName${index}`).textContent = file.name;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        this.extraTokens[index].image = event.target.result;
+                        this.updateExtraTokenPreview(index);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            document.getElementById(`extraTokenColor${index}`).addEventListener('change', (e) => {
+                this.extraTokens[index].color = e.target.value;
+                this.updateExtraTokenPreview(index);
+            });
+
+            // Обновляем превью если изображение уже загружено
+            if (token.image) {
+                this.updateExtraTokenPreview(index);
+                document.getElementById(`extraTokenImageName${index}`).textContent = 'Загружено';
+            }
+        });
+    }
+
+    updateExtraTokenPreview(index) {
+        const preview = document.getElementById(`extraTokenPreview${index}`);
+        const token = this.extraTokens[index];
+        
+        if (token.image) {
+            preview.style.backgroundColor = token.color;
+            preview.innerHTML = `<img src="${token.image}" alt="Дополнительный токен ${index + 1}">`;
+        } else {
+            preview.style.backgroundColor = '#f7fafc';
+            preview.innerHTML = '<div class="token-preview-placeholder">Загрузите изображение</div>';
+        }
+    }
+
+    clearAll() {
+        this.characterName = '';
+        this.deck = null;
+        this.mainToken = {
+            image: null,
+            color: '#ff0000',
+            hp: 14
+        };
+        this.extraTokens = [];
+        this.extraTokensCount = 3;
+        this.extraTokenHP = 1;
+
+        document.getElementById('characterName').value = '';
+        document.getElementById('mainTokenColor').value = '#ff0000';
+        document.getElementById('mainTokenHP').value = 14;
+        document.getElementById('extraTokensCount').value = 3;
+        document.getElementById('extraTokenHP').value = 1;
+        document.getElementById('mainTokenImageName').textContent = 'Изображение не выбрано';
+        document.getElementById('charDeckBackFileName').textContent = 'Рубашка не выбрана';
+        document.getElementById('deckImagesSection').style.display = 'none';
+        
+        this.updateDeckStatus(false);
+        this.updateMainTokenPreview();
+        this.updateExtraTokensFields();
+        this.updateCharCardsGrid();
+        this.updateCharCardsCount();
+    }
+
+    exportCharacter() {
+        // Валидация
+        if (!this.characterName.trim()) {
+            alert('Введите имя персонажа!');
+            return;
+        }
+
+        if (!this.deck || !this.deck.backImage || !this.deck.cards || this.deck.cards.length !== 30) {
+            alert('Загрузите полную колоду (30 карт + рубашка)!');
+            return;
+        }
+
+        if (!this.mainToken.image) {
+            alert('Загрузите изображение для главного токена!');
+            return;
+        }
+
+        for (let i = 0; i < this.extraTokens.length; i++) {
+            if (!this.extraTokens[i].image) {
+                alert(`Загрузите изображение для дополнительного токена ${i + 1}!`);
+                return;
+            }
+        }
+
+        // Создаём объект персонажа
+        const characterData = {
+            name: this.characterName,
+            deck: this.deck,
+            mainToken: {
+                image: this.mainToken.image,
+                color: this.mainToken.color,
+                hp: this.mainToken.hp
+            },
+            extraTokens: this.extraTokens.map(token => ({
+                image: token.image,
+                color: token.color
+            })),
+            extraTokenHP: this.extraTokenHP
+        };
+
+        // Экспорт в JSON
+        const jsonString = JSON.stringify(characterData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${this.characterName.toLowerCase().replace(/\s+/g, '_')}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        alert('Персонаж успешно экспортирован! Сохраните файл в папку heroes/characters/');
+    }
+
+    importCharacter(characterData) {
+        // Валидация
+        if (!characterData.name || !characterData.deck || !characterData.mainToken) {
+            alert('Неверный формат файла персонажа!');
+            return;
+        }
+
+        this.characterName = characterData.name;
+        this.deck = characterData.deck;
+        this.mainToken = characterData.mainToken;
+        this.extraTokens = characterData.extraTokens || [];
+        this.extraTokenHP = characterData.extraTokenHP || 1;
+        this.extraTokensCount = this.extraTokens.length;
+
+        // Обновляем UI
+        document.getElementById('characterName').value = this.characterName;
+        document.getElementById('mainTokenColor').value = this.mainToken.color;
+        document.getElementById('mainTokenHP').value = this.mainToken.hp;
+        document.getElementById('extraTokensCount').value = this.extraTokensCount;
+        document.getElementById('extraTokenHP').value = this.extraTokenHP;
+        document.getElementById('mainTokenImageName').textContent = 'Загружено из файла';
+
+        this.updateDeckStatus(true);
+        this.updateMainTokenPreview();
+        this.updateExtraTokensFields();
+
+        alert('Персонаж успешно импортирован!');
+    }
+}
+
 // Инициализация редакторов
 window.addEventListener('DOMContentLoaded', () => {
     const pointEditor = new PointEditor('editorCanvas');
     const deckEditor = new DeckEditor();
+    const characterEditor = new CharacterEditor();
 
     // Переключение между вкладками
     document.getElementById('pointsEditorTab').addEventListener('click', () => {
         document.getElementById('pointsEditor').style.display = 'block';
         document.getElementById('deckEditor').style.display = 'none';
+        document.getElementById('characterEditor').style.display = 'none';
         document.getElementById('pointsEditorTab').classList.add('active');
         document.getElementById('deckEditorTab').classList.remove('active');
+        document.getElementById('characterEditorTab').classList.remove('active');
     });
 
     document.getElementById('deckEditorTab').addEventListener('click', () => {
         document.getElementById('pointsEditor').style.display = 'none';
         document.getElementById('deckEditor').style.display = 'block';
+        document.getElementById('characterEditor').style.display = 'none';
         document.getElementById('deckEditorTab').classList.add('active');
         document.getElementById('pointsEditorTab').classList.remove('active');
+        document.getElementById('characterEditorTab').classList.remove('active');
+    });
+
+    document.getElementById('characterEditorTab').addEventListener('click', () => {
+        document.getElementById('pointsEditor').style.display = 'none';
+        document.getElementById('deckEditor').style.display = 'none';
+        document.getElementById('characterEditor').style.display = 'block';
+        document.getElementById('characterEditorTab').classList.add('active');
+        document.getElementById('pointsEditorTab').classList.remove('active');
+        document.getElementById('deckEditorTab').classList.remove('active');
     });
 });

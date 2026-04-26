@@ -56,90 +56,34 @@
             <canvas id="previewCanvas" width="600" height="400"></canvas>
         </div>
         
-        <!-- Загрузка колод -->
+        <!-- Выбор персонажей -->
         <div class="setup-section">
-            <h2>Колоды карт</h2>
+            <h2>Выбор персонажей</h2>
             
-            <div class="deck-upload-group">
-                <div class="deck-upload">
-                    <h4>Колода Игрока 1</h4>
-                    <label for="player1DeckUpload" class="btn">Загрузить колоду (JSON)</label>
-                    <input type="file" id="player1DeckUpload" accept=".json" style="display: none;">
-                    <span id="player1DeckFileName">Стандартная колода (30 карт)</span>
-                </div>
-                
-                <div class="deck-upload">
-                    <h4>Колода Игрока 2</h4>
-                    <label for="player2DeckUpload" class="btn">Загрузить колоду (JSON)</label>
-                    <input type="file" id="player2DeckUpload" accept=".json" style="display: none;">
-                    <span id="player2DeckFileName">Стандартная колода (30 карт)</span>
-                </div>
-            </div>
-            
-            <div class="deck-info">
-                <p><strong>Формат колоды:</strong> JSON файл с 30 картами</p>
-                <p>Используйте <a href="editor.html" target="_blank">Редактор колод</a> для создания своих колод</p>
-            </div>
-        </div>
-        
-        <!-- Настройки игроков -->
-        <div class="setup-section">
-            <h2>Настройки игроков</h2>
-            
-            <div class="players-setup">
-                <!-- Игрок 1 -->
-                <div class="player-setup">
-                    <h3>Игрок 1</h3>
-                    
-                    <div class="chip-setup">
-                        <label>Цвет главной фишки:</label>
-                        <div class="color-picker" id="setup-player1-main-colors"></div>
-                        <div class="hp-control">
-                            <label>Здоровье main:</label>
-                            <input type="number" id="setup-player1-main-hp" min="0" max="20" value="14">
-                        </div>
+            <div class="character-selection-group">
+                <div class="character-selection">
+                    <h4>Персонаж Игрока 1</h4>
+                    <div id="player1CharacterGallery" class="character-gallery">
+                        <div class="loading-message">Загрузка персонажей...</div>
                     </div>
-                    
-                    <div class="chip-setup">
-                        <label>Цвет дополнительных фишек:</label>
-                        <div class="color-picker" id="setup-player1-extra-colors"></div>
-                        <div class="quantity-control">
-                            <label>Количество:</label>
-                            <input type="number" id="setup-player1-extra-count" min="0" max="10" value="3">
-                        </div>
-                        <div class="hp-control">
-                            <label>Здоровье extra:</label>
-                            <input type="number" id="setup-player1-extra-hp" min="0" max="20" value="1">
-                        </div>
+                    <div id="player1SelectedCharacter" class="selected-character-info">
+                        <p>Персонаж не выбран</p>
                     </div>
                 </div>
                 
-                <!-- Игрок 2 -->
-                <div class="player-setup">
-                    <h3>Игрок 2</h3>
-                    
-                    <div class="chip-setup">
-                        <label>Цвет главной фишки:</label>
-                        <div class="color-picker" id="setup-player2-main-colors"></div>
-                        <div class="hp-control">
-                            <label>Здоровье main:</label>
-                            <input type="number" id="setup-player2-main-hp" min="0" max="20" value="14">
-                        </div>
+                <div class="character-selection">
+                    <h4>Персонаж Игрока 2</h4>
+                    <div id="player2CharacterGallery" class="character-gallery">
+                        <div class="loading-message">Загрузка персонажей...</div>
                     </div>
-                    
-                    <div class="chip-setup">
-                        <label>Цвет дополнительных фишек:</label>
-                        <div class="color-picker" id="setup-player2-extra-colors"></div>
-                        <div class="quantity-control">
-                            <label>Количество:</label>
-                            <input type="number" id="setup-player2-extra-count" min="0" max="10" value="3">
-                        </div>
-                        <div class="hp-control">
-                            <label>Здоровье extra:</label>
-                            <input type="number" id="setup-player2-extra-hp" min="0" max="20" value="1">
-                        </div>
+                    <div id="player2SelectedCharacter" class="selected-character-info">
+                        <p>Персонаж не выбран</p>
                     </div>
                 </div>
+            </div>
+            
+            <div class="character-info">
+                <p>Используйте <a href="editor.html" target="_blank">Редактор персонажей</a> для создания своих персонажей</p>
             </div>
         </div>
         

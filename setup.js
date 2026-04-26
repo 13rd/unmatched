@@ -32,22 +32,16 @@ class GameSetup {
         
         this.settings = {
             player1: { 
-                mainColor: null, 
-                mainHP: 14, 
-                extraColor: null, 
-                extraHP: 1, 
-                extraCount: 3,
-                deck: null // Пользовательская колода
+                character: null // Выбранный персонаж
             },
             player2: { 
-                mainColor: null, 
-                mainHP: 14, 
-                extraColor: null, 
-                extraHP: 1, 
-                extraCount: 3,
-                deck: null // Пользовательская колода
+                character: null // Выбранный персонаж
             }
         };
+        
+        this.availableCharacters = [];
+        this.selectedCharacter1 = null;
+        this.selectedCharacter2 = null;
         
         this.socket = io();
         this.roomCode = null;
@@ -59,7 +53,7 @@ class GameSetup {
         // Проверка авторизации
         this.checkAuth();
         
-        this.initializeColorPickers();
+        this.loadCharacters();
         this.setupEventListeners();
         this.setupSocketListeners();
     }
@@ -81,43 +75,123 @@ class GameSetup {
         });
     }
 
+    async loadCharacters() {
+        try {
+            const response = await fetch('/api/characters');
+            const characters = await response.json();
+            this.availableCharacters = characters;
+            this.renderCharacterGalleries();
+        } catch (error) {
+            console.error('Ошибка загрузки персонажей:', error);
+            this.showCharacterError();
+        }
+    }
+
+    renderCharacterGalleries() {
+        this.renderCharacterGallery('player1CharacterGallery', 1);
+        this.renderCharacterGallery('player2CharacterGallery', 2);
+    }
+
+    renderCharacterGallery(containerId, playerNum) {
+        const container = document.getElementById(containerId);
+        
+        if (this.availableCharacters.length === 0) {
+            container.innerHTML = '<div class="error-message">Персонажи не найдены. Создайте персонажей в редакторе.</div>';
+            return;
+        }
+
+        container.innerHTML = '';
+        
+        this.availableCharacters.forEach((character, index) => {
+            const card = document.createElement('div');
+            card.className = 'character-card';
+            card.dataset.characterIndex = index;
+            
+            const imageDiv = document.createElement('div');
+            imageDiv.className = 'character-card-image';
+            
+            if (character.mainToken && character.mainToken.image) {
+                const img = document.createElement('img');
+                img.src = character.mainToken.image;
+                img.alt = character.name;
+                imageDiv.style.backgroundColor = character.mainToken.color;
+                imageDiv.appendChild(img);
+            }
+            
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'character-card-name';
+            nameDiv.textContent = character.name;
+            
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'character-card-info';
+            const extraCount = character.extraTokens ? character.extraTokens.length : 0;
+            infoDiv.textContent = `HP: ${character.mainToken.hp} | Помощники: ${extraCount}`;
+            
+            card.appendChild(imageDiv);
+            card.appendChild(nameDiv);
+            card.appendChild(infoDiv);
+            
+            card.addEventListener('click', () => {
+                this.selectCharacter(playerNum, index, containerId);
+            });
+            
+            container.appendChild(card);
+        });
+    }
+
+    selectCharacter(playerNum, characterIndex, containerId) {
+        const character = this.availableCharacters[characterIndex];
+        
+        if (playerNum === 1) {
+            this.selectedCharacter1 = character;
+            this.settings.player1.character = character;
+        } else {
+            this.selectedCharacter2 = character;
+            this.settings.player2.character = character;
+        }
+
+        // Обновляем визуальное выделение
+        const container = document.getElementById(containerId);
+        container.querySelectorAll('.character-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        container.querySelector(`[data-character-index="${characterIndex}"]`).classList.add('selected');
+
+        // Обновляем информацию о выбранном персонаже
+        this.updateSelectedCharacterInfo(playerNum, character);
+    }
+
+    updateSelectedCharacterInfo(playerNum, character) {
+        const infoContainer = document.getElementById(`player${playerNum}SelectedCharacter`);
+        infoContainer.classList.add('has-character');
+        
+        const extraCount = character.extraTokens ? character.extraTokens.length : 0;
+        
+        infoContainer.innerHTML = `
+            <p><strong>Выбран:</strong> ${character.name}</p>
+            <p><strong>Главный токен:</strong> HP ${character.mainToken.hp}</p>
+            <p><strong>Дополнительные токены:</strong> ${extraCount} шт., HP ${character.extraTokenHP}</p>
+            <p><strong>Колода:</strong> 30 карт</p>
+        `;
+    }
+
+    showCharacterError() {
+        document.getElementById('player1CharacterGallery').innerHTML = 
+            '<div class="error-message">Ошибка загрузки персонажей</div>';
+        document.getElementById('player2CharacterGallery').innerHTML = 
+            '<div class="error-message">Ошибка загрузки персонажей</div>';
+    }
+
     initializeColorPickers() {
-        this.createColorPicker('setup-player1-main-colors', 'player1', true);
-        this.createColorPicker('setup-player1-extra-colors', 'player1', false);
-        this.createColorPicker('setup-player2-main-colors', 'player2', true);
-        this.createColorPicker('setup-player2-extra-colors', 'player2', false);
+        // Удалено - больше не нужно
     }
 
     createColorPicker(elementId, player, isMain) {
-        const container = document.getElementById(elementId);
-        
-        COLOR_PAIRS.forEach((pair, index) => {
-            const colorDiv = document.createElement('div');
-            colorDiv.className = 'color-option';
-            colorDiv.style.backgroundColor = isMain ? pair.main : pair.extra;
-            colorDiv.dataset.pairIndex = index;
-            
-            colorDiv.addEventListener('click', () => {
-                this.selectColor(elementId, colorDiv, pair, player, isMain);
-            });
-            
-            container.appendChild(colorDiv);
-        });
+        // Удалено - больше не нужно
     }
 
     selectColor(elementId, selectedDiv, pair, player, isMain) {
-        const container = document.getElementById(elementId);
-        container.querySelectorAll('.color-option').forEach(div => {
-            div.classList.remove('selected');
-        });
-        
-        selectedDiv.classList.add('selected');
-        
-        if (isMain) {
-            this.settings[player].mainColor = pair.main;
-        } else {
-            this.settings[player].extraColor = pair.extra;
-        }
+        // Удалено - больше не нужно
     }
 
     setupEventListeners() {
@@ -178,79 +252,20 @@ class GameSetup {
             }
         });
 
-        // Загрузка колоды игрока 1
-        document.getElementById('player1DeckUpload').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const deckData = JSON.parse(event.target.result);
-                        if (this.validateDeck(deckData)) {
-                            this.settings.player1.deck = deckData;
-                            document.getElementById('player1DeckFileName').textContent = file.name;
-                        } else {
-                            alert('Неверный формат колоды! Колода должна содержать 30 карт.');
-                        }
-                    } catch (error) {
-                        alert('Ошибка при загрузке колоды: ' + error.message);
-                    }
-                };
-                reader.readAsText(file);
-            }
-        });
-
-        // Загрузка колоды игрока 2
-        document.getElementById('player2DeckUpload').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const deckData = JSON.parse(event.target.result);
-                        if (this.validateDeck(deckData)) {
-                            this.settings.player2.deck = deckData;
-                            document.getElementById('player2DeckFileName').textContent = file.name;
-                        } else {
-                            alert('Неверный формат колоды! Колода должна содержать 30 карт.');
-                        }
-                    } catch (error) {
-                        alert('Ошибка при загрузке колоды: ' + error.message);
-                    }
-                };
-                reader.readAsText(file);
-            }
-        });
-
-        // Обновление количества фишек
-        document.getElementById('setup-player1-extra-count').addEventListener('change', (e) => {
-            this.settings.player1.extraCount = parseInt(e.target.value);
-        });
-
-        document.getElementById('setup-player2-extra-count').addEventListener('change', (e) => {
-            this.settings.player2.extraCount = parseInt(e.target.value);
-        });
-
-        document.getElementById('setup-player1-main-hp').addEventListener('change', (e) => {
-            this.settings.player1.mainHP = parseInt(e.target.value);
-        });
-
-        document.getElementById('setup-player1-extra-hp').addEventListener('change', (e) => {
-            this.settings.player1.extraHP = parseInt(e.target.value);
-        });
-
-        document.getElementById('setup-player2-main-hp').addEventListener('change', (e) => {
-            this.settings.player2.mainHP = parseInt(e.target.value);
-        });
-
-        document.getElementById('setup-player2-extra-hp').addEventListener('change', (e) => {
-            this.settings.player2.extraHP = parseInt(e.target.value);
-        });
-
         // Кнопка старта игры
         document.getElementById('startGame').addEventListener('click', () => {
             this.startGame();
         });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('userId');
+            localStorage.removeItem('username');
+            window.location.href = 'auth.html';
+        });
+
+        // Отображение имени пользователя
+        document.getElementById('currentUsername').textContent = this.username;
     }
 
     validateDeck(deckData) {
@@ -279,38 +294,13 @@ class GameSetup {
             document.getElementById('currentRoomCode').textContent = data.roomCode;
             document.getElementById('roomCodeDisplay').style.display = 'block';
             
-            // Сохраняем только код комнаты и базовые настройки (БЕЗ колод и изображений)
+            // Сохраняем только код комнаты (персонажи загрузятся с сервера)
             try {
-                const lightSettings = {
-                    player1: {
-                        mainColor: data.settings.player1.mainColor,
-                        mainHP: data.settings.player1.mainHP,
-                        extraColor: data.settings.player1.extraColor,
-                        extraHP: data.settings.player1.extraHP,
-                        extraCount: data.settings.player1.extraCount
-                    },
-                    player2: {
-                        mainColor: data.settings.player2.mainColor,
-                        mainHP: data.settings.player2.mainHP,
-                        extraColor: data.settings.player2.extraColor,
-                        extraHP: data.settings.player2.extraHP,
-                        extraCount: data.settings.player2.extraCount
-                    },
-                    // Сохраняем только координаты точек, без изображения
-                    points: data.settings.points,
-                    // Сохраняем флаг наличия фона, но не само изображение
-                    hasBackground: !!data.settings.backgroundImage
-                };
-                
-                sessionStorage.setItem('gameSettings', JSON.stringify(lightSettings));
                 sessionStorage.setItem('roomCode', data.roomCode);
-                
-                // Сохраняем изображение отдельно в IndexedDB или не сохраняем вообще
-                // Оно будет загружено с сервера при необходимости
                 
             } catch (e) {
                 console.error('Ошибка сохранения настроек:', e);
-                alert('Ошибка сохранения настроек. Данные слишком большие.');
+                alert('Ошибка сохранения настроек.');
                 return;
             }
             
@@ -322,33 +312,13 @@ class GameSetup {
         this.socket.on('room-joined', (data) => {
             this.roomCode = data.roomCode;
             
-            // Сохраняем только базовые настройки (БЕЗ колод и изображений)
+            // Сохраняем только код комнаты
             try {
-                const lightSettings = {
-                    player1: {
-                        mainColor: data.settings.player1.mainColor,
-                        mainHP: data.settings.player1.mainHP,
-                        extraColor: data.settings.player1.extraColor,
-                        extraHP: data.settings.player1.extraHP,
-                        extraCount: data.settings.player1.extraCount
-                    },
-                    player2: {
-                        mainColor: data.settings.player2.mainColor,
-                        mainHP: data.settings.player2.mainHP,
-                        extraColor: data.settings.player2.extraColor,
-                        extraHP: data.settings.player2.extraHP,
-                        extraCount: data.settings.player2.extraCount
-                    },
-                    points: data.settings.points,
-                    hasBackground: !!data.settings.backgroundImage
-                };
-                
-                sessionStorage.setItem('gameSettings', JSON.stringify(lightSettings));
                 sessionStorage.setItem('roomCode', data.roomCode);
                 
             } catch (e) {
                 console.error('Ошибка сохранения настроек:', e);
-                alert('Ошибка сохранения настроек. Данные слишком большие.');
+                alert('Ошибка сохранения настроек.');
                 return;
             }
             
@@ -412,13 +382,13 @@ class GameSetup {
                 return;
             }
 
-            if (!this.settings.player1.mainColor || !this.settings.player1.extraColor) {
-                alert('Выберите цвета для Игрока 1!');
+            if (!this.settings.player1.character) {
+                alert('Выберите персонажа для Игрока 1!');
                 return;
             }
 
-            if (!this.settings.player2.mainColor || !this.settings.player2.extraColor) {
-                alert('Выберите цвета для Игрока 2!');
+            if (!this.settings.player2.character) {
+                alert('Выберите персонажа для Игрока 2!');
                 return;
             }
 
@@ -426,36 +396,23 @@ class GameSetup {
             const gameSettings = {
                 backgroundImage: this.backgroundImageData,
                 points: this.pointsData,
-                player1: this.settings.player1,
-                player2: this.settings.player2
+                player1: {
+                    character: this.settings.player1.character
+                },
+                player2: {
+                    character: this.settings.player2.character
+                }
             };
 
             // Отправляем запрос на создание комнаты
             this.socket.emit('create-room', gameSettings);
         } else {
-            alert('Выберите режим игры: создать комнату или присоединиться к существующей');
+            alert('Выберите режим игры: создать комнату или присоединиться');
         }
     }
 }
 
 // Инициализация
 window.addEventListener('DOMContentLoaded', () => {
-    // Отображаем имя пользователя
-    const username = localStorage.getItem('username');
-    if (username) {
-        document.getElementById('currentUsername').textContent = `Игрок: ${username}`;
-    }
-    
-    // Обработчик выхода
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-        if (confirm('Вы уверены, что хотите выйти?')) {
-            localStorage.removeItem('username');
-            localStorage.removeItem('userId');
-            localStorage.removeItem('loginTime');
-            sessionStorage.clear();
-            window.location.href = 'auth.html';
-        }
-    });
-    
     new GameSetup();
 });

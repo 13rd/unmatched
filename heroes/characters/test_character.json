@@ -1,0 +1,58 @@
+{
+  "name": "Тестовый Герой",
+  "deck": {
+    "backImage": "/heroes/characters/test_character_assets/card_back.svg",
+    "cards": [
+      {"image": "/heroes/characters/test_character_assets/card_1.svg", "text": "Атака 1"},
+      {"image": "/heroes/characters/test_character_assets/card_2.svg", "text": "Атака 2"},
+      {"image": "/heroes/characters/test_character_assets/card_3.svg", "text": "Атака 3"},
+      {"image": "/heroes/characters/test_character_assets/card_4.svg", "text": "Атака 4"},
+      {"image": "/heroes/characters/test_character_assets/card_5.svg", "text": "Атака 5"},
+      {"image": "/heroes/characters/test_character_assets/card_6.svg", "text": "Защита 1"},
+      {"image": "/heroes/characters/test_character_assets/card_7.svg", "text": "Защита 2"},
+      {"image": "/heroes/characters/test_character_assets/card_8.svg", "text": "Защита 3"},
+      {"image": "/heroes/characters/test_character_assets/card_9.svg", "text": "Защита 4"},
+      {"image": "/heroes/characters/test_character_assets/card_10.svg", "text": "Защита 5"},
+      {"image": "/heroes/characters/test_character_assets/card_11.svg", "text": "Движение 1"},
+      {"image": "/heroes/characters/test_character_assets/card_12.svg", "text": "Движение 2"},
+      {"image": "/heroes/characters/test_character_assets/card_13.svg", "text": "Движение 3"},
+      {"image": "/heroes/characters/test_character_assets/card_14.svg", "text": "Движение 4"},
+      {"image": "/heroes/characters/test_character_assets/card_15.svg", "text": "Движение 5"},
+      {"image": "/heroes/characters/test_character_assets/card_16.svg", "text": "Способность 1"},
+      {"image": "/heroes/characters/test_character_assets/card_17.svg", "text": "Способность 2"},
+      {"image": "/heroes/characters/test_character_assets/card_18.svg", "text": "Способность 3"},
+      {"image": "/heroes/characters/test_character_assets/card_19.svg", "text": "Способность 4"},
+      {"image": "/heroes/characters/test_character_assets/card_20.svg", "text": "Способность 5"},
+      {"image": "/heroes/characters/test_character_assets/card_21.svg", "text": "Лечение 1"},
+      {"image": "/heroes/characters/test_character_assets/card_22.svg", "text": "Лечение 2"},
+      {"image": "/heroes/characters/test_character_assets/card_23.svg", "text": "Лечение 3"},
+      {"image": "/heroes/characters/test_character_assets/card_24.svg", "text": "Лечение 4"},
+      {"image": "/heroes/characters/test_character_assets/card_25.svg", "text": "Лечение 5"},
+      {"image": "/heroes/characters/test_character_assets/card_26.svg", "text": "Уклонение 1"},
+      {"image": "/heroes/characters/test_character_assets/card_27.svg", "text": "Уклонение 2"},
+      {"image": "/heroes/characters/test_character_assets/card_28.svg", "text": "Уклонение 3"},
+      {"image": "/heroes/characters/test_character_assets/card_29.svg", "text": "Уклонение 4"},
+      {"image": "/heroes/characters/test_character_assets/card_30.svg", "text": "Уклонение 5"}
+    ]
+  },
+  "mainToken": {
+    "image": "/heroes/characters/test_character_assets/main_token.svg",
+    "color": "#e53e3e",
+    "hp": 14
+  },
+  "extraTokens": [
+    {
+      "image": "/heroes/characters/test_character_assets/extra_token_1.svg",
+      "color": "#3182ce"
+    },
+    {
+      "image": "/heroes/characters/test_character_assets/extra_token_2.svg",
+      "color": "#38a169"
+    },
+    {
+      "image": "/heroes/characters/test_character_assets/extra_token_3.svg",
+      "color": "#d69e2e"
+    }
+  ],
+  "extraTokenHP": 1
+}

@@ -68,7 +68,7 @@ class Point {
 
 // Класс для фишек
 class Chip {
-    constructor(x, y, color, id, isMain = false, player = null) {
+    constructor(x, y, color, id, isMain = false, player = null, image = null) {
         this.x = x;
         this.y = y;
         this.color = color;
@@ -80,9 +80,17 @@ class Chip {
         this.player = player;
         this.hp = isMain ? 10 : 5;
         this.maxHp = isMain ? 10 : 5;
+        this.image = null;
+        
+        // Загружаем изображение если оно есть
+        if (image) {
+            this.image = new Image();
+            this.image.src = image;
+        }
     }
 
     draw(ctx) {
+        // Рисуем цветной круг
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = this.color;
@@ -91,10 +99,29 @@ class Chip {
         ctx.lineWidth = this.isMain ? 4 : 3;
         ctx.stroke();
         
-        // Внутренний круг для визуального эффекта
+        // Рисуем изображение персонажа поверх круга
+        if (this.image && this.image.complete) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius - 3, 0, Math.PI * 2);
+            ctx.clip();
+            
+            const imgSize = (this.radius - 3) * 2;
+            ctx.drawImage(
+                this.image,
+                this.x - (this.radius - 3),
+                this.y - (this.radius - 3),
+                imgSize,
+                imgSize
+            );
+            
+            ctx.restore();
+        }
+        
+        // Внутренняя обводка для визуального эффекта
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius - 5, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.arc(this.x, this.y, this.radius - 3, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
         ctx.lineWidth = 2;
         ctx.stroke();
     }
@@ -145,21 +172,8 @@ class GameBoard {
     }
 
     loadGameSettings() {
-        // Пробуем получить настройки из sessionStorage
-        const settingsJson = sessionStorage.getItem('gameSettings');
-        
-        if (!settingsJson) {
-            alert('Настройки игры не найдены! Перенаправление на страницу настроек...');
-            window.location.href = 'setup.html';
-            return;
-        }
-
-        this.settings = JSON.parse(settingsJson);
-        
-        // Загружаем точки
-        if (this.settings.points) {
-            this.loadPointsFromJSON(this.settings.points);
-        }
+        // Настройки будут загружены с сервера при подключении к комнате
+        this.settings = null;
         
         // Подключаемся к комнате только если код есть
         if (this.roomCode) {
@@ -178,7 +192,8 @@ class GameBoard {
                 this.socket.emit('request-background');
             }, 100);
         } else {
-            console.error('Код комнаты не найден!');
+            alert('Код комнаты не найден! Перенаправление на страницу настроек...');
+            window.location.href = 'setup.html';
         }
     }
 
@@ -212,6 +227,14 @@ class GameBoard {
             this.playerRole = data.playerRole;
             console.log('Роль игрока:', this.playerRole);
             
+            // Сохраняем настройки с сервера
+            this.settings = data.settings;
+            
+            // Загружаем точки
+            if (this.settings.points) {
+                this.loadPointsFromJSON(this.settings.points);
+            }
+            
             // Если есть сохраненные фишки, загружаем их
             if (data.chips && data.chips.length > 0) {
                 this.loadChipsFromServer(data.chips);
@@ -225,6 +248,14 @@ class GameBoard {
             if (window.cardManager) {
                 console.log('Запрос колод после подключения к комнате');
                 window.cardManager.requestDecks();
+                
+                // Устанавливаем цвета полей персонажей
+                if (this.settings.player1.character && this.settings.player2.character) {
+                    window.cardManager.setCharacterColors(
+                        this.settings.player1.character,
+                        this.settings.player2.character
+                    );
+                }
             }
             
             // Обновляем UI после небольшой задержки, чтобы DOM был готов
@@ -338,6 +369,12 @@ class GameBoard {
             console.error('Элемент currentRole не найден!');
         }
         
+        // Отображаем код комнаты
+        const roomCodeText = document.getElementById('roomCodeText');
+        if (roomCodeText && this.roomCode) {
+            roomCodeText.textContent = `Комната: ${this.roomCode}`;
+        }
+        
         // Обработчик выхода (добавляем только один раз)
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn && !logoutBtn.hasAttribute('data-listener')) {
@@ -402,7 +439,8 @@ class GameBoard {
                 chipData.color,
                 chipData.id,
                 chipData.isMain,
-                chipData.player
+                chipData.player,
+                chipData.image || null
             );
             chip.hp = chipData.hp;
             this.chips.push(chip);
@@ -436,74 +474,100 @@ class GameBoard {
         console.log('Создание фишек игроков. Свободных точек:', freePoints.length);
         console.log('Настройки:', settings);
         
+        // Получаем данные персонажей
+        const char1 = settings.player1.character;
+        const char2 = settings.player2.character;
+        
         // Создаем главную фишку игрока 1
-        if (pointIndex < freePoints.length) {
+        if (pointIndex < freePoints.length && char1) {
             const point = freePoints[pointIndex++];
-            const chip = new Chip(point.x, point.y, settings.player1.mainColor, this.chips.length, true, 'player1');
-            chip.hp = settings.player1.mainHP;
-            chip.maxHp = settings.player1.mainHP;
+            const chip = new Chip(
+                point.x, 
+                point.y, 
+                char1.mainToken.color, 
+                this.chips.length, 
+                true, 
+                'player1',
+                char1.mainToken.image
+            );
+            chip.hp = char1.mainToken.hp;
+            chip.maxHp = char1.mainToken.hp;
             this.chips.push(chip);
             point.attachChip(chip);
             console.log('Создана главная фишка игрока 1');
         }
         
         // Создаем дополнительные фишки игрока 1
-        for (let i = 0; i < settings.player1.extraCount && pointIndex < freePoints.length; i++) {
-            const point = freePoints[pointIndex++];
-            const chip = new Chip(point.x, point.y, settings.player1.extraColor, this.chips.length, false, 'player1');
-            chip.hp = settings.player1.extraHP;
-            chip.maxHp = settings.player1.extraHP;
-            this.chips.push(chip);
-            point.attachChip(chip);
-            console.log(`Создана дополнительная фишка игрока 1 #${i+1}`);
+        if (char1 && char1.extraTokens) {
+            for (let i = 0; i < char1.extraTokens.length && pointIndex < freePoints.length; i++) {
+                const point = freePoints[pointIndex++];
+                const extraToken = char1.extraTokens[i];
+                const chip = new Chip(
+                    point.x, 
+                    point.y, 
+                    extraToken.color, 
+                    this.chips.length, 
+                    false, 
+                    'player1',
+                    extraToken.image
+                );
+                chip.hp = char1.extraTokenHP;
+                chip.maxHp = char1.extraTokenHP;
+                this.chips.push(chip);
+                point.attachChip(chip);
+                console.log(`Создана дополнительная фишка игрока 1 #${i+1}`);
+            }
         }
         
         // Создаем главную фишку игрока 2
-        if (pointIndex < freePoints.length) {
+        if (pointIndex < freePoints.length && char2) {
             const point = freePoints[pointIndex++];
-            const chip = new Chip(point.x, point.y, settings.player2.mainColor, this.chips.length, true, 'player2');
-            chip.hp = settings.player2.mainHP;
-            chip.maxHp = settings.player2.mainHP;
+            const chip = new Chip(
+                point.x, 
+                point.y, 
+                char2.mainToken.color, 
+                this.chips.length, 
+                true, 
+                'player2',
+                char2.mainToken.image
+            );
+            chip.hp = char2.mainToken.hp;
+            chip.maxHp = char2.mainToken.hp;
             this.chips.push(chip);
             point.attachChip(chip);
             console.log('Создана главная фишка игрока 2');
         }
         
         // Создаем дополнительные фишки игрока 2
-        for (let i = 0; i < settings.player2.extraCount && pointIndex < freePoints.length; i++) {
-            const point = freePoints[pointIndex++];
-            const chip = new Chip(point.x, point.y, settings.player2.extraColor, this.chips.length, false, 'player2');
-            chip.hp = settings.player2.extraHP;
-            chip.maxHp = settings.player2.extraHP;
-            this.chips.push(chip);
-            point.attachChip(chip);
-            console.log(`Создана дополнительная фишка игрока 2 #${i+1}`);
+        if (char2 && char2.extraTokens) {
+            for (let i = 0; i < char2.extraTokens.length && pointIndex < freePoints.length; i++) {
+                const point = freePoints[pointIndex++];
+                const extraToken = char2.extraTokens[i];
+                const chip = new Chip(
+                    point.x, 
+                    point.y, 
+                    extraToken.color, 
+                    this.chips.length, 
+                    false, 
+                    'player2',
+                    extraToken.image
+                );
+                chip.hp = char2.extraTokenHP;
+                chip.maxHp = char2.extraTokenHP;
+                this.chips.push(chip);
+                point.attachChip(chip);
+                console.log(`Создана дополнительная фишка игрока 2 #${i+1}`);
+            }
         }
         
         console.log('Всего создано фишек:', this.chips.length);
         
-        // Отправляем созданные фишки на сервер
-        const chipsData = this.chips.map(chip => ({
-            id: chip.id,
-            x: chip.x,
-            y: chip.y,
-            color: chip.color,
-            isMain: chip.isMain,
-            player: chip.player,
-            hp: chip.hp,
-            attachedPointId: chip.attachedPoint ? chip.attachedPoint.id : null
-        }));
+        // Инициализируем панель HP
+        this.hpPanel = new HPPanel(this);
         
-        this.socket.emit('chips-initialized', chipsData);
+        // Отправляем фишки на сервер
+        this.syncChipsToServer();
         
-        // Инициализируем панель HP если она еще не создана
-        if (!this.hpPanel) {
-            this.hpPanel = new HPPanel(this);
-        } else {
-            this.hpPanel.renderChips();
-        }
-        
-        // Перерисовываем canvas
         this.draw();
     }
 
@@ -529,6 +593,24 @@ class GameBoard {
         
         document.getElementById('backToSetup').addEventListener('click', () => {
             window.location.href = 'setup.html';
+        });
+        
+        // Кнопка копирования кода комнаты
+        document.getElementById('copyRoomCode').addEventListener('click', () => {
+            if (this.roomCode) {
+                navigator.clipboard.writeText(this.roomCode).then(() => {
+                    const btn = document.getElementById('copyRoomCode');
+                    const originalText = btn.textContent;
+                    btn.textContent = '✓';
+                    btn.style.background = '#38a169';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.style.background = '#3182ce';
+                    }, 2000);
+                }).catch(err => {
+                    alert('Не удалось скопировать код комнаты');
+                });
+            }
         });
     }
 
@@ -662,6 +744,23 @@ class GameBoard {
             this.hpPanel.renderChips();
         }
         this.draw();
+    }
+
+    syncChipsToServer() {
+        // Отправляем созданные фишки на сервер
+        const chipsData = this.chips.map(chip => ({
+            id: chip.id,
+            x: chip.x,
+            y: chip.y,
+            color: chip.color,
+            isMain: chip.isMain,
+            player: chip.player,
+            hp: chip.hp,
+            image: chip.image ? chip.image.src : null,
+            attachedPointId: chip.attachedPoint ? chip.attachedPoint.id : null
+        }));
+        
+        this.socket.emit('chips-initialized', chipsData);
     }
 
     draw() {
@@ -798,11 +897,12 @@ class HPPanel {
 
 // Класс для карты
 class Card {
-    constructor(id, text, owner, image = null) {
+    constructor(id, text, owner, image = null, backImage = null) {
         this.id = id;
         this.text = text;
         this.owner = owner; // 'player1', 'player2', или null для общих карт
         this.image = image; // URL изображения карты
+        this.backImage = backImage; // URL рубашки карты
         this.isFlipped = false; // false = рубашка, true = лицевая сторона
         this.element = null;
         this.currentField = null; // 'shared', 'player1', 'player2'
@@ -812,6 +912,22 @@ class Card {
         const card = document.createElement('div');
         card.className = 'card';
         card.dataset.cardId = this.id;
+        card.draggable = true;
+        
+        // Добавляем обработчики drag and drop
+        card.addEventListener('dragstart', (e) => {
+            if (window.cardManager) {
+                window.cardManager.draggedCard = this;
+                card.classList.add('dragging');
+            }
+        });
+        
+        card.addEventListener('dragend', (e) => {
+            card.classList.remove('dragging');
+            if (window.cardManager) {
+                window.cardManager.draggedCard = null;
+            }
+        });
         
         const cardInner = document.createElement('div');
         cardInner.className = 'card-inner';
@@ -835,7 +951,18 @@ class Card {
         // Рубашка
         const cardBack = document.createElement('div');
         cardBack.className = 'card-face card-back';
-        cardBack.textContent = '🎴';
+        
+        if (this.backImage) {
+            const img = document.createElement('img');
+            img.src = this.backImage;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '6px';
+            cardBack.appendChild(img);
+        } else {
+            cardBack.textContent = '🎴';
+        }
         
         cardInner.appendChild(cardFront);
         cardInner.appendChild(cardBack);
@@ -963,10 +1090,18 @@ class CardManager {
         this.player1Field = document.getElementById('player1CardField');
         this.player2Field = document.getElementById('player2CardField');
         
+        // Устанавливаем атрибуты для полей игроков
+        this.player1Field.setAttribute('data-player', 'player1');
+        this.player2Field.setAttribute('data-player', 'player2');
+        
         // Колоды будут загружены с сервера
         this.player1Deck = null;
         this.player2Deck = null;
         this.decksLoaded = false;
+        
+        // Рубашки колод
+        this.player1DeckBack = null;
+        this.player2DeckBack = null;
         
         // Сброшенные карты
         this.player1Discard = [];
@@ -978,9 +1113,100 @@ class CardManager {
         
         this.setupEventListeners();
         this.setupSocketListeners();
+        this.setupDragAndDrop();
         
         // НЕ запрашиваем колоды здесь - они будут запрошены после подключения к комнате
         console.log('CardManager инициализирован, ожидание подключения к комнате для загрузки колод');
+    }
+
+    setupDragAndDrop() {
+        // Настройка drag and drop для полей
+        [this.sharedField, this.player1Field, this.player2Field].forEach(field => {
+            field.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                field.classList.add('drag-over');
+            });
+            
+            field.addEventListener('dragleave', (e) => {
+                field.classList.remove('drag-over');
+            });
+            
+            field.addEventListener('drop', (e) => {
+                e.preventDefault();
+                field.classList.remove('drag-over');
+                
+                if (this.draggedCard) {
+                    this.moveCardToField(this.draggedCard, field);
+                }
+            });
+        });
+    }
+
+    setCharacterColors(player1Character, player2Character) {
+        // Устанавливаем цвета полей на основе персонажей
+        if (player1Character && player1Character.mainToken) {
+            const color = player1Character.mainToken.color;
+            const rgb = this.hexToRgb(color);
+            this.player1Field.style.background = `linear-gradient(135deg, rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.1) 0%, rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.05) 100%)`;
+            this.player1Field.style.borderColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.3)`;
+        }
+        
+        if (player2Character && player2Character.mainToken) {
+            const color = player2Character.mainToken.color;
+            const rgb = this.hexToRgb(color);
+            this.player2Field.style.background = `linear-gradient(135deg, rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.1) 0%, rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.05) 100%)`;
+            this.player2Field.style.borderColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.3)`;
+        }
+    }
+
+    hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : { r: 0, g: 0, b: 0 };
+    }
+
+    moveCardToField(card, targetField) {
+        // Проверяем, может ли игрок перемещать эту карту
+        if (!this.canControlPlayer(card.owner) && card.owner !== null) {
+            // Нельзя перемещать карты противника
+            return;
+        }
+        
+        // Перемещаем карту в другое поле
+        const oldField = card.currentField;
+        
+        // Определяем новое поле
+        let newFieldName = null;
+        if (targetField === this.sharedField) {
+            newFieldName = 'shared';
+        } else if (targetField === this.player1Field) {
+            newFieldName = 'player1';
+        } else if (targetField === this.player2Field) {
+            newFieldName = 'player2';
+        }
+        
+        // Проверяем, может ли игрок перемещать карту в поле противника
+        if (newFieldName === 'player1' && !this.canControlPlayer('player1')) {
+            return;
+        }
+        if (newFieldName === 'player2' && !this.canControlPlayer('player2')) {
+            return;
+        }
+        
+        if (newFieldName && oldField !== newFieldName) {
+            card.currentField = newFieldName;
+            targetField.appendChild(card.element);
+            
+            // Синхронизируем с сервером
+            this.gameBoard.socket.emit('card-moved', {
+                cardId: card.id,
+                fromField: oldField,
+                toField: newFieldName
+            });
+        }
     }
 
     requestDecks() {
@@ -992,11 +1218,27 @@ class CardManager {
     loadDecks(decksData) {
         // Загружаем колоды с сервера
         console.log('Получены колоды с сервера:', decksData);
+        
+        // Сохраняем рубашки колод
+        if (decksData.player1 && decksData.player1.backImage) {
+            this.player1DeckBack = decksData.player1.backImage;
+        }
+        if (decksData.player2 && decksData.player2.backImage) {
+            this.player2DeckBack = decksData.player2.backImage;
+        }
+        
+        // Создаем колоды из данных персонажей
         this.player1Deck = new Deck('player1', decksData.player1);
         this.player2Deck = new Deck('player2', decksData.player2);
+        
+        // Перемешиваем колоды
+        this.player1Deck.shuffle();
+        this.player2Deck.shuffle();
+        
         this.decksLoaded = true;
         this.updateDeckCounts();
-        console.log('Колоды загружены с сервера. Player1:', this.player1Deck.getCardsCount(), 'Player2:', this.player2Deck.getCardsCount());
+        
+        console.log('Колоды загружены и перемешаны');
     }
 
     updateDeckCounts() {
@@ -1014,31 +1256,55 @@ class CardManager {
     }
 
     setupEventListeners() {
-        // Кнопки взятия карт
+        // Кнопки взятия карт - только для своего игрока
         document.getElementById('drawCardPlayer1').addEventListener('click', () => {
-            this.drawCard('player1');
+            if (this.canControlPlayer('player1')) {
+                this.drawCard('player1');
+            } else {
+                alert('Вы не можете брать карты за другого игрока!');
+            }
         });
 
         document.getElementById('drawCardPlayer2').addEventListener('click', () => {
-            this.drawCard('player2');
+            if (this.canControlPlayer('player2')) {
+                this.drawCard('player2');
+            } else {
+                alert('Вы не можете брать карты за другого игрока!');
+            }
         });
 
-        // Кнопки перемешивания колоды
+        // Кнопки перемешивания колоды - только для своего игрока
         document.getElementById('shuffleDeckPlayer1').addEventListener('click', () => {
-            this.shuffleDeck('player1');
+            if (this.canControlPlayer('player1')) {
+                this.shuffleDeck('player1');
+            } else {
+                alert('Вы не можете перемешивать колоду противника!');
+            }
         });
 
         document.getElementById('shuffleDeckPlayer2').addEventListener('click', () => {
-            this.shuffleDeck('player2');
+            if (this.canControlPlayer('player2')) {
+                this.shuffleDeck('player2');
+            } else {
+                alert('Вы не можете перемешивать колоду противника!');
+            }
         });
 
-        // Кнопки просмотра сброса
+        // Кнопки просмотра сброса - только для своего игрока
         document.getElementById('discardPilePlayer1').addEventListener('click', () => {
-            this.showDiscardPile('player1');
+            if (this.canControlPlayer('player1')) {
+                this.showDiscardPile('player1');
+            } else {
+                alert('Вы не можете просматривать сброс противника!');
+            }
         });
 
         document.getElementById('discardPilePlayer2').addEventListener('click', () => {
-            this.showDiscardPile('player2');
+            if (this.canControlPlayer('player2')) {
+                this.showDiscardPile('player2');
+            } else {
+                alert('Вы не можете просматривать сброс противника!');
+            }
         });
 
         // Закрытие модального окна
@@ -1057,6 +1323,11 @@ class CardManager {
             field.addEventListener('dragover', (e) => this.handleDragOver(e));
             field.addEventListener('drop', (e) => this.handleDrop(e));
         });
+    }
+
+    canControlPlayer(player) {
+        // Проверяем, может ли текущий пользователь управлять этим игроком
+        return this.gameBoard.playerRole === player || this.gameBoard.playerRole === 'spectator';
     }
 
     shuffleDeck(player) {
@@ -1347,6 +1618,7 @@ class CardManager {
         }
 
         const deck = player === 'player1' ? this.player1Deck : this.player2Deck;
+        const deckBack = player === 'player1' ? this.player1DeckBack : this.player2DeckBack;
         const cardData = deck.drawCard();
         
         if (!cardData) {
@@ -1354,7 +1626,7 @@ class CardManager {
             return;
         }
 
-        const card = new Card(cardData.id, cardData.text, player, cardData.image);
+        const card = new Card(cardData.id, cardData.text, player, cardData.image, deckBack);
         this.cards.set(card.id, card);
         
         const targetField = player === 'player1' ? this.player1Field : this.player2Field;
@@ -1381,7 +1653,8 @@ class CardManager {
             owner: card.owner,
             field: card.currentField,
             isFlipped: card.isFlipped,
-            image: card.image
+            image: card.image,
+            backImage: deckBack
         });
 
         this.updateDeckCounts();
@@ -1389,6 +1662,13 @@ class CardManager {
     }
 
     addDiscardButton(cardElement, cardId) {
+        const card = this.cards.get(cardId);
+        
+        // Проверяем, может ли игрок управлять этой картой
+        if (!card || !this.canControlPlayer(card.owner)) {
+            return; // Не добавляем кнопку сброса для карт противника
+        }
+        
         const discardBtn = document.createElement('button');
         discardBtn.className = 'card-control-btn';
         discardBtn.textContent = '🗑️';
@@ -1409,7 +1689,16 @@ class CardManager {
         const controls = cardElement.querySelector('.card-controls');
         if (controls) {
             controls.appendChild(discardBtn);
-        }
+        
+    
+            // Отправляем событие удаления на сервер
+            this.gameBoard.socket.emit('card-removed', { cardId: cardId });
+        };
+        
+        // const controls = cardElement.querySelector('.card-controls');
+        // if (controls) {
+        //     controls.appendChild(discardBtn);
+        // }
     }
     
 
@@ -1419,7 +1708,7 @@ class CardManager {
             return;
         }
 
-        const card = new Card(data.id, data.text, data.owner, data.image);
+        const card = new Card(data.id, data.text, data.owner, data.image, data.backImage);
         card.isFlipped = data.isFlipped;
         card.currentField = data.field;
         this.cards.set(card.id, card);
@@ -1432,6 +1721,14 @@ class CardManager {
         if (shouldHide) {
             cardElement.classList.add('hidden-card');
         }
+        
+        this.setupCardDragAndDrop(cardElement, card);
+        targetField.appendChild(cardElement);
+        
+        // Добавляем кнопку сброса
+        this.addDiscardButton(cardElement, card.id);
+    
+        
         
         this.setupCardDragAndDrop(cardElement, card);
         targetField.appendChild(cardElement);

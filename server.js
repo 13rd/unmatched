@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
+const fs = require('fs').promises;
 
 const app = express();
 const server = http.createServer(app);
@@ -16,6 +17,28 @@ const io = socketIo(server, {
 
 // Статические файлы
 app.use(express.static(path.join(__dirname)));
+
+// API для получения списка персонажей
+app.get('/api/characters', async (req, res) => {
+    try {
+        const charactersDir = path.join(__dirname, 'heroes', 'characters');
+        const files = await fs.readdir(charactersDir);
+        const jsonFiles = files.filter(file => file.endsWith('.json'));
+        
+        const characters = [];
+        for (const file of jsonFiles) {
+            const filePath = path.join(charactersDir, file);
+            const data = await fs.readFile(filePath, 'utf8');
+            const character = JSON.parse(data);
+            characters.push(character);
+        }
+        
+        res.json(characters);
+    } catch (error) {
+        console.error('Ошибка загрузки персонажей:', error);
+        res.json([]);
+    }
+});
 
 // Хранилище игровых комнат
 const rooms = new Map();
@@ -128,7 +151,7 @@ io.on('connection', (socket) => {
         
         console.log(`Комната создана: ${roomCode} пользователем ${socket.username}`);
         
-        // Отправляем клиенту только базовые настройки (БЕЗ колод)
+        // Отправляем клиенту настройки с персонажами
         socket.emit('room-created', { 
             roomCode,
             playerRole: 'player1',
@@ -136,18 +159,10 @@ io.on('connection', (socket) => {
                 backgroundImage: settings.backgroundImage,
                 points: settings.points,
                 player1: {
-                    mainColor: settings.player1.mainColor,
-                    mainHP: settings.player1.mainHP,
-                    extraColor: settings.player1.extraColor,
-                    extraHP: settings.player1.extraHP,
-                    extraCount: settings.player1.extraCount
+                    character: settings.player1.character
                 },
                 player2: {
-                    mainColor: settings.player2.mainColor,
-                    mainHP: settings.player2.mainHP,
-                    extraColor: settings.player2.extraColor,
-                    extraHP: settings.player2.extraHP,
-                    extraCount: settings.player2.extraCount
+                    character: settings.player2.character
                 }
             }
         });
@@ -213,7 +228,7 @@ io.on('connection', (socket) => {
             user.roomCode = roomCode;
         }
         
-        // Отправляем текущее состояние игры новому игроку (БЕЗ колод)
+        // Отправляем текущее состояние игры новому игроку
         socket.emit('room-joined', {
             roomCode,
             playerRole: playerRole,
@@ -221,18 +236,10 @@ io.on('connection', (socket) => {
                 backgroundImage: room.settings.backgroundImage,
                 points: room.settings.points,
                 player1: {
-                    mainColor: room.settings.player1.mainColor,
-                    mainHP: room.settings.player1.mainHP,
-                    extraColor: room.settings.player1.extraColor,
-                    extraHP: room.settings.player1.extraHP,
-                    extraCount: room.settings.player1.extraCount
+                    character: room.settings.player1.character
                 },
                 player2: {
-                    mainColor: room.settings.player2.mainColor,
-                    mainHP: room.settings.player2.mainHP,
-                    extraColor: room.settings.player2.extraColor,
-                    extraHP: room.settings.player2.extraHP,
-                    extraCount: room.settings.player2.extraCount
+                    character: room.settings.player2.character
                 }
             },
             chips: room.chips,
@@ -254,10 +261,10 @@ io.on('connection', (socket) => {
         
         console.log('Запрос колод от пользователя', socket.username, 'для комнаты', socket.roomCode);
         
-        // Отправляем колоды клиенту
+        // Отправляем колоды из персонажей
         const decksData = {
-            player1: room.settings.player1.deck || null,
-            player2: room.settings.player2.deck || null
+            player1: room.settings.player1.character ? room.settings.player1.character.deck : null,
+            player2: room.settings.player2.character ? room.settings.player2.character.deck : null
         };
         
         console.log('Отправка колод:', {
