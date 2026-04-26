@@ -1261,6 +1261,11 @@ class CardManager {
         if (imageEl && characterData.characterImage) {
             imageEl.src = characterData.characterImage;
             imageEl.style.display = 'block';
+            
+            // Добавляем обработчик клика для увеличения изображения
+            imageEl.addEventListener('click', () => {
+                this.showCharacterImagePreview(characterData.characterImage, characterData.name);
+            });
         }
         
         // Обновляем тип атаки главного токена
@@ -1284,6 +1289,64 @@ class CardManager {
                 }
             });
         }
+    }
+
+    showCharacterImagePreview(imageSrc, characterName) {
+        // Создаем оверлей для превью
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            cursor: pointer;
+        `;
+
+        const previewContainer = document.createElement('div');
+        previewContainer.style.cssText = `
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        `;
+
+        const img = document.createElement('img');
+        img.src = imageSrc;
+        img.style.cssText = `
+            max-width: 600px;
+            max-height: 800px;
+            width: auto;
+            height: auto;
+            border-radius: 8px;
+        `;
+        
+        if (characterName) {
+            const title = document.createElement('div');
+            title.textContent = characterName;
+            title.style.cssText = `
+                font-size: 24px;
+                font-weight: bold;
+                color: #2d3748;
+                margin-bottom: 15px;
+                text-align: center;
+            `;
+            previewContainer.appendChild(title);
+        }
+        
+        previewContainer.appendChild(img);
+        overlay.appendChild(previewContainer);
+        document.body.appendChild(overlay);
+
+        // Закрытие по клику
+        overlay.addEventListener('click', () => {
+            document.body.removeChild(overlay);
+        });
     }
 
     updateDeckCounts() {

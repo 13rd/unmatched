@@ -320,6 +320,7 @@ button:active {
     background: rgba(255, 255, 255, 0.5);
     border-radius: 8px;
     border: 1px solid rgba(0, 0, 0, 0.1);
+    order: 2;
 }
 
 .character-image-container {
@@ -332,6 +333,12 @@ button:active {
     object-fit: cover;
     border-radius: 8px;
     border: 2px solid rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.character-image:hover {
+    transform: scale(1.05);
 }
 
 .character-stats {
@@ -373,6 +380,7 @@ button:active {
     display: flex;
     gap: 15px;
     align-items: center;
+    order: 3;
 }
 
 .deck-info {
