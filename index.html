@@ -58,6 +58,22 @@
         <div class="card-area player-area">
             <div class="player-header">
                 <h3>Ваше поле (Игрок 1)</h3>
+                <div class="player-info-panel">
+                    <div class="character-image-container">
+                        <img id="player1CharacterImage" class="character-image" src="" alt="" style="display: none;">
+                    </div>
+                    <div class="character-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Скорость:</span>
+                            <span id="player1Speed" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Атака (главный):</span>
+                            <span id="player1MainAttack" class="stat-value">-</span>
+                        </div>
+                        <div id="player1ExtraAttacks" class="extra-attacks"></div>
+                    </div>
+                </div>
                 <div class="deck-controls">
                     <div class="deck-info">
                         <button id="drawCardPlayer1" class="draw-card-btn">Взять карту</button>
@@ -76,6 +92,22 @@
         <div class="card-area player-area">
             <div class="player-header">
                 <h3>Ваше поле (Игрок 2)</h3>
+                <div class="player-info-panel">
+                    <div class="character-image-container">
+                        <img id="player2CharacterImage" class="character-image" src="" alt="" style="display: none;">
+                    </div>
+                    <div class="character-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Скорость:</span>
+                            <span id="player2Speed" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Атака (главный):</span>
+                            <span id="player2MainAttack" class="stat-value">-</span>
+                        </div>
+                        <div id="player2ExtraAttacks" class="extra-attacks"></div>
+                    </div>
+                </div>
                 <div class="deck-controls">
                     <div class="deck-info">
                         <button id="drawCardPlayer2" class="draw-card-btn">Взять карту</button>

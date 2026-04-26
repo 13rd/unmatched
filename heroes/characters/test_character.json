@@ -1,5 +1,7 @@
 {
   "name": "Тестовый Герой",
+  "speed": 3,
+  "characterImage": "/heroes/characters/test_character_assets/main_token.svg",
   "deck": {
     "backImage": "/heroes/characters/test_character_assets/card_back.svg",
     "cards": [
@@ -38,20 +40,24 @@
   "mainToken": {
     "image": "/heroes/characters/test_character_assets/main_token.svg",
     "color": "#e53e3e",
-    "hp": 14
+    "hp": 14,
+    "attackType": "melee"
   },
   "extraTokens": [
     {
       "image": "/heroes/characters/test_character_assets/extra_token_1.svg",
-      "color": "#3182ce"
+      "color": "#3182ce",
+      "attackType": "ranged"
     },
     {
       "image": "/heroes/characters/test_character_assets/extra_token_2.svg",
-      "color": "#38a169"
+      "color": "#38a169",
+      "attackType": "melee"
     },
     {
       "image": "/heroes/characters/test_character_assets/extra_token_3.svg",
-      "color": "#d69e2e"
+      "color": "#d69e2e",
+      "attackType": "melee"
     }
   ],
   "extraTokenHP": 1

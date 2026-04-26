@@ -287,7 +287,9 @@ io.on('connection', (socket) => {
         // Отправляем колоды из персонажей
         const decksData = {
             player1: room.settings.player1.character ? room.settings.player1.character.deck : null,
-            player2: room.settings.player2.character ? room.settings.player2.character.deck : null
+            player2: room.settings.player2.character ? room.settings.player2.character.deck : null,
+            player1Character: room.settings.player1.character || null,
+            player2Character: room.settings.player2.character || null
         };
         
         console.log('Отправка колод:', {

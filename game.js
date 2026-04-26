@@ -1238,7 +1238,52 @@ class CardManager {
         this.decksLoaded = true;
         this.updateDeckCounts();
         
+        // Обновляем информацию о персонажах
+        this.updateCharacterInfo('player1', decksData.player1Character);
+        this.updateCharacterInfo('player2', decksData.player2Character);
+        
         console.log('Колоды загружены и перемешаны');
+    }
+
+    updateCharacterInfo(player, characterData) {
+        if (!characterData) return;
+        
+        const prefix = player === 'player1' ? 'player1' : 'player2';
+        
+        // Обновляем скорость
+        const speedEl = document.getElementById(`${prefix}Speed`);
+        if (speedEl && characterData.speed) {
+            speedEl.textContent = characterData.speed;
+        }
+        
+        // Обновляем изображение персонажа
+        const imageEl = document.getElementById(`${prefix}CharacterImage`);
+        if (imageEl && characterData.characterImage) {
+            imageEl.src = characterData.characterImage;
+            imageEl.style.display = 'block';
+        }
+        
+        // Обновляем тип атаки главного токена
+        const mainAttackEl = document.getElementById(`${prefix}MainAttack`);
+        if (mainAttackEl && characterData.mainToken && characterData.mainToken.attackType) {
+            const attackType = characterData.mainToken.attackType === 'melee' ? 'Ближняя' : 'Дальняя';
+            mainAttackEl.textContent = attackType;
+        }
+        
+        // Обновляем типы атак дополнительных токенов
+        const extraAttacksEl = document.getElementById(`${prefix}ExtraAttacks`);
+        if (extraAttacksEl && characterData.extraTokens && characterData.extraTokens.length > 0) {
+            extraAttacksEl.innerHTML = '';
+            characterData.extraTokens.forEach((token, index) => {
+                if (token.attackType) {
+                    const attackType = token.attackType === 'melee' ? 'Ближняя' : 'Дальняя';
+                    const div = document.createElement('div');
+                    div.className = 'stat-item';
+                    div.innerHTML = `<span class="stat-label">Доп. токен ${index + 1}:</span><span class="stat-value">${attackType}</span>`;
+                    extraAttacksEl.appendChild(div);
+                }
+            });
+        }
     }
 
     updateDeckCounts() {

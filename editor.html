@@ -215,6 +215,28 @@
                     <div id="deckStatus" class="deck-status">Колода не загружена</div>
                 </div>
                 
+                <!-- Общие параметры персонажа -->
+                <div class="character-general-section">
+                    <h3>Общие параметры</h3>
+                    
+                    <div class="setting-group">
+                        <label for="characterSpeed">Скорость персонажа:</label>
+                        <input type="number" id="characterSpeed" min="1" max="10" value="3">
+                    </div>
+                    
+                    <div class="file-upload">
+                        <label for="characterImage" class="btn">Загрузить изображение персонажа</label>
+                        <input type="file" id="characterImage" accept="image/*" style="display: none;">
+                        <span id="characterImageName">Изображение не выбрано</span>
+                    </div>
+                    
+                    <div class="character-image-preview">
+                        <div id="characterImagePreview" class="image-preview-box">
+                            <div class="image-preview-placeholder">Загрузите изображение</div>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Главный токен -->
                 <div class="character-main-token-section">
                     <h3>Главный токен</h3>
@@ -241,6 +263,14 @@
                             <div class="setting-group">
                                 <label for="mainTokenHP">HP (по умолчанию):</label>
                                 <input type="number" id="mainTokenHP" min="1" max="50" value="14">
+                            </div>
+                            
+                            <div class="setting-group">
+                                <label for="mainTokenAttackType">Тип атаки:</label>
+                                <select id="mainTokenAttackType">
+                                    <option value="melee">Ближняя</option>
+                                    <option value="ranged">Дальняя</option>
+                                </select>
                             </div>
                         </div>
                     </div>

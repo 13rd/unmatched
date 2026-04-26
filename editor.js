@@ -412,11 +412,14 @@ class DeckEditor {
 class CharacterEditor {
     constructor() {
         this.characterName = '';
+        this.speed = 3;
+        this.characterImage = null;
         this.deck = null; // { backImage, cards }
         this.mainToken = {
             image: null,
             color: '#ff0000',
-            hp: 14
+            hp: 14,
+            attackType: 'melee'
         };
         this.extraTokens = [];
         this.extraTokensCount = 3;
@@ -532,6 +535,30 @@ class CharacterEditor {
             this.mainToken.hp = parseInt(e.target.value);
         });
 
+        // Главный токен - тип атаки
+        document.getElementById('mainTokenAttackType').addEventListener('change', (e) => {
+            this.mainToken.attackType = e.target.value;
+        });
+
+        // Скорость персонажа
+        document.getElementById('characterSpeed').addEventListener('change', (e) => {
+            this.speed = parseInt(e.target.value);
+        });
+
+        // Изображение персонажа
+        document.getElementById('characterImage').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('characterImageName').textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    this.characterImage = event.target.result;
+                    this.updateCharacterImagePreview();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
         // Количество дополнительных токенов
         document.getElementById('extraTokensCount').addEventListener('change', (e) => {
             this.extraTokensCount = parseInt(e.target.value);
@@ -645,6 +672,15 @@ class CharacterEditor {
         }
     }
 
+    updateCharacterImagePreview() {
+        const preview = document.getElementById('characterImagePreview');
+        if (this.characterImage) {
+            preview.innerHTML = `<img src="${this.characterImage}" alt="Изображение персонажа" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
+        } else {
+            preview.innerHTML = '<div class="image-preview-placeholder">Загрузите изображение</div>';
+        }
+    }
+
     updateExtraTokensFields() {
         const container = document.getElementById('extraTokensContainer');
         container.innerHTML = '';
@@ -653,7 +689,8 @@ class CharacterEditor {
         while (this.extraTokens.length < this.extraTokensCount) {
             this.extraTokens.push({
                 image: null,
-                color: '#0000ff'
+                color: '#0000ff',
+                attackType: 'melee'
             });
         }
         while (this.extraTokens.length > this.extraTokensCount) {
@@ -682,6 +719,13 @@ class CharacterEditor {
                             <label for="extraTokenColor${index}">Цвет токена:</label>
                             <input type="color" id="extraTokenColor${index}" value="${token.color}">
                         </div>
+                        <div class="setting-group">
+                            <label for="extraTokenAttackType${index}">Тип атаки:</label>
+                            <select id="extraTokenAttackType${index}">
+                                <option value="melee" ${token.attackType === 'melee' ? 'selected' : ''}>Ближняя</option>
+                                <option value="ranged" ${token.attackType === 'ranged' ? 'selected' : ''}>Дальняя</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             `;
@@ -707,6 +751,10 @@ class CharacterEditor {
                 this.updateExtraTokenPreview(index);
             });
 
+            document.getElementById(`extraTokenAttackType${index}`).addEventListener('change', (e) => {
+                this.extraTokens[index].attackType = e.target.value;
+            });
+
             // Обновляем превью если изображение уже загружено
             if (token.image) {
                 this.updateExtraTokenPreview(index);
@@ -730,27 +778,34 @@ class CharacterEditor {
 
     clearAll() {
         this.characterName = '';
+        this.speed = 3;
+        this.characterImage = null;
         this.deck = null;
         this.mainToken = {
             image: null,
             color: '#ff0000',
-            hp: 14
+            hp: 14,
+            attackType: 'melee'
         };
         this.extraTokens = [];
         this.extraTokensCount = 3;
         this.extraTokenHP = 1;
 
         document.getElementById('characterName').value = '';
+        document.getElementById('characterSpeed').value = 3;
         document.getElementById('mainTokenColor').value = '#ff0000';
         document.getElementById('mainTokenHP').value = 14;
+        document.getElementById('mainTokenAttackType').value = 'melee';
         document.getElementById('extraTokensCount').value = 3;
         document.getElementById('extraTokenHP').value = 1;
         document.getElementById('mainTokenImageName').textContent = 'Изображение не выбрано';
+        document.getElementById('characterImageName').textContent = 'Изображение не выбрано';
         document.getElementById('charDeckBackFileName').textContent = 'Рубашка не выбрана';
         document.getElementById('deckImagesSection').style.display = 'none';
         
         this.updateDeckStatus(false);
         this.updateMainTokenPreview();
+        this.updateCharacterImagePreview();
         this.updateExtraTokensFields();
         this.updateCharCardsGrid();
         this.updateCharCardsCount();
@@ -783,15 +838,19 @@ class CharacterEditor {
         // Создаём объект персонажа
         const characterData = {
             name: this.characterName,
+            speed: this.speed,
+            characterImage: this.characterImage,
             deck: this.deck,
             mainToken: {
                 image: this.mainToken.image,
                 color: this.mainToken.color,
-                hp: this.mainToken.hp
+                hp: this.mainToken.hp,
+                attackType: this.mainToken.attackType
             },
             extraTokens: this.extraTokens.map(token => ({
                 image: token.image,
-                color: token.color
+                color: token.color,
+                attackType: token.attackType
             })),
             extraTokenHP: this.extraTokenHP
         };
@@ -819,6 +878,8 @@ class CharacterEditor {
         }
 
         this.characterName = characterData.name;
+        this.speed = characterData.speed || 3;
+        this.characterImage = characterData.characterImage || null;
         this.deck = characterData.deck;
         this.mainToken = characterData.mainToken;
         this.extraTokens = characterData.extraTokens || [];
@@ -827,14 +888,21 @@ class CharacterEditor {
 
         // Обновляем UI
         document.getElementById('characterName').value = this.characterName;
+        document.getElementById('characterSpeed').value = this.speed;
         document.getElementById('mainTokenColor').value = this.mainToken.color;
         document.getElementById('mainTokenHP').value = this.mainToken.hp;
+        document.getElementById('mainTokenAttackType').value = this.mainToken.attackType || 'melee';
         document.getElementById('extraTokensCount').value = this.extraTokensCount;
         document.getElementById('extraTokenHP').value = this.extraTokenHP;
         document.getElementById('mainTokenImageName').textContent = 'Загружено из файла';
+        
+        if (this.characterImage) {
+            document.getElementById('characterImageName').textContent = 'Загружено из файла';
+        }
 
         this.updateDeckStatus(true);
         this.updateMainTokenPreview();
+        this.updateCharacterImagePreview();
         this.updateExtraTokensFields();
 
         alert('Персонаж успешно импортирован!');
