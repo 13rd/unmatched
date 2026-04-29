@@ -824,3 +824,29 @@ button:active {
 .counter-btn:active {
     transform: scale(0.95);
 }
+
+/* Кнопка показа руки */
+.show-hand-btn {
+    padding: 8px 12px;
+    background: #805ad5;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.3s;
+}
+
+.show-hand-btn:hover {
+    background: #6b46c1;
+    transform: scale(1.1);
+}
+
+.show-hand-btn.active {
+    background: #38a169;
+    box-shadow: 0 0 10px rgba(56, 161, 105, 0.5);
+}
+
+.show-hand-btn:active {
+    transform: scale(0.95);
+}

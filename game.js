@@ -1107,6 +1107,10 @@ class CardManager {
         this.player1Discard = [];
         this.player2Discard = [];
         
+        // Состояние показа руки
+        this.player1HandVisible = false;
+        this.player2HandVisible = false;
+        
         this.draggedCard = null;
         this.currentPlayer = null;
         this.currentDiscardPlayer = null;
@@ -1519,6 +1523,23 @@ class CardManager {
             }
         });
 
+        // Кнопки показа руки - только для своего игрока
+        document.getElementById('showHandPlayer1').addEventListener('click', () => {
+            if (this.canControlPlayer('player1')) {
+                this.toggleHandVisibility('player1');
+            } else {
+                alert('Вы не можете управлять рукой другого игрока!');
+            }
+        });
+
+        document.getElementById('showHandPlayer2').addEventListener('click', () => {
+            if (this.canControlPlayer('player2')) {
+                this.toggleHandVisibility('player2');
+            } else {
+                alert('Вы не можете управлять рукой другого игрока!');
+            }
+        });
+
         // Закрытие модального окна
         document.querySelector('.modal-close').addEventListener('click', () => {
             document.getElementById('discardModal').style.display = 'none';
@@ -1540,6 +1561,73 @@ class CardManager {
     canControlPlayer(player) {
         // Проверяем, может ли текущий пользователь управлять этим игроком
         return this.gameBoard.playerRole === player || this.gameBoard.playerRole === 'spectator';
+    }
+
+    toggleHandVisibility(player) {
+        // Переключаем состояние видимости руки
+        if (player === 'player1') {
+            this.player1HandVisible = !this.player1HandVisible;
+        } else {
+            this.player2HandVisible = !this.player2HandVisible;
+        }
+
+        const isVisible = player === 'player1' ? this.player1HandVisible : this.player2HandVisible;
+        
+        // Обновляем визуальное состояние кнопки
+        const button = document.getElementById(`showHand${player === 'player1' ? 'Player1' : 'Player2'}`);
+        if (isVisible) {
+            button.classList.add('active');
+            button.title = 'Скрыть руку';
+        } else {
+            button.classList.remove('active');
+            button.title = 'Показать руку';
+        }
+
+        // Отправляем событие на сервер
+        this.gameBoard.socket.emit('hand-visibility-changed', {
+            player: player,
+            visible: isVisible
+        });
+
+        // Обновляем видимость карт локально
+        this.updateCardsVisibility();
+    }
+
+    updateCardsVisibility() {
+        // Обновляем видимость всех карт на основе текущих настроек
+        this.cards.forEach(card => {
+            if (!card.element) return;
+
+            const shouldHide = this.shouldHideCard(card);
+            
+            if (shouldHide) {
+                card.element.classList.add('hidden-card');
+            } else {
+                card.element.classList.remove('hidden-card');
+            }
+        });
+    }
+
+    updateHandVisibilityFromServer(data) {
+        // Обновляем состояние видимости руки от сервера
+        if (data.player === 'player1') {
+            this.player1HandVisible = data.visible;
+        } else {
+            this.player2HandVisible = data.visible;
+        }
+
+        // Обновляем визуальное состояние кнопки
+        const button = document.getElementById(`showHand${data.player === 'player1' ? 'Player1' : 'Player2'}`);
+        if (data.visible) {
+            button.classList.add('active');
+            button.title = 'Скрыть руку';
+        } else {
+            button.classList.remove('active');
+            button.title = 'Показать руку';
+        }
+
+        // Обновляем видимость карт
+        this.updateCardsVisibility();
     }
 
     shuffleDeck(player) {
@@ -1819,11 +1907,49 @@ class CardManager {
                 this.player2Discard = data.discardPiles.player2 || [];
                 this.updateDiscardCounts();
             }
+            
+            // Восстанавливаем состояние видимости рук
+            if (data.handVisibility) {
+                this.player1HandVisible = data.handVisibility.player1 || false;
+                this.player2HandVisible = data.handVisibility.player2 || false;
+                
+                // Обновляем визуальное состояние кнопок
+                const button1 = document.getElementById('showHandPlayer1');
+                const button2 = document.getElementById('showHandPlayer2');
+                
+                if (button1) {
+                    if (this.player1HandVisible) {
+                        button1.classList.add('active');
+                        button1.title = 'Скрыть руку';
+                    } else {
+                        button1.classList.remove('active');
+                        button1.title = 'Показать руку';
+                    }
+                }
+                
+                if (button2) {
+                    if (this.player2HandVisible) {
+                        button2.classList.add('active');
+                        button2.title = 'Скрыть руку';
+                    } else {
+                        button2.classList.remove('active');
+                        button2.title = 'Показать руку';
+                    }
+                }
+                
+                // Обновляем видимость карт
+                this.updateCardsVisibility();
+            }
         });
 
         // Синхронизация изменения счётчиков
         socket.on('counter-updated', (data) => {
             this.updateCounterFromServer(data);
+        });
+
+        // Синхронизация видимости руки
+        socket.on('hand-visibility-updated', (data) => {
+            this.updateHandVisibilityFromServer(data);
         });
     }
 
@@ -1963,12 +2089,21 @@ class CardManager {
             return false;
         }
         
-        // Если игрок 1, скрываем карты игрока 2
+        // Проверяем, показывает ли игрок свою руку
+        if (card.currentField === 'player1' && this.player1HandVisible) {
+            return false; // Игрок 1 показывает руку - все видят
+        }
+        
+        if (card.currentField === 'player2' && this.player2HandVisible) {
+            return false; // Игрок 2 показывает руку - все видят
+        }
+        
+        // Если игрок 1, скрываем карты игрока 2 (если он не показывает руку)
         if (playerRole === 'player1' && card.currentField === 'player2') {
             return true;
         }
         
-        // Если игрок 2, скрываем карты игрока 1
+        // Если игрок 2, скрываем карты игрока 1 (если он не показывает руку)
         if (playerRole === 'player2' && card.currentField === 'player1') {
             return true;
         }

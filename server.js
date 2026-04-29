@@ -267,7 +267,8 @@ io.on('connection', (socket) => {
             },
             chips: room.chips,
             cards: room.cards || [],
-            discardPiles: room.discardPiles || { player1: [], player2: [] }
+            discardPiles: room.discardPiles || { player1: [], player2: [] },
+            handVisibility: room.handVisibility || { player1: false, player2: false }
         });
         
         // Уведомляем других игроков о новом подключении
@@ -405,6 +406,29 @@ io.on('connection', (socket) => {
         };
         
         io.to(socket.roomCode).emit('counter-updated', updateData);
+    });
+
+    // Синхронизация видимости руки
+    socket.on('hand-visibility-changed', (data) => {
+        const room = rooms.get(socket.roomCode);
+        if (!room) return;
+        
+        // Инициализируем состояние видимости рук если его нет
+        if (!room.handVisibility) {
+            room.handVisibility = {
+                player1: false,
+                player2: false
+            };
+        }
+        
+        // Обновляем состояние видимости
+        room.handVisibility[data.player] = data.visible;
+        
+        // Отправляем обновление всем в комнате
+        io.to(socket.roomCode).emit('hand-visibility-updated', {
+            player: data.player,
+            visible: data.visible
+        });
     });
 
     // Синхронизация создания фишек
