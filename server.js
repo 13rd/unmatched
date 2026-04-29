@@ -356,6 +356,57 @@ io.on('connection', (socket) => {
         socket.to(socket.roomCode).emit('hp-changed', data);
     });
 
+    // Синхронизация изменения счётчиков
+    socket.on('counter-changed', (data) => {
+        const room = rooms.get(socket.roomCode);
+        if (!room) return;
+        
+        // Инициализируем счётчики если их нет
+        if (!room.counters) {
+            room.counters = {
+                player1: [],
+                player2: []
+            };
+        }
+        
+        // Получаем данные персонажа для этого игрока
+        const characterData = data.player === 'player1' ? room.settings.player1.character : room.settings.player2.character;
+        
+        if (!characterData || !characterData.counters || !characterData.counters[data.counterIndex]) {
+            return;
+        }
+        
+        const counterConfig = characterData.counters[data.counterIndex];
+        
+        // Инициализируем счётчик если его нет
+        if (!room.counters[data.player][data.counterIndex]) {
+            room.counters[data.player][data.counterIndex] = {
+                currentValue: counterConfig.currentValue,
+                minValue: counterConfig.minValue,
+                maxValue: counterConfig.maxValue
+            };
+        }
+        
+        const counter = room.counters[data.player][data.counterIndex];
+        
+        // Обновляем значение счётчика
+        counter.currentValue = Math.max(
+            counter.minValue,
+            Math.min(counter.maxValue, counter.currentValue + data.delta)
+        );
+        
+        // Отправляем обновление всем в комнате
+        const updateData = {
+            player: data.player,
+            counterIndex: data.counterIndex,
+            newValue: counter.currentValue,
+            minValue: counter.minValue,
+            maxValue: counter.maxValue
+        };
+        
+        io.to(socket.roomCode).emit('counter-updated', updateData);
+    });
+
     // Синхронизация создания фишек
     socket.on('chips-initialized', (chips) => {
         const room = rooms.get(socket.roomCode);

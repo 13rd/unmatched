@@ -424,9 +424,12 @@ class CharacterEditor {
         this.extraTokens = [];
         this.extraTokensCount = 3;
         this.extraTokenHP = 1;
+        this.counters = [];
+        this.countersCount = 0;
         
         this.setupEventListeners();
         this.updateExtraTokensFields();
+        this.updateCountersFields();
     }
 
     setupEventListeners() {
@@ -568,6 +571,12 @@ class CharacterEditor {
         // HP дополнительных токенов
         document.getElementById('extraTokenHP').addEventListener('change', (e) => {
             this.extraTokenHP = parseInt(e.target.value);
+        });
+
+        // Количество счётчиков
+        document.getElementById('countersCount').addEventListener('change', (e) => {
+            this.countersCount = parseInt(e.target.value);
+            this.updateCountersFields();
         });
 
         // Очистить всё
@@ -776,6 +785,93 @@ class CharacterEditor {
         }
     }
 
+    updateCountersFields() {
+        const container = document.getElementById('countersContainer');
+        container.innerHTML = '';
+
+        // Обновляем массив счётчиков
+        while (this.counters.length < this.countersCount) {
+            this.counters.push({
+                name: `Счётчик ${this.counters.length + 1}`,
+                minValue: 0,
+                maxValue: 10,
+                currentValue: 0
+            });
+        }
+        while (this.counters.length > this.countersCount) {
+            this.counters.pop();
+        }
+
+        // Создаём поля для каждого счётчика
+        this.counters.forEach((counter, index) => {
+            const counterItem = document.createElement('div');
+            counterItem.className = 'counter-item';
+            
+            counterItem.innerHTML = `
+                <h4>Счётчик ${index + 1}</h4>
+                <div class="counter-config">
+                    <div class="setting-group">
+                        <label for="counterName${index}">Название:</label>
+                        <input type="text" id="counterName${index}" value="${counter.name}" class="text-input">
+                    </div>
+                    <div class="setting-group">
+                        <label for="counterMin${index}">Минимальное значение:</label>
+                        <input type="number" id="counterMin${index}" value="${counter.minValue}" min="0" max="100">
+                    </div>
+                    <div class="setting-group">
+                        <label for="counterMax${index}">Максимальное значение:</label>
+                        <input type="number" id="counterMax${index}" value="${counter.maxValue}" min="1" max="100">
+                    </div>
+                    <div class="setting-group">
+                        <label for="counterCurrent${index}">Начальное значение:</label>
+                        <input type="number" id="counterCurrent${index}" value="${counter.currentValue}" min="0" max="100">
+                    </div>
+                    <div class="counter-preview">
+                        <div class="counter-preview-bar">
+                            <div class="counter-preview-fill" id="counterPreviewFill${index}"></div>
+                        </div>
+                        <div class="counter-preview-text" id="counterPreviewText${index}">${counter.currentValue}/${counter.maxValue}</div>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(counterItem);
+
+            // Добавляем обработчики для этого счётчика
+            document.getElementById(`counterName${index}`).addEventListener('input', (e) => {
+                this.counters[index].name = e.target.value;
+            });
+
+            document.getElementById(`counterMin${index}`).addEventListener('change', (e) => {
+                this.counters[index].minValue = parseInt(e.target.value);
+                this.updateCounterPreview(index);
+            });
+
+            document.getElementById(`counterMax${index}`).addEventListener('change', (e) => {
+                this.counters[index].maxValue = parseInt(e.target.value);
+                this.updateCounterPreview(index);
+            });
+
+            document.getElementById(`counterCurrent${index}`).addEventListener('change', (e) => {
+                this.counters[index].currentValue = parseInt(e.target.value);
+                this.updateCounterPreview(index);
+            });
+
+            // Обновляем превью
+            this.updateCounterPreview(index);
+        });
+    }
+
+    updateCounterPreview(index) {
+        const counter = this.counters[index];
+        const fill = document.getElementById(`counterPreviewFill${index}`);
+        const text = document.getElementById(`counterPreviewText${index}`);
+        
+        const percentage = ((counter.currentValue - counter.minValue) / (counter.maxValue - counter.minValue)) * 100;
+        fill.style.width = `${Math.max(0, Math.min(100, percentage))}%`;
+        text.textContent = `${counter.currentValue}/${counter.maxValue}`;
+    }
+
     clearAll() {
         this.characterName = '';
         this.speed = 3;
@@ -790,6 +886,8 @@ class CharacterEditor {
         this.extraTokens = [];
         this.extraTokensCount = 3;
         this.extraTokenHP = 1;
+        this.counters = [];
+        this.countersCount = 0;
 
         document.getElementById('characterName').value = '';
         document.getElementById('characterSpeed').value = 3;
@@ -798,6 +896,7 @@ class CharacterEditor {
         document.getElementById('mainTokenAttackType').value = 'melee';
         document.getElementById('extraTokensCount').value = 3;
         document.getElementById('extraTokenHP').value = 1;
+        document.getElementById('countersCount').value = 0;
         document.getElementById('mainTokenImageName').textContent = 'Изображение не выбрано';
         document.getElementById('characterImageName').textContent = 'Изображение не выбрано';
         document.getElementById('charDeckBackFileName').textContent = 'Рубашка не выбрана';
@@ -807,6 +906,7 @@ class CharacterEditor {
         this.updateMainTokenPreview();
         this.updateCharacterImagePreview();
         this.updateExtraTokensFields();
+        this.updateCountersFields();
         this.updateCharCardsGrid();
         this.updateCharCardsCount();
     }
@@ -852,7 +952,13 @@ class CharacterEditor {
                 color: token.color,
                 attackType: token.attackType
             })),
-            extraTokenHP: this.extraTokenHP
+            extraTokenHP: this.extraTokenHP,
+            counters: this.counters.map(counter => ({
+                name: counter.name,
+                minValue: counter.minValue,
+                maxValue: counter.maxValue,
+                currentValue: counter.currentValue
+            }))
         };
 
         // Экспорт в JSON
@@ -885,6 +991,8 @@ class CharacterEditor {
         this.extraTokens = characterData.extraTokens || [];
         this.extraTokenHP = characterData.extraTokenHP || 1;
         this.extraTokensCount = this.extraTokens.length;
+        this.counters = characterData.counters || [];
+        this.countersCount = this.counters.length;
 
         // Обновляем UI
         document.getElementById('characterName').value = this.characterName;
@@ -894,6 +1002,7 @@ class CharacterEditor {
         document.getElementById('mainTokenAttackType').value = this.mainToken.attackType || 'melee';
         document.getElementById('extraTokensCount').value = this.extraTokensCount;
         document.getElementById('extraTokenHP').value = this.extraTokenHP;
+        document.getElementById('countersCount').value = this.countersCount;
         document.getElementById('mainTokenImageName').textContent = 'Загружено из файла';
         
         if (this.characterImage) {
@@ -904,6 +1013,7 @@ class CharacterEditor {
         this.updateMainTokenPreview();
         this.updateCharacterImagePreview();
         this.updateExtraTokensFields();
+        this.updateCountersFields();
 
         alert('Персонаж успешно импортирован!');
     }

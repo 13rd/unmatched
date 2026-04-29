@@ -1289,6 +1289,110 @@ class CardManager {
                 }
             });
         }
+        
+        // Инициализируем счётчики персонажа
+        this.initializeCounters(player, characterData);
+    }
+
+    initializeCounters(player, characterData) {
+        if (!characterData || !characterData.counters || characterData.counters.length === 0) {
+            return;
+        }
+        
+        const prefix = player === 'player1' ? 'player1' : 'player2';
+        const countersContainer = document.getElementById(`${prefix}Counters`);
+        
+        if (!countersContainer) return;
+        
+        countersContainer.innerHTML = '';
+        
+        // Получаем цвет персонажа для счётчиков
+        const characterColor = characterData.mainToken ? characterData.mainToken.color : '#3182ce';
+        
+        characterData.counters.forEach((counter, index) => {
+            const counterItem = document.createElement('div');
+            counterItem.className = 'counter-item';
+            counterItem.dataset.player = player;
+            counterItem.dataset.counterIndex = index;
+            
+            const counterHeader = document.createElement('div');
+            counterHeader.className = 'counter-header';
+            
+            const counterName = document.createElement('span');
+            counterName.className = 'counter-name';
+            counterName.textContent = counter.name;
+            
+            const counterValue = document.createElement('span');
+            counterValue.className = 'counter-value';
+            counterValue.id = `${prefix}Counter${index}Value`;
+            counterValue.textContent = `${counter.currentValue}/${counter.maxValue}`;
+            
+            counterHeader.appendChild(counterName);
+            counterHeader.appendChild(counterValue);
+            
+            const barContainer = document.createElement('div');
+            barContainer.className = 'counter-bar-container';
+            
+            const bar = document.createElement('div');
+            bar.className = 'counter-bar';
+            bar.id = `${prefix}Counter${index}Bar`;
+            bar.style.backgroundColor = characterColor;
+            
+            const percentage = ((counter.currentValue - counter.minValue) / (counter.maxValue - counter.minValue)) * 100;
+            bar.style.width = `${Math.max(0, Math.min(100, percentage))}%`;
+            
+            barContainer.appendChild(bar);
+            
+            const controls = document.createElement('div');
+            controls.className = 'counter-controls';
+            
+            const minusBtn = document.createElement('button');
+            minusBtn.className = 'counter-btn minus';
+            minusBtn.textContent = '-';
+            minusBtn.addEventListener('click', () => {
+                this.updateCounter(player, index, -1);
+            });
+            
+            const plusBtn = document.createElement('button');
+            plusBtn.className = 'counter-btn plus';
+            plusBtn.textContent = '+';
+            plusBtn.addEventListener('click', () => {
+                this.updateCounter(player, index, 1);
+            });
+            
+            controls.appendChild(minusBtn);
+            controls.appendChild(plusBtn);
+            
+            counterItem.appendChild(counterHeader);
+            counterItem.appendChild(barContainer);
+            counterItem.appendChild(controls);
+            
+            countersContainer.appendChild(counterItem);
+        });
+    }
+
+    updateCounter(player, counterIndex, delta) {
+        // Отправляем обновление счётчика на сервер
+        this.gameBoard.socket.emit('counter-changed', {
+            player: player,
+            counterIndex: counterIndex,
+            delta: delta
+        });
+    }
+
+    updateCounterFromServer(data) {
+        const { player, counterIndex, newValue, minValue, maxValue } = data;
+        const prefix = player === 'player1' ? 'player1' : 'player2';
+        
+        const valueEl = document.getElementById(`${prefix}Counter${counterIndex}Value`);
+        const barEl = document.getElementById(`${prefix}Counter${counterIndex}Bar`);
+        
+        if (valueEl && barEl) {
+            valueEl.textContent = `${newValue}/${maxValue}`;
+            
+            const percentage = ((newValue - minValue) / (maxValue - minValue)) * 100;
+            barEl.style.width = `${Math.max(0, Math.min(100, percentage))}%`;
+        }
     }
 
     showCharacterImagePreview(imageSrc, characterName) {
@@ -1715,6 +1819,11 @@ class CardManager {
                 this.player2Discard = data.discardPiles.player2 || [];
                 this.updateDiscardCounts();
             }
+        });
+
+        // Синхронизация изменения счётчиков
+        socket.on('counter-updated', (data) => {
+            this.updateCounterFromServer(data);
         });
     }
 
