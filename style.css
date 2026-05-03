@@ -329,7 +329,7 @@ button:active {
 
 .character-image {
     width: 80px;
-    height: 80px;
+    height: 100px;
     object-fit: cover;
     border-radius: 8px;
     border: 2px solid rgba(0, 0, 0, 0.2);
@@ -706,7 +706,7 @@ button:active {
 
 .hidden-card {
     position: relative;
-    filter: blur(12px) brightness(0.7);
+    filter: blur(30px) brightness(0.7);
     pointer-events: none;
     opacity: 0.5;
 }
