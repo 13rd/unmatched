@@ -826,6 +826,7 @@ class HPPanel {
     createChipHPItem(chip, index) {
         const item = document.createElement('div');
         item.className = 'chip-hp-item';
+        item.dataset.chipId = chip.id;
         
         const chipInfo = document.createElement('div');
         chipInfo.className = 'chip-info';
@@ -849,8 +850,9 @@ class HPPanel {
         minusBtn.textContent = '-';
         minusBtn.addEventListener('click', () => {
             if (chip.hp > 0) {
+                const oldHP = chip.hp;
                 chip.hp--;
-                this.updateHP(chip, hpValue);
+                this.updateHP(chip, hpValue, item, oldHP);
             }
         });
         
@@ -863,9 +865,19 @@ class HPPanel {
         plusBtn.textContent = '+';
         plusBtn.addEventListener('click', () => {
             if (chip.hp < 20) {
+                const oldHP = chip.hp;
                 chip.hp++;
-                this.updateHP(chip, hpValue);
+                this.updateHP(chip, hpValue, item, oldHP);
             }
+        });
+        
+        // Добавляем hover эффект для подсветки токена на canvas
+        item.addEventListener('mouseenter', () => {
+            this.highlightChipOnCanvas(chip, true);
+        });
+        
+        item.addEventListener('mouseleave', () => {
+            this.highlightChipOnCanvas(chip, false);
         });
         
         hpControls.appendChild(minusBtn);
@@ -878,7 +890,7 @@ class HPPanel {
         return item;
     }
 
-    updateHP(chip, hpElement) {
+    updateHP(chip, hpElement, itemElement, oldHP) {
         hpElement.textContent = chip.hp;
         
         if (chip.hp === 0) {
@@ -887,11 +899,68 @@ class HPPanel {
             hpElement.style.color = '#2d3748';
         }
         
+        // Добавляем анимацию подсветки
+        if (chip.hp < oldHP) {
+            // Урон - красная подсветка
+            itemElement.classList.add('highlight-damage');
+            this.highlightChipOnCanvas(chip, true, 'damage');
+            setTimeout(() => {
+                itemElement.classList.remove('highlight-damage');
+                this.highlightChipOnCanvas(chip, false);
+            }, 1000);
+        } else if (chip.hp > oldHP) {
+            // Лечение - зелёная подсветка
+            itemElement.classList.add('highlight-heal');
+            this.highlightChipOnCanvas(chip, true, 'heal');
+            setTimeout(() => {
+                itemElement.classList.remove('highlight-heal');
+                this.highlightChipOnCanvas(chip, false);
+            }, 1000);
+        }
+        
         // Отправляем обновление HP на сервер
         this.gameBoard.socket.emit('hp-changed', {
             chipId: chip.id,
             hp: chip.hp
         });
+    }
+    
+    highlightChipOnCanvas(chip, highlight, type = 'hover') {
+        if (!chip) return;
+        
+        // Сохраняем оригинальный цвет если ещё не сохранён
+        if (!chip.originalColor) {
+            chip.originalColor = chip.color;
+        }
+        
+        if (highlight) {
+            // Временно меняем цвет фишки на canvas
+            if (type === 'damage') {
+                chip.color = '#e53e3e'; // Красный
+            } else if (type === 'heal') {
+                chip.color = '#38a169'; // Зелёный
+            } else {
+                // Hover - делаем ярче
+                chip.color = this.brightenColor(chip.originalColor, 40);
+            }
+        } else {
+            // Возвращаем оригинальный цвет
+            chip.color = chip.originalColor;
+        }
+        
+        // Перерисовываем canvas
+        this.gameBoard.draw();
+    }
+    
+    brightenColor(color, percent) {
+        // Конвертируем hex в RGB
+        const num = parseInt(color.replace('#', ''), 16);
+        const r = Math.min(255, ((num >> 16) & 0xff) + percent);
+        const g = Math.min(255, ((num >> 8) & 0xff) + percent);
+        const b = Math.min(255, (num & 0xff) + percent);
+        
+        // Конвертируем обратно в hex
+        return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
     }
 }
 
