@@ -1,28 +1,25 @@
-// Предопределенные цветовые пары (насыщенный и менее насыщенный)
 const COLOR_PAIRS = [
-    { main: '#e53e3e', extra: '#fc8181' },  // Красный
-    { main: '#3182ce', extra: '#63b3ed' },  // Синий
-    { main: '#38a169', extra: '#68d391' },  // Зеленый
-    { main: '#d69e2e', extra: '#f6e05e' },  // Желтый
-    { main: '#805ad5', extra: '#b794f4' },  // Фиолетовый
-    { main: '#dd6b20', extra: '#f6ad55' },  // Оранжевый
-    { main: '#c53030', extra: '#f56565' },  // Темно-красный
-    { main: '#2c5282', extra: '#4299e1' },  // Темно-синий
-    { main: '#276749', extra: '#48bb78' },  // Темно-зеленый
-    { main: '#975a16', extra: '#ecc94b' },  // Темно-желтый
-    { main: '#553c9a', extra: '#9f7aea' },  // Темно-фиолетовый
-    { main: '#9c4221', extra: '#ed8936' },  // Темно-оранжевый
-    { main: '#e91e63', extra: '#f48fb1' },  // Розовый
-    { main: '#00bcd4', extra: '#80deea' },  // Голубой
-    { main: '#4caf50', extra: '#a5d6a7' },  // Светло-зеленый
-    { main: '#ff9800', extra: '#ffcc80' },  // Янтарный
-    { main: '#9e9e9e', extra: '#e0e0e0' },  // Серый
-    { main: '#795548', extra: '#bcaaa4' },  // Коричневый
-    { main: '#607d8b', extra: '#b0bec5' },  // Сине-серый
-    { main: '#8e24aa', extra: '#ce93d8' }   // Пурпурный
+    { main: '#e53e3e', extra: '#fc8181' },
+    { main: '#3182ce', extra: '#63b3ed' },
+    { main: '#38a169', extra: '#68d391' },
+    { main: '#d69e2e', extra: '#f6e05e' },
+    { main: '#805ad5', extra: '#b794f4' },
+    { main: '#dd6b20', extra: '#f6ad55' },
+    { main: '#c53030', extra: '#f56565' },
+    { main: '#2c5282', extra: '#4299e1' },
+    { main: '#276749', extra: '#48bb78' },
+    { main: '#975a16', extra: '#ecc94b' },
+    { main: '#553c9a', extra: '#9f7aea' },
+    { main: '#9c4221', extra: '#ed8936' },
+    { main: '#e91e63', extra: '#f48fb1' },
+    { main: '#00bcd4', extra: '#80deea' },
+    { main: '#4caf50', extra: '#a5d6a7' },
+    { main: '#ff9800', extra: '#ffcc80' },
+    { main: '#795548', extra: '#bcaaa4' },
+    { main: '#607d8b', extra: '#b0bec5' },
+    { main: '#8e24aa', extra: '#ce93d8' }
 ];
 
-// Класс для точек на поле
 class Point {
     constructor(x, y, id) {
         this.x = x;
@@ -45,9 +42,9 @@ class Point {
         ctx.stroke();
     }
 
-    containsPoint(x, y) {
-        const dx = x - this.x;
-        const dy = y - this.y;
+    containsPoint(px, py) {
+        const dx = px - this.x;
+        const dy = py - this.y;
         return Math.sqrt(dx * dx + dy * dy) <= this.radius;
     }
 
@@ -66,7 +63,6 @@ class Point {
     }
 }
 
-// Класс для фишек
 class Chip {
     constructor(x, y, color, id, isMain = false, player = null, image = null) {
         this.x = x;
@@ -126,14 +122,13 @@ class Chip {
         ctx.stroke();
     }
 
-    containsPoint(x, y) {
-        const dx = x - this.x;
-        const dy = y - this.y;
+    containsPoint(px, py) {
+        const dx = px - this.x;
+        const dy = py - this.y;
         return Math.sqrt(dx * dx + dy * dy) <= this.radius;
     }
 }
 
-// Основной класс игрового поля
 class GameBoard {
     constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
@@ -159,7 +154,10 @@ class GameBoard {
         this.roomCode = sessionStorage.getItem('roomCode');
         this.isInitialized = false;
         
-        // Загружаем фоновое изображение
+        this.roomId = null;
+        this.myPlayer = null;
+        this.isHost = false;
+        
         this.backgroundImage = new Image();
         this.backgroundImage.onload = () => this.draw();
         
@@ -467,7 +465,30 @@ class GameBoard {
         this.draw();
     }
 
-    createPlayerChips(settings) {
+    createDefaultPoints() {
+        const centerX = 600;
+        const centerY = 400;
+        const rows = [0, 80, 160, 240];
+        const counts = [1, 4, 6, 4];
+        
+        let id = 0;
+        const points = [];
+        rows.forEach((offsetY, rowIndex) => {
+            const count = counts[rowIndex];
+            const spacing = 120;
+            const startX = centerX - ((count - 1) * spacing) / 2;
+            
+            for (let i = 0; i < count; i++) {
+                points.push({ id: id++, x: startX + i * spacing, y: centerY + offsetY - 120 });
+            }
+        });
+        
+        this.points = points.map(p => new Point(p.x, p.y, p.id));
+        this.socket.emit('setPoints', this.roomId, points);
+    }
+
+    createPlayerChips() {
+        const settings = JSON.parse(sessionStorage.getItem('gameSettings') || '{}');
         const freePoints = this.points.filter(p => !p.chip);
         let pointIndex = 0;
         
@@ -569,16 +590,33 @@ class GameBoard {
         this.syncChipsToServer();
         
         this.draw();
+        if (this.hpPanel) this.hpPanel.renderChips();
     }
 
-    loadPointsFromJSON(pointsData) {
-        // Очищаем существующие точки
-        this.points = [];
+    applyGameState(gameState) {
+        if (gameState.backgroundImage) {
+            this.backgroundImage.src = gameState.backgroundImage;
+        }
         
-        // Загружаем новые точки
-        pointsData.forEach((data, index) => {
-            this.points.push(new Point(data.x, data.y, index));
-        });
+        if (gameState.points && gameState.points.length > 0) {
+            this.points = gameState.points.map(p => new Point(p.x, p.y, p.id));
+        }
+        
+        if (gameState.chips) {
+            this.chips = gameState.chips.map(c => {
+                const chip = new Chip(c.x, c.y, c.color, c.id, c.isMain, c.player);
+                chip.hp = c.hp;
+                chip.maxHp = c.maxHp;
+                return chip;
+            });
+            
+            this.points.forEach(point => {
+                const chip = this.chips.find(c => c.pointId === point.id);
+                if (chip) {
+                    point.attachChip(chip);
+                }
+            });
+        }
         
         this.draw();
     }
@@ -589,7 +627,13 @@ class GameBoard {
         this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
         this.canvas.addEventListener('mouseleave', (e) => this.handleMouseUp(e));
 
-        document.getElementById('clearBoard').addEventListener('click', () => this.clearBoard());
+        document.getElementById('clearBoard').addEventListener('click', () => {
+            this.chips = [];
+            this.points.forEach(p => p.chip = null);
+            this.draw();
+            this.socket.emit('resetGame', this.roomId);
+            if (this.hpPanel) this.hpPanel.renderChips();
+        });
         
         document.getElementById('backToSetup').addEventListener('click', () => {
             window.location.href = 'setup.html';
@@ -625,18 +669,16 @@ class GameBoard {
     handleMouseDown(e) {
         const pos = this.getMousePos(e);
         
-        // Проверяем, нажали ли на фишку (в обратном порядке, чтобы верхние были приоритетнее)
         for (let i = this.chips.length - 1; i >= 0; i--) {
             if (this.chips[i].containsPoint(pos.x, pos.y)) {
                 this.draggedChip = this.chips[i];
                 this.draggedChip.isDragging = true;
                 
-                // Отсоединяем от точки
                 if (this.draggedChip.attachedPoint) {
                     this.draggedChip.attachedPoint.detachChip();
+                    this.socket.emit('chipDetached', this.roomId, { chipId: this.draggedChip.id });
                 }
                 
-                // Перемещаем фишку в конец массива (на передний план)
                 this.chips.splice(i, 1);
                 this.chips.push(this.draggedChip);
                 break;
@@ -651,14 +693,12 @@ class GameBoard {
             this.draggedChip.x = pos.x;
             this.draggedChip.y = pos.y;
             
-            // Подсвечиваем ближайшую точку
             this.points.forEach(point => {
                 point.isHovered = point.containsPoint(pos.x, pos.y);
             });
             
             this.draw();
         } else {
-            // Проверяем наведение на точки
             let needsRedraw = false;
             this.points.forEach(point => {
                 const wasHovered = point.isHovered;
@@ -670,24 +710,32 @@ class GameBoard {
     }
 
     handleMouseUp(e) {
-        if (this.draggedChip) {
-            const pos = this.getMousePos(e);
-            
-            // Ищем ближайшую точку для прикрепления
-            let closestPoint = null;
-            let minDistance = this.snapDistance;
-            
-            this.points.forEach(point => {
-                if (!point.chip) {
-                    const dx = point.x - pos.x;
-                    const dy = point.y - pos.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        closestPoint = point;
-                    }
+        if (!this.draggedChip) return;
+        
+        const pos = this.getMousePos(e);
+        let closestPoint = null;
+        let minDistance = this.snapDistance;
+        
+        this.points.forEach(point => {
+            if (!point.chip) {
+                const dx = point.x - pos.x;
+                const dy = point.y - pos.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestPoint = point;
                 }
+            }
+        });
+        
+        if (closestPoint) {
+            closestPoint.attachChip(this.draggedChip);
+            this.socket.emit('chipAttached', this.roomId, {
+                chipId: this.draggedChip.id,
+                pointId: closestPoint.id,
+                x: this.draggedChip.x,
+                y: this.draggedChip.y
             });
             
             if (closestPoint) {
@@ -764,41 +812,20 @@ class GameBoard {
     }
 
     draw() {
-        // Очищаем canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Рисуем фоновое изображение, если оно загружено
         if (this.backgroundImage.complete) {
             this.ctx.drawImage(this.backgroundImage, 0, 0, this.canvas.width, this.canvas.height);
         } else {
-            // Запасной фон, если изображение еще не загрузилось
             this.ctx.fillStyle = '#f5f5f5';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         }
         
-        // Рисуем точки
         this.points.forEach(point => point.draw(this.ctx));
-        
-        // Рисуем фишки
         this.chips.forEach(chip => chip.draw(this.ctx));
-    }
-
-    addPlayerChip(color, isMain = false) {
-        // Находим свободную точку
-        const freePoints = this.points.filter(p => !p.chip);
-        if (freePoints.length > 0) {
-            const randomPoint = freePoints[Math.floor(Math.random() * freePoints.length)];
-            const chip = new Chip(randomPoint.x, randomPoint.y, color, this.chips.length, isMain);
-            this.chips.push(chip);
-            randomPoint.attachChip(chip);
-            this.draw();
-            return true;
-        }
-        return false;
     }
 }
 
-// Класс для управления панелью HP
 class HPPanel {
     constructor(gameBoard) {
         this.gameBoard = gameBoard;
@@ -2305,7 +2332,6 @@ class CardManager {
     }
 }
 
-// Инициализация игры
 window.addEventListener('DOMContentLoaded', () => {
     const gameBoard = new GameBoard('gameCanvas');
     // Панель HP будет инициализирована автоматически после создания/загрузки фишек

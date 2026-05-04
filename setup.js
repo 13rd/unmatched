@@ -1,26 +1,4 @@
-// Предопределенные цветовые пары
-const COLOR_PAIRS = [
-    { main: '#e53e3e', extra: '#fc8181' },
-    { main: '#3182ce', extra: '#63b3ed' },
-    { main: '#38a169', extra: '#68d391' },
-    { main: '#d69e2e', extra: '#f6e05e' },
-    { main: '#805ad5', extra: '#b794f4' },
-    { main: '#dd6b20', extra: '#f6ad55' },
-    { main: '#c53030', extra: '#f56565' },
-    { main: '#2c5282', extra: '#4299e1' },
-    { main: '#276749', extra: '#48bb78' },
-    { main: '#975a16', extra: '#ecc94b' },
-    { main: '#553c9a', extra: '#9f7aea' },
-    { main: '#9c4221', extra: '#ed8936' },
-    { main: '#e91e63', extra: '#f48fb1' },
-    { main: '#00bcd4', extra: '#80deea' },
-    { main: '#4caf50', extra: '#a5d6a7' },
-    { main: '#ff9800', extra: '#ffcc80' },
-    { main: '#9e9e9e', extra: '#e0e0e0' },
-    { main: '#795548', extra: '#bcaaa4' },
-    { main: '#607d8b', extra: '#b0bec5' },
-    { main: '#8e24aa', extra: '#ce93d8' }
-];
+const socket = io();
 
 class GameSetup {
     constructor() {
@@ -542,9 +520,13 @@ class GameSetup {
         }
     
     }
-}
+    socket.emit('joinRoom', roomCode);
+});
 
-// Инициализация
-window.addEventListener('DOMContentLoaded', () => {
-    new GameSetup();
+socket.on('roomJoined', (data) => {
+    window.location.href = `index.html?room=${data.roomId}`;
+});
+
+socket.on('error', (data) => {
+    alert(data.message);
 });
