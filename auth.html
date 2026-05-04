@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход в игру</title>
+    <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1>Добро пожаловать!</h1>
+            <p class="subtitle">Введите ваше имя для входа в игру</p>
+            
+            <form id="authForm">
+                <div class="input-group">
+                    <label for="username">Имя игрока</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        placeholder="Введите ваше имя"
+                        required
+                        minlength="2"
+                        maxlength="20"
+                        autocomplete="off"
+                    >
+                </div>
+                
+                <button type="submit" class="auth-btn">Войти в игру</button>
+            </form>
+            
+            <div class="info">
+                <p>Ваше имя будет сохранено для следующих сессий</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="auth.js"></script>
+</body>
+</html>

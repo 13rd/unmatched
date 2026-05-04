@@ -8,22 +8,115 @@
     <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-    <div class="setup-container">
+    <div class="user-info">
+        <span id="currentUsername"></span>
+        <button id="logoutBtn" class="logout-btn">Выйти</button>
+    </div>
+    
+    <div class="container">
         <h1>Настройка игры</h1>
         
+        <!-- Выбор режима игры -->
         <div class="setup-section">
-            <h2>Создание комнаты</h2>
-            <p>Создайте комнату и поделитесь ссылкой с другим игроком</p>
-            <button id="createRoom" class="btn-start">Создать комнату</button>
+            <h2>Режим игры</h2>
+            <div class="game-mode-selection">
+                <button id="createRoomBtn" class="btn mode-btn">Создать новую комнату</button>
+                <button id="joinRoomBtn" class="btn mode-btn">Присоединиться к комнате</button>
+            </div>
+            
+            <div id="joinRoomSection" style="display: none; margin-top: 20px;">
+                <label for="roomCodeInput">Введите код комнаты:</label>
+                <input type="text" id="roomCodeInput" placeholder="Например: ABC123" maxlength="6" style="text-transform: uppercase;">
+                <button id="joinRoomConfirm" class="btn">Подключиться</button>
+            </div>
+            
+            <div id="roomCodeDisplay" style="display: none; margin-top: 20px;">
+                <p><strong>Код вашей комнаты:</strong> <span id="currentRoomCode" style="font-size: 24px; color: #3182ce;"></span></p>
+                <p style="font-size: 14px; color: #666;">Поделитесь этим кодом с другими игроками</p>
+            </div>
         </div>
         
-        <div id="joinSection" class="setup-section" style="display: none;">
-            <h2>Или присоединиться</h2>
-            <input type="text" id="roomCodeInput" placeholder="Код комнаты" maxlength="6">
-            <button id="joinRoom" class="btn-start">Присоединиться</button>
+        <!-- Выбор игрового поля -->
+        <div class="setup-section">
+            <h2>Игровое поле</h2>
+            
+            <div class="map-selection-tabs">
+                <button id="savedMapsTab" class="map-tab-btn active">Готовые карты</button>
+                <button id="customMapTab" class="map-tab-btn">Загрузить свою карту</button>
+            </div>
+            
+            <!-- Готовые карты -->
+            <div id="savedMapsSection" class="map-section">
+                <div id="savedMapsGallery" class="maps-gallery">
+                    <div class="loading-message">Загрузка карт...</div>
+                </div>
+                <div id="selectedMapInfo" class="selected-map-info">
+                    <p>Карта не выбрана</p>
+                </div>
+            </div>
+            
+            <!-- Загрузка своей карты -->
+            <div id="customMapSection" class="map-section" style="display: none;">
+                <div class="file-upload-group">
+                    <div class="file-upload">
+                        <label for="setupBackgroundUpload" class="btn">Загрузить фон</label>
+                        <input type="file" id="setupBackgroundUpload" accept="image/*" style="display: none;">
+                        <span id="backgroundFileName">Файл не выбран</span>
+                    </div>
+                    
+                    <div class="file-upload">
+                        <label for="setupPointsUpload" class="btn">Загрузить точки (JSON)</label>
+                        <input type="file" id="setupPointsUpload" accept=".json" style="display: none;">
+                        <span id="pointsFileName">Файл не выбран</span>
+                    </div>
+                </div>
+                
+                <canvas id="previewCanvas" width="600" height="400"></canvas>
+            </div>
+            
+            <div class="map-info">
+                <p>Используйте <a href="editor.html" target="_blank">Редактор карт</a> для создания своих карт</p>
+            </div>
+        </div>
+        
+        <!-- Выбор персонажей -->
+        <div class="setup-section">
+            <h2>Выбор персонажей</h2>
+            
+            <div class="character-selection-group">
+                <div class="character-selection">
+                    <h4>Персонаж Игрока 1</h4>
+                    <div id="player1CharacterGallery" class="character-gallery">
+                        <div class="loading-message">Загрузка персонажей...</div>
+                    </div>
+                    <div id="player1SelectedCharacter" class="selected-character-info">
+                        <p>Персонаж не выбран</p>
+                    </div>
+                </div>
+                
+                <div class="character-selection">
+                    <h4>Персонаж Игрока 2</h4>
+                    <div id="player2CharacterGallery" class="character-gallery">
+                        <div class="loading-message">Загрузка персонажей...</div>
+                    </div>
+                    <div id="player2SelectedCharacter" class="selected-character-info">
+                        <p>Персонаж не выбран</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="character-info">
+                <p>Используйте <a href="editor.html" target="_blank">Редактор персонажей</a> для создания своих персонажей</p>
+            </div>
+        </div>
+        
+        <!-- Кнопка запуска -->
+        <div class="start-section">
+            <button id="startGame" class="btn-start">Начать игру</button>
         </div>
     </div>
     
+    <script src="/socket.io/socket.io.js"></script>
     <script src="setup.js"></script>
 </body>
 </html>

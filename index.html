@@ -8,38 +8,214 @@
     <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Игровое поле</h1>
-        
-        <div id="roomInfo" style="display: none;">
-            <p>Код комнаты: <strong id="roomCode"></strong> | Игроков: <span id="playerCount">1</span></p>
-            <button id="copyLink">Копировать ссылку</button>
+    <div class="user-info">
+        <span id="currentUsername"></span>
+        <span id="currentRole"></span>
+        <div class="room-code-display">
+            <span id="roomCodeText">Комната: </span>
+            <button id="copyRoomCode" class="copy-btn" title="Копировать код комнаты">📋</button>
+        </div>
+        <button id="logoutBtn" class="logout-btn">Выйти</button>
+    </div>
+    
+    <div class="top-section">
+        <div class="container">
+            <canvas id="gameCanvas" width="1200" height="800"></canvas>
+            
+            <div class="controls">
+                <button id="clearBoard">Очистить поле</button>
+                <button id="backToSetup">Вернуться к настройкам</button>
+            </div>
         </div>
         
-        <canvas id="gameCanvas" width="1200" height="800"></canvas>
-        
-        <div class="controls">
-            <button id="clearBoard">Очистить поле</button>
-            <button id="backToSetup">Вернуться к настройкам</button>
+        <div class="container2">
+            <div class="hp-panel">
+                <h2>Счётчики HP</h2>
+                
+                <div class="player-hp-section">
+                    <h3>Игрок 1</h3>
+                    <div id="player1-chips" class="chips-list"></div>
+                </div>
+                
+                <div class="player-hp-section">
+                    <h3>Игрок 2</h3>
+                    <div id="player2-chips" class="chips-list"></div>
+                </div>
+            </div>
         </div>
     </div>
     
-    <div class="container2">
-        <div class="hp-panel">
-            <h2>Счётчики HP</h2>
-            
-            <div class="player-hp-section">
-                <h3>Игрок 1</h3>
-                <div id="player1-chips" class="chips-list"></div>
+    <!-- Карточные поля -->
+    <div class="cards-container">
+        <!-- Общее поле для карт -->
+        <div class="card-area shared-area">
+            <h3>Общее поле</h3>
+            <div id="sharedCardField" class="card-field shared-field"></div>
+        </div>
+        
+        <!-- Поля игроков -->
+        <div class="players-cards-grid">
+            <!-- Личное поле игрока 1 -->
+            <div class="card-area player-area">
+                <div class="player-header">
+                    <h3>Ваше поле (Игрок 1)</h3>
+                    <div class="player-info-panel">
+                        <div class="character-image-container">
+                            <img id="player1CharacterImage" class="character-image" src="" alt="" style="display: none;">
+                        </div>
+                        <div class="character-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Скорость:</span>
+                                <span id="player1Speed" class="stat-value">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Атака (главный):</span>
+                                <span id="player1MainAttack" class="stat-value">-</span>
+                            </div>
+                            <div id="player1ExtraAttacks" class="extra-attacks"></div>
+                            
+                        </div>
+                        <div id="player1Counters" class="character-counters"></div>
+                    </div>
+                    <div class="deck-controls">
+                        <div class="deck-info">
+                            <button id="drawCardPlayer1" class="draw-card-btn">Взять карту</button>
+                            <button id="shuffleDeckPlayer1" class="shuffle-btn" title="Перемешать колоду">🔀</button>
+                            <button id="showHandPlayer1" class="show-hand-btn" title="Показать/скрыть руку">👁️</button>
+                            <span id="deckCountPlayer1" class="deck-count">Колода: 30</span>
+                        </div>
+                        <div class="discard-pile">
+                            <button id="discardPilePlayer1" class="discard-btn" title="Просмотреть сброс">Сброс: 0</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="player1CardField" class="card-field player-field"></div>
             </div>
             
-            <div class="player-hp-section">
-                <h3>Игрок 2</h3>
-                <div id="player2-chips" class="chips-list"></div>
+            <!-- Личное поле игрока 2 -->
+            <div class="card-area player-area">
+                <div class="player-header">
+                    <h3>Ваше поле (Игрок 2)</h3>
+                    <div class="player-info-panel">
+                        <div class="character-image-container">
+                            <img id="player2CharacterImage" class="character-image" src="" alt="" style="display: none;">
+                        </div>
+                        <div class="character-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Скорость:</span>
+                                <span id="player2Speed" class="stat-value">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Атака (главный):</span>
+                                <span id="player2MainAttack" class="stat-value">-</span>
+                            </div>
+                            <div id="player2ExtraAttacks" class="extra-attacks"></div>
+                            <div id="player2Counters" class="character-counters"></div>
+                        </div>
+                    </div>
+                    <div class="deck-controls">
+                        <div class="deck-info">
+                            <button id="drawCardPlayer2" class="draw-card-btn">Взять карту</button>
+                            <button id="shuffleDeckPlayer2" class="shuffle-btn" title="Перемешать колоду">🔀</button>
+                            <button id="showHandPlayer2" class="show-hand-btn" title="Показать/скрыть руку">👁️</button>
+                            <span id="deckCountPlayer2" class="deck-count">Колода: 30</span>
+                        </div>
+                        <div class="discard-pile">
+                            <button id="discardPilePlayer2" class="discard-btn" title="Просмотреть сброс">Сброс: 0</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="player2CardField" class="card-field player-field"></div>
             </div>
         </div>
     </div>
+        
+        <!-- Личное поле игрока 1 -->
+        <!-- <div class="card-area player-area">
+            <div class="player-header">
+                <h3>Ваше поле (Игрок 1)</h3>
+                <div class="player-info-panel">
+                    <div class="character-image-container">
+                        <img id="player1CharacterImage" class="character-image" src="" alt="" style="display: none;">
+                    </div>
+                    <div class="character-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Скорость:</span>
+                            <span id="player1Speed" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Атака (главный):</span>
+                            <span id="player1MainAttack" class="stat-value">-</span>
+                        </div>
+                        <div id="player1ExtraAttacks" class="extra-attacks"></div>
+                        
+                    </div>
+                    <div id="player1Counters" class="character-counters"></div>
+                </div>
+                <div class="deck-controls">
+                    <div class="deck-info">
+                        <button id="drawCardPlayer1" class="draw-card-btn">Взять карту</button>
+                        <button id="shuffleDeckPlayer1" class="shuffle-btn" title="Перемешать колоду">🔀</button>
+                        <button id="showHandPlayer1" class="show-hand-btn" title="Показать/скрыть руку">👁️</button>
+                        <span id="deckCountPlayer1" class="deck-count">Колода: 30</span>
+                    </div>
+                    <div class="discard-pile">
+                        <button id="discardPilePlayer1" class="discard-btn" title="Просмотреть сброс">Сброс: 0</button>
+                    </div>
+                </div>
+            </div>
+            <div id="player1CardField" class="card-field player-field"></div>
+        </div>
+        
+        Личное поле игрока 2
+        <div class="card-area player-area">
+            <div class="player-header">
+                <h3>Ваше поле (Игрок 2)</h3>
+                <div class="player-info-panel">
+                    <div class="character-image-container">
+                        <img id="player2CharacterImage" class="character-image" src="" alt="" style="display: none;">
+                    </div>
+                    <div class="character-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Скорость:</span>
+                            <span id="player2Speed" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Атака (главный):</span>
+                            <span id="player2MainAttack" class="stat-value">-</span>
+                        </div>
+                        <div id="player2ExtraAttacks" class="extra-attacks"></div>
+                        <div id="player2Counters" class="character-counters"></div>
+                    </div>
+                </div>
+                <div class="deck-controls">
+                    <div class="deck-info">
+                        <button id="drawCardPlayer2" class="draw-card-btn">Взять карту</button>
+                        <button id="shuffleDeckPlayer2" class="shuffle-btn" title="Перемешать колоду">🔀</button>
+                        <button id="showHandPlayer2" class="show-hand-btn" title="Показать/скрыть руку">👁️</button>
+                        <span id="deckCountPlayer2" class="deck-count">Колода: 30</span>
+                    </div>
+                    <div class="discard-pile">
+                        <button id="discardPilePlayer2" class="discard-btn" title="Просмотреть сброс">Сброс: 0</button>
+                    </div>
+                </div>
+            </div>
+            <div id="player2CardField" class="card-field player-field"></div>
+        </div> -->
+    </div>
     
+    <!-- Модальное окно для просмотра сброса -->
+    <div id="discardModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Сброшенные карты</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div id="discardGrid" class="discard-grid"></div>
+        </div>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
     <script src="game.js"></script>
 </body>
 </html>
