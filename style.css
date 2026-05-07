@@ -1268,3 +1268,197 @@ h1 {
 .show-hand-btn:active {
     transform: scale(0.95);
 }
+
+/* Стили для кнопок колоды */
+.view-deck-btn, .put-to-deck-btn {
+    padding: 6px 10px;
+    background: #805ad5;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.view-deck-btn:hover, .put-to-deck-btn:hover {
+    background: #6b46c1;
+    transform: scale(1.05);
+}
+
+.view-deck-btn:active, .put-to-deck-btn:active {
+    transform: scale(0.95);
+}
+
+/* Модальное окно просмотра колоды */
+.deck-view-modal {
+    max-width: 900px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.deck-view-controls {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    background: #f7fafc;
+    border-bottom: 1px solid #e2e8f0;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.deck-view-btn {
+    padding: 8px 16px;
+    background: #3182ce;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.deck-view-btn:hover {
+    background: #2c5282;
+}
+
+.deck-position-input {
+    width: 80px;
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.deck-view-count {
+    margin-left: auto;
+    font-weight: bold;
+    color: #4a5568;
+}
+
+.deck-view-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    padding: 20px;
+}
+
+.deck-card {
+    position: relative;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    aspect-ratio: 2.5/3.5;
+}
+
+.deck-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    border-color: #3182ce;
+}
+
+.deck-card.selected {
+    border-color: #38a169;
+    box-shadow: 0 0 15px rgba(56, 161, 105, 0.5);
+}
+
+.deck-card-front, .deck-card-back {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+.deck-card-front img, .deck-card-back img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.deck-card-text {
+    font-size: 12px;
+    text-align: center;
+    color: #2d3748;
+    word-break: break-word;
+}
+
+.deck-card-position {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+}
+
+/* Модальное окно выбора карты для колоды */
+.put-to-deck-controls {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    background: #f7fafc;
+    border-bottom: 1px solid #e2e8f0;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.put-to-deck-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    padding: 20px;
+}
+
+/* Стили для кнопок выбора режима просмотра */
+.deck-option-btn:hover {
+    background: #2c5282 !important;
+    transform: scale(1.02);
+    transition: all 0.2s;
+}
+
+.deck-option-btn:active {
+    transform: scale(0.98);
+}
+
+.deck-options-content {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Адаптивность для модальных окон */
+@media (max-width: 768px) {
+    .deck-view-modal {
+        max-width: 95vw;
+    }
+
+    .deck-view-controls {
+        flex-direction: column;
+    }
+
+    .deck-view-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+        padding: 15px;
+    }
+
+    .put-to-deck-controls {
+        flex-direction: column;
+    }
+}

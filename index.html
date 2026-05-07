@@ -81,6 +81,8 @@
                             <button id="drawCardPlayer1" class="draw-card-btn">Взять карту</button>
                             <button id="shuffleDeckPlayer1" class="shuffle-btn" title="Перемешать колоду">🔀</button>
                             <button id="showHandPlayer1" class="show-hand-btn" title="Показать/скрыть руку">👁️</button>
+                            <button id="viewDeckPlayer1" class="view-deck-btn" title="Просмотреть колоду">📖</button>
+                            <button id="putCardToDeckPlayer1" class="put-to-deck-btn" title="Положить карту в колоду">⬆️</button>
                             <span id="deckCountPlayer1" class="deck-count">Колода: 30</span>
                         </div>
                         <div class="discard-pile">
@@ -117,6 +119,8 @@
                             <button id="drawCardPlayer2" class="draw-card-btn">Взять карту</button>
                             <button id="shuffleDeckPlayer2" class="shuffle-btn" title="Перемешать колоду">🔀</button>
                             <button id="showHandPlayer2" class="show-hand-btn" title="Показать/скрыть руку">👁️</button>
+                            <button id="viewDeckPlayer2" class="view-deck-btn" title="Просмотреть колоду">📖</button>
+                            <button id="putCardToDeckPlayer2" class="put-to-deck-btn" title="Положить карту в колоду">⬆️</button>
                             <span id="deckCountPlayer2" class="deck-count">Колода: 30</span>
                         </div>
                         <div class="discard-pile">
@@ -211,6 +215,77 @@
                 <button class="modal-close">&times;</button>
             </div>
             <div id="discardGrid" class="discard-grid"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для выбора режима просмотра колоды -->
+    <div id="deckViewOptionsModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Просмотр колоды</h2>
+                <button class="modal-close" onclick="document.getElementById('deckViewOptionsModal').style.display='none'">&times;</button>
+            </div>
+            <div class="deck-options-content" style="padding: 30px; text-align: center;">
+                <h3 style="margin-bottom: 20px; color: #2d3748;">Сколько карт показать?</h3>
+                <div class="deck-options-buttons" style="display: flex; flex-direction: column; gap: 15px;">
+                    <button id="viewOneCard" class="deck-option-btn" style="padding: 15px; font-size: 16px; background: #3182ce; color: white; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                        Одну карту
+                    </button>
+                    <button id="viewSeveralCards" class="deck-option-btn" style="padding: 15px; font-size: 16px; background: #3182ce; color: white; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                        Несколько карт
+                    </button>
+                    <button id="viewAllCards" class="deck-option-btn" style="padding: 15px; font-size: 16px; background: #3182ce; color: white; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                        Всю колоду
+                    </button>
+                </div>
+                <div id="severalCardsOptions" style="margin-top: 20px; display: none;">
+                    <label style="display: block; margin-bottom: 10px; color: #4a5568;">Сколько карт показать?</label>
+                    <input type="number" id="cardsCountInput" min="1" max="30" value="5" style="padding: 10px; width: 100px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 14px;">
+                    <label style="display: block; margin-top: 15px; margin-bottom: 10px; color: #4a5568;">Начать с позиции:</label>
+                    <input type="number" id="cardsStartPosition" min="1" max="30" value="1" style="padding: 10px; width: 100px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 14px;">
+                    <button id="confirmSeveralCards" style="margin-top: 15px; padding: 10px 20px; background: #38a169; color: white; border: none; border-radius: 4px; cursor: pointer;">Показать</button>
+                </div>
+                <div id="oneCardOptions" style="margin-top: 20px; display: none;">
+                    <label style="display: block; margin-bottom: 10px; color: #4a5568;">Позиция карты (1 - верх, оставьте пустым для верха):</label>
+                    <input type="number" id="oneCardPosition" min="1" max="30" placeholder="1" style="padding: 10px; width: 100px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 14px;">
+                    <button id="confirmOneCard" style="margin-top: 15px; padding: 10px 20px; background: #38a169; color: white; border: none; border-radius: 4px; cursor: pointer;">Показать</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для просмотра колоды -->
+    <div id="deckViewModal" class="modal" style="display: none;">
+        <div class="modal-content deck-view-modal">
+            <div class="modal-header">
+                <h2 id="deckViewTitle">Колода</h2>
+                <button class="modal-close" onclick="document.getElementById('deckViewModal').style.display='none'">&times;</button>
+            </div>
+            <div class="deck-view-controls">
+                <button id="deckViewTop" class="deck-view-btn">Взять с верха</button>
+                <button id="deckViewBottom" class="deck-view-btn">Взять с низа</button>
+                <input type="number" id="deckViewPosition" class="deck-position-input" placeholder="Позиция" min="1">
+                <button id="deckViewPositionBtn" class="deck-view-btn">Взять с позиции</button>
+                <span id="deckViewCount" class="deck-view-count">Карт: 0</span>
+            </div>
+            <div id="deckViewGrid" class="deck-view-grid"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для выбора карты из руки -->
+    <div id="putToDeckModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="putToDeckTitle">Выберите карту для колоды</h2>
+                <button class="modal-close" onclick="document.getElementById('putToDeckModal').style.display='none'">&times;</button>
+            </div>
+            <div class="put-to-deck-controls">
+                <button id="putToDeckTop" class="put-to-deck-btn">На верх</button>
+                <button id="putToDeckBottom" class="put-to-deck-btn">В низ</button>
+                <input type="number" id="putToDeckPosition" class="deck-position-input" placeholder="Позиция" min="1">
+                <button id="putToDeckPositionBtn" class="put-to-deck-btn">На позицию</button>
+            </div>
+            <div id="putToDeckGrid" class="put-to-deck-grid"></div>
         </div>
     </div>
     

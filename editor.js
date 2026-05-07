@@ -12,17 +12,32 @@ class PointEditor {
 
     setupEventListeners() {
         // Загрузка изображения
-        document.getElementById('imageUpload').addEventListener('change', (e) => {
+        document.getElementById('imageUpload').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file) {
                 document.getElementById('fileName').textContent = file.name;
-                const reader = new FileReader();
-                reader.onload = (event) => {
+                const formData = new FormData();
+                formData.append('image', file);
+                
+                try {
+                    const response = await fetch('/api/upload-image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Ошибка загрузки изображения');
+                    }
+                    
+                    const result = await response.json();
+                    // Store the server path
                     this.backgroundImage = new Image();
                     this.backgroundImage.onload = () => this.draw();
-                    this.backgroundImage.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
+                    this.backgroundImage.src = result.url;
+                } catch (error) {
+                    console.error('Ошибка загрузки изображения:', error);
+                    alert('Не удалось загрузить изображение: ' + error.message);
+                }
             }
         });
 
@@ -231,21 +246,35 @@ class DeckEditor {
 
     setupEventListeners() {
         // Загрузка рубашки
-        document.getElementById('deckBackUpload').addEventListener('change', (e) => {
+        document.getElementById('deckBackUpload').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file) {
                 document.getElementById('deckBackFileName').textContent = file.name;
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    this.backImage = event.target.result;
+                const formData = new FormData();
+                formData.append('image', file);
+                
+                try {
+                    const response = await fetch('/api/upload-image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Ошибка загрузки изображения');
+                    }
+                    
+                    const result = await response.json();
+                    this.backImage = result.url; // Store the server path
                     this.updateBackPreview();
-                };
-                reader.readAsDataURL(file);
+                } catch (error) {
+                    console.error('Ошибка загрузки изображения рубашки:', error);
+                    alert('Не удалось загрузить изображение рубашки: ' + error.message);
+                }
             }
         });
 
         // Загрузка карт
-        document.getElementById('cardsUpload').addEventListener('change', (e) => {
+        document.getElementById('cardsUpload').addEventListener('change', async (e) => {
             const files = Array.from(e.target.files);
             
             if (this.cards.length + files.length > this.maxCards) {
@@ -253,18 +282,32 @@ class DeckEditor {
                 return;
             }
 
-            files.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (event) => {
+            for (const file of files) {
+                const formData = new FormData();
+                formData.append('image', file);
+                
+                try {
+                    const response = await fetch('/api/upload-image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Ошибка загрузки изображения');
+                    }
+                    
+                    const result = await response.json();
                     this.cards.push({
-                        image: event.target.result,
+                        image: result.url, // Store the server path
                         text: file.name.replace(/\.[^/.]+$/, '') // Имя файла без расширения
                     });
                     this.updateCardsGrid();
                     this.updateCardsCount();
-                };
-                reader.readAsDataURL(file);
-            });
+                } catch (error) {
+                    console.error('Ошибка загрузки изображения карты:', error);
+                    alert('Не удалось загрузить изображение карты: ' + error.message);
+                }
+            }
         });
 
         // Очистка колоды
@@ -469,19 +512,33 @@ class CharacterEditor {
         });
 
         // Загрузка рубашки колоды для карт
-        document.getElementById('charDeckBackUpload').addEventListener('change', (e) => {
+        document.getElementById('charDeckBackUpload').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file) {
                 document.getElementById('charDeckBackFileName').textContent = file.name;
-                const reader = new FileReader();
-                reader.onload = (event) => {
+                const formData = new FormData();
+                formData.append('image', file);
+                
+                try {
+                    const response = await fetch('/api/upload-image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Ошибка загрузки изображения');
+                    }
+                    
+                    const result = await response.json();
                     if (!this.deck) {
                         this.deck = { backImage: null, cards: [] };
                     }
-                    this.deck.backImage = event.target.result;
+                    this.deck.backImage = result.url; // Store the server path
                     this.checkDeckComplete();
-                };
-                reader.readAsDataURL(file);
+                } catch (error) {
+                    console.error('Ошибка загрузки изображения рубашки колоды:', error);
+                    alert('Не удалось загрузить изображение рубашки колоды: ' + error.message);
+                }
             }
         });
 
@@ -514,16 +571,30 @@ class CharacterEditor {
         });
 
         // Главный токен - изображение
-        document.getElementById('mainTokenImage').addEventListener('change', (e) => {
+        document.getElementById('mainTokenImage').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file) {
                 document.getElementById('mainTokenImageName').textContent = file.name;
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    this.mainToken.image = event.target.result;
+                const formData = new FormData();
+                formData.append('image', file);
+                
+                try {
+                    const response = await fetch('/api/upload-image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Ошибка загрузки изображения');
+                    }
+                    
+                    const result = await response.json();
+                    this.mainToken.image = result.url; // Store the server path
                     this.updateMainTokenPreview();
-                };
-                reader.readAsDataURL(file);
+                } catch (error) {
+                    console.error('Ошибка загрузки изображения главного токена:', error);
+                    alert('Не удалось загрузить изображение главного токена: ' + error.message);
+                }
             }
         });
 
@@ -549,16 +620,30 @@ class CharacterEditor {
         });
 
         // Изображение персонажа
-        document.getElementById('characterImage').addEventListener('change', (e) => {
+        document.getElementById('characterImage').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file) {
                 document.getElementById('characterImageName').textContent = file.name;
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    this.characterImage = event.target.result;
+                const formData = new FormData();
+                formData.append('image', file);
+                
+                try {
+                    const response = await fetch('/api/upload-image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Ошибка загрузки изображения');
+                    }
+                    
+                    const result = await response.json();
+                    this.characterImage = result.url; // Store the server path
                     this.updateCharacterImagePreview();
-                };
-                reader.readAsDataURL(file);
+                } catch (error) {
+                    console.error('Ошибка загрузки изображения персонажа:', error);
+                    alert('Не удалось загрузить изображение персонажа: ' + error.message);
+                }
             }
         });
 
@@ -742,16 +827,30 @@ class CharacterEditor {
             container.appendChild(tokenItem);
 
             // Добавляем обработчики для этого токена
-            document.getElementById(`extraTokenImage${index}`).addEventListener('change', (e) => {
+            document.getElementById(`extraTokenImage${index}`).addEventListener('change', async (e) => {
                 const file = e.target.files[0];
                 if (file) {
                     document.getElementById(`extraTokenImageName${index}`).textContent = file.name;
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        this.extraTokens[index].image = event.target.result;
+                    const formData = new FormData();
+                    formData.append('image', file);
+                    
+                    try {
+                        const response = await fetch('/api/upload-image', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Ошибка загрузки изображения');
+                        }
+                        
+                        const result = await response.json();
+                        this.extraTokens[index].image = result.url; // Store the server path
                         this.updateExtraTokenPreview(index);
-                    };
-                    reader.readAsDataURL(file);
+                    } catch (error) {
+                        console.error('Ошибка загрузки изображения дополнительного токена:', error);
+                        alert('Не удалось загрузить изображение дополнительного токена: ' + error.message);
+                    }
                 }
             });
 
@@ -1039,18 +1138,32 @@ class MapEditor {
 
     setupEventListeners() {
         // Загрузка фона
-        document.getElementById('mapBackgroundUpload').addEventListener('change', (e) => {
+        document.getElementById('mapBackgroundUpload').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file) {
                 document.getElementById('mapBackgroundFileName').textContent = file.name;
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    this.backgroundImageData = event.target.result;
+                const formData = new FormData();
+                formData.append('image', file);
+                
+                try {
+                    const response = await fetch('/api/upload-image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Ошибка загрузки изображения');
+                    }
+                    
+                    const result = await response.json();
+                    this.backgroundImageData = result.url; // Store the server path
                     this.backgroundImage = new Image();
                     this.backgroundImage.onload = () => this.draw();
-                    this.backgroundImage.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
+                    this.backgroundImage.src = result.url;
+                } catch (error) {
+                    console.error('Ошибка загрузки фонового изображения:', error);
+                    alert('Не удалось загрузить фоновое изображение: ' + error.message);
+                }
             }
         });
 

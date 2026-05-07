@@ -1091,7 +1091,8 @@ class Deck {
         this.owner = owner; // 'player1' или 'player2'
         this.cards = [];
         this.nextCardId = 0;
-        
+        this.backImage = null; // Рубашка колоды
+
         if (customDeck) {
             this.loadCustomDeck(customDeck);
         } else {
@@ -1104,26 +1105,26 @@ class Deck {
         const cardTypes = [
             'Атака', 'Защита', 'Движение', 'Особая способность', 'Лечение', 'Уклонение'
         ];
-        
+
         for (let i = 0; i < 30; i++) {
             const type = cardTypes[i % cardTypes.length];
             const cardText = `${type} ${Math.floor(i / cardTypes.length) + 1}`;
             this.cards.push({
                 text: cardText,
                 id: `${this.owner}_card_${this.nextCardId++}`,
-                image: null // Для стандартной колоды нет изображений
+                image: null
             });
         }
     }
 
     loadCustomDeck(customDeck) {
-        // Загружаем пользовательскую колоду
         if (customDeck.cards && customDeck.cards.length === 30) {
             this.cards = customDeck.cards.map((card, index) => ({
                 text: card.text || `Карта ${index + 1}`,
                 id: `${this.owner}_card_${this.nextCardId++}`,
                 image: card.image || null
             }));
+            this.backImage = customDeck.backImage || null;
         } else {
             console.error('Неверный формат колоды, используется стандартная');
             this.initializeDefaultDeck();
@@ -1135,6 +1136,68 @@ class Deck {
             return null;
         }
         return this.cards.shift();
+    }
+
+    // Взять карту с определенной позиции (0 = верх, -1 = низ, или индекс)
+    takeCard(position = 0) {
+        if (this.cards.length === 0) {
+            return null;
+        }
+
+        let index;
+        if (position === 'top' || position === 0) {
+            index = 0;
+        } else if (position === 'bottom' || position === -1) {
+            index = this.cards.length - 1;
+        } else {
+            index = Math.min(Math.max(0, position), this.cards.length - 1);
+        }
+
+        return this.cards.splice(index, 1)[0];
+    }
+
+    // Положить карту в колоду (top = на верх, bottom = в низ, или индекс)
+    putCard(card, position = 'top') {
+        if (position === 'top') {
+            this.cards.unshift(card);
+        } else if (position === 'bottom') {
+            this.cards.push(card);
+        } else if (typeof position === 'number') {
+            const index = Math.min(Math.max(0, position), this.cards.length);
+            this.cards.splice(index, 0, card);
+        } else {
+            this.cards.unshift(card);
+        }
+    }
+
+    // Посмотреть карту без извлечения (0 = верх, -1 = низ, или индекс)
+    peekCard(position = 0) {
+        if (this.cards.length === 0) {
+            return null;
+        }
+
+        let index;
+        if (position === 'top' || position === 0) {
+            index = 0;
+        } else if (position === 'bottom' || position === -1) {
+            index = this.cards.length - 1;
+        } else {
+            index = Math.min(Math.max(0, position), this.cards.length - 1);
+        }
+
+        return { ...this.cards[index] };
+    }
+
+    // Получить несколько карт для просмотра
+    peekCards(count = 1, startFrom = 0) {
+        const start = Math.min(Math.max(0, startFrom), this.cards.length - 1);
+        const end = Math.min(start + count, this.cards.length);
+        return this.cards.slice(start, end).map(card => ({ ...card }));
+    }
+
+    // Получить все карты для просмотра
+    peekAllCards() {
+        return this.cards.map(card => ({ ...card }));
     }
 
     getCardsCount() {
@@ -1179,6 +1242,13 @@ class CardManager {
         // Состояние показа руки
         this.player1HandVisible = false;
         this.player2HandVisible = false;
+
+        // Текущий игрок для работы с колодой
+        this.currentDeckPlayer = null;
+        this.currentDeckViewMode = 'all';
+        this.currentDeckViewStartPos = 0;
+        this.currentDeckViewCount = 0;
+        this.selectedCardForDeck = null;
         
         this.draggedCard = null;
         this.currentPlayer = null;
@@ -1291,30 +1361,26 @@ class CardManager {
     loadDecks(decksData) {
         // Загружаем колоды с сервера
         console.log('Получены колоды с сервера:', decksData);
-        
-        // Сохраняем рубашки колод
-        if (decksData.player1 && decksData.player1.backImage) {
-            this.player1DeckBack = decksData.player1.backImage;
-        }
-        if (decksData.player2 && decksData.player2.backImage) {
-            this.player2DeckBack = decksData.player2.backImage;
-        }
-        
+
         // Создаем колоды из данных персонажей
         this.player1Deck = new Deck('player1', decksData.player1);
         this.player2Deck = new Deck('player2', decksData.player2);
-        
+
+        // Сохраняем рубашки колод
+        this.player1DeckBack = this.player1Deck.backImage;
+        this.player2DeckBack = this.player2Deck.backImage;
+
         // Перемешиваем колоды
         this.player1Deck.shuffle();
         this.player2Deck.shuffle();
-        
+
         this.decksLoaded = true;
         this.updateDeckCounts();
-        
+
         // Обновляем информацию о персонажах
         this.updateCharacterInfo('player1', decksData.player1Character);
         this.updateCharacterInfo('player2', decksData.player2Character);
-        
+
         console.log('Колоды загружены и перемешаны');
     }
 
@@ -1609,6 +1675,40 @@ class CardManager {
             }
         });
 
+        // Кнопки просмотра колоды - только для своего игрока
+        document.getElementById('viewDeckPlayer1').addEventListener('click', () => {
+            if (this.canControlPlayer('player1')) {
+                this.showDeckViewOptions('player1');
+            } else {
+                alert('Вы не можете просматривать колоду противника!');
+            }
+        });
+
+        document.getElementById('viewDeckPlayer2').addEventListener('click', () => {
+            if (this.canControlPlayer('player2')) {
+                this.showDeckViewOptions('player2');
+            } else {
+                alert('Вы не можете просматривать колоду противника!');
+            }
+        });
+
+        // Кнопки положить карту в колоду - только для своего игрока
+        document.getElementById('putCardToDeckPlayer1').addEventListener('click', () => {
+            if (this.canControlPlayer('player1')) {
+                this.showPutCardToDeckModal('player1');
+            } else {
+                alert('Вы не можете управлять картами противника!');
+            }
+        });
+
+        document.getElementById('putCardToDeckPlayer2').addEventListener('click', () => {
+            if (this.canControlPlayer('player2')) {
+                this.showPutCardToDeckModal('player2');
+            } else {
+                alert('Вы не можете управлять картами противника!');
+            }
+        });
+
         // Закрытие модального окна
         document.querySelector('.modal-close').addEventListener('click', () => {
             document.getElementById('discardModal').style.display = 'none';
@@ -1708,9 +1808,399 @@ class CardManager {
         const deck = player === 'player1' ? this.player1Deck : this.player2Deck;
         deck.shuffle();
         alert('Колода перемешана!');
-        
+
         // Синхронизируем с сервером
         this.gameBoard.socket.emit('deck-shuffled', { player: player });
+    }
+
+    // Показать модальное окно выбора режима просмотра колоды
+    showDeckViewOptions(player) {
+        const deck = player === 'player1' ? this.player1Deck : this.player2Deck;
+        if (!deck) {
+            alert('Колода не загружена!');
+            return;
+        }
+
+        this.currentDeckPlayer = player;
+        const modal = document.getElementById('deckViewOptionsModal');
+        modal.style.display = 'flex';
+
+        // Скрываем все дополнительные опции
+        document.getElementById('severalCardsOptions').style.display = 'none';
+        document.getElementById('oneCardOptions').style.display = 'none';
+
+        // Обработчики для кнопок выбора
+        document.getElementById('viewOneCard').onclick = () => {
+            document.getElementById('severalCardsOptions').style.display = 'none';
+            document.getElementById('oneCardOptions').style.display = 'block';
+            document.getElementById('viewOneCard').style.background = '#2c5282';
+            document.getElementById('viewSeveralCards').style.background = '#3182ce';
+            document.getElementById('viewAllCards').style.background = '#3182ce';
+        };
+
+        document.getElementById('viewSeveralCards').onclick = () => {
+            document.getElementById('oneCardOptions').style.display = 'none';
+            document.getElementById('severalCardsOptions').style.display = 'block';
+            document.getElementById('viewOneCard').style.background = '#3182ce';
+            document.getElementById('viewSeveralCards').style.background = '#2c5282';
+            document.getElementById('viewAllCards').style.background = '#3182ce';
+        };
+
+        document.getElementById('viewAllCards').onclick = () => {
+            document.getElementById('oneCardOptions').style.display = 'none';
+            document.getElementById('severalCardsOptions').style.display = 'none';
+            document.getElementById('viewOneCard').style.background = '#3182ce';
+            document.getElementById('viewSeveralCards').style.background = '#3182ce';
+            document.getElementById('viewAllCards').style.background = '#2c5282';
+            // Сразу показываем всю колоду
+            modal.style.display = 'none';
+            this.showDeckView(player, 'all');
+        };
+
+        // Подтверждение для одной карты
+        document.getElementById('confirmOneCard').onclick = () => {
+            const posInput = document.getElementById('oneCardPosition').value;
+            const pos = posInput ? parseInt(posInput) - 1 : 0;
+            modal.style.display = 'none';
+            this.showDeckView(player, 'one', pos);
+        };
+
+        // Подтверждение для нескольких карт
+        document.getElementById('confirmSeveralCards').onclick = () => {
+            const count = parseInt(document.getElementById('cardsCountInput').value) || 5;
+            const startPos = (parseInt(document.getElementById('cardsStartPosition').value) || 1) - 1;
+            modal.style.display = 'none';
+            this.showDeckView(player, 'several', startPos, count);
+        };
+
+        // Сбрасываем стили кнопок
+        document.getElementById('viewOneCard').style.background = '#3182ce';
+        document.getElementById('viewSeveralCards').style.background = '#3182ce';
+        document.getElementById('viewAllCards').style.background = '#3182ce';
+    }
+
+    // Показать модальное окно просмотра колоды
+    showDeckView(player, mode = 'all', startPos = 0, count = 0) {
+        const deck = player === 'player1' ? this.player1Deck : this.player2Deck;
+        if (!deck) {
+            alert('Колода не загружена!');
+            return;
+        }
+
+        this.currentDeckPlayer = player;
+        this.currentDeckViewMode = mode;
+        this.currentDeckViewStartPos = startPos;
+        this.currentDeckViewCount = count;
+
+        const modal = document.getElementById('deckViewModal');
+        const grid = document.getElementById('deckViewGrid');
+        const title = document.getElementById('deckViewTitle');
+        const countSpan = document.getElementById('deckViewCount');
+
+        let cards = [];
+        let titleText = '';
+
+        switch (mode) {
+            case 'one':
+                const card = deck.peekCard(startPos);
+                if (card) {
+                    cards = [card];
+                    titleText = `Карта #${startPos + 1} из колоды ${player === 'player1' ? 'Игрока 1' : 'Игрока 2'}`;
+                }
+                break;
+            case 'several':
+                cards = deck.peekCards(count, startPos);
+                titleText = `${count} карт из колоды ${player === 'player1' ? 'Игрока 1' : 'Игрока 2'} (с позиции ${startPos + 1})`;
+                break;
+            case 'all':
+            default:
+                cards = deck.peekAllCards();
+                titleText = `Колода ${player === 'player1' ? 'Игрока 1' : 'Игрока 2'} (${deck.getCardsCount()} карт)`;
+                break;
+        }
+
+        title.textContent = titleText;
+        countSpan.textContent = `Карт в колоде: ${deck.getCardsCount()}`;
+
+        grid.innerHTML = '';
+
+        if (cards.length === 0) {
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #718096;">Нет карт для отображения</p>';
+        } else {
+            cards.forEach((card, index) => {
+                const actualIndex = mode === 'several' ? startPos + index : (mode === 'one' ? startPos : index);
+                const cardDiv = this.createDeckCardElement(card, actualIndex, deck);
+                grid.appendChild(cardDiv);
+            });
+        }
+
+        modal.style.display = 'flex';
+
+        // Настраиваем кнопки
+        document.getElementById('deckViewTop').onclick = () => this.takeCardFromDeck(player, 'top');
+        document.getElementById('deckViewBottom').onclick = () => this.takeCardFromDeck(player, 'bottom');
+        document.getElementById('deckViewPositionBtn').onclick = () => {
+            const pos = parseInt(document.getElementById('deckViewPosition').value) - 1;
+            if (!isNaN(pos) && pos >= 0 && pos < deck.getCardsCount()) {
+                this.takeCardFromDeck(player, pos);
+            } else {
+                alert('Неверная позиция!');
+            }
+        };
+    }
+
+    // Создать элемент карты для просмотра колоды
+    createDeckCardElement(card, index, deck) {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'deck-card';
+        cardDiv.dataset.cardIndex = index;
+
+        // Позиция карты
+        const position = document.createElement('div');
+        position.className = 'deck-card-position';
+        position.textContent = `#${index + 1}`;
+        cardDiv.appendChild(position);
+
+        // Лицевая сторона или рубашка
+        const cardFront = document.createElement('div');
+        cardFront.className = 'deck-card-front';
+
+        if (card.image) {
+            const img = document.createElement('img');
+            img.src = card.image;
+            cardFront.appendChild(img);
+        } else {
+            const text = document.createElement('div');
+            text.className = 'deck-card-text';
+            text.textContent = card.text;
+            cardFront.appendChild(text);
+        }
+
+        cardDiv.appendChild(cardFront);
+
+        // Клик для взятия конкретной карты
+        cardDiv.addEventListener('click', () => {
+            this.takeCardFromDeck(this.currentDeckPlayer, index);
+        });
+
+        // Двойной клик для увеличенного просмотра
+        cardDiv.addEventListener('dblclick', () => {
+            this.showCardPreview(card);
+        });
+
+        return cardDiv;
+    }
+
+    // Взять карту из колоды
+    takeCardFromDeck(player, position) {
+        const deck = player === 'player1' ? this.player1Deck : this.player2Deck;
+
+        if (deck.getCardsCount() === 0) {
+            alert('Колода пуста!');
+            return;
+        }
+
+        const cardData = deck.takeCard(position);
+
+        if (!cardData) {
+            alert('Ошибка при взятии карты!');
+            return;
+        }
+
+        // Создаем карту и добавляем в руку игрока
+        const card = new Card(cardData.id, cardData.text, player, cardData.image, deck.backImage);
+        this.cards.set(card.id, card);
+
+        const targetField = player === 'player1' ? this.player1Field : this.player2Field;
+        card.currentField = player;
+
+        const cardElement = card.createElement();
+
+        // Проверяем, должна ли карта быть скрыта
+        const shouldHide = this.shouldHideCard(card);
+        if (shouldHide) {
+            cardElement.classList.add('hidden-card');
+        }
+
+        this.setupCardDragAndDrop(cardElement, card);
+        targetField.appendChild(cardElement);
+
+        // Добавляем кнопку сброса к карте
+        this.addDiscardButton(cardElement, card.id);
+
+        // Обновляем отображение
+        this.updateDeckCounts();
+
+        // Обновляем модальное окно если оно открыто, сохраняя режим просмотра
+        if (document.getElementById('deckViewModal').style.display === 'flex') {
+            this.showDeckView(player, this.currentDeckViewMode, this.currentDeckViewStartPos, this.currentDeckViewCount);
+        }
+
+        // Синхронизируем с сервером
+        this.gameBoard.socket.emit('card-taken-from-deck', {
+            player: player,
+            card: {
+                id: card.id,
+                text: card.text,
+                owner: card.owner,
+                field: card.currentField,
+                isFlipped: card.isFlipped,
+                image: card.image,
+                backImage: card.backImage
+            },
+            position: position
+        });
+
+        console.log(`Взята карта "${cardData.text}" из колоды`);
+    }
+
+    // Показать модальное окно выбора карты для колоды
+    showPutCardToDeckModal(player) {
+        const modal = document.getElementById('putToDeckModal');
+        const grid = document.getElementById('putToDeckGrid');
+        const title = document.getElementById('putToDeckTitle');
+
+        this.currentDeckPlayer = player;
+        title.textContent = `Выберите карту из руки для колоды ${player === 'player1' ? 'Игрока 1' : 'Игрока 2'}`;
+
+        grid.innerHTML = '';
+
+        // Получаем карты из руки игрока
+        const handCards = [];
+        this.cards.forEach((card, id) => {
+            if (card.owner === player && card.currentField === player) {
+                handCards.push({ card, id });
+            }
+        });
+
+        if (handCards.length === 0) {
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #718096;">В руке нет карт</p>';
+        } else {
+            handCards.forEach(({ card, id }) => {
+                const cardDiv = this.createHandCardForDeck(card, id, player);
+                grid.appendChild(cardDiv);
+            });
+        }
+
+        modal.style.display = 'flex';
+
+        // Настраиваем кнопки
+        document.getElementById('putToDeckTop').onclick = () => {
+            const selectedCardId = this.selectedCardForDeck;
+            if (selectedCardId) {
+                this.putCardToDeck(player, selectedCardId, 'top');
+            } else {
+                alert('Выберите карту!');
+            }
+        };
+
+        document.getElementById('putToDeckBottom').onclick = () => {
+            const selectedCardId = this.selectedCardForDeck;
+            if (selectedCardId) {
+                this.putCardToDeck(player, selectedCardId, 'bottom');
+            } else {
+                alert('Выберите карту!');
+            }
+        };
+
+        document.getElementById('putToDeckPositionBtn').onclick = () => {
+            const selectedCardId = this.selectedCardForDeck;
+            if (selectedCardId) {
+                const pos = parseInt(document.getElementById('putToDeckPosition').value) - 1;
+                const deck = player === 'player1' ? this.player1Deck : this.player2Deck;
+                if (!isNaN(pos) && pos >= 0 && pos <= deck.getCardsCount()) {
+                    this.putCardToDeck(player, selectedCardId, pos);
+                } else {
+                    alert('Неверная позиция!');
+                }
+            } else {
+                alert('Выберите карту!');
+            }
+        };
+    }
+
+    // Создать элемент карты из руки для выбора
+    createHandCardForDeck(card, cardId, player) {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'deck-card';
+        cardDiv.dataset.cardId = cardId;
+
+        // Лицевая сторона
+        const cardFront = document.createElement('div');
+        cardFront.className = 'deck-card-front';
+
+        if (card.image) {
+            const img = document.createElement('img');
+            img.src = card.image;
+            cardFront.appendChild(img);
+        } else {
+            const text = document.createElement('div');
+            text.className = 'deck-card-text';
+            text.textContent = card.text;
+            cardFront.appendChild(text);
+        }
+
+        cardDiv.appendChild(cardFront);
+
+        // Клик для выбора карты
+        cardDiv.addEventListener('click', () => {
+            // Убираем выделение с других карт
+            document.querySelectorAll('#putToDeckGrid .deck-card').forEach(el => {
+                el.classList.remove('selected');
+            });
+
+            // Выделяем выбранную карту
+            cardDiv.classList.add('selected');
+            this.selectedCardForDeck = cardId;
+        });
+
+        // Двойной клик для увеличенного просмотра
+        cardDiv.addEventListener('dblclick', () => {
+            this.showCardPreview(card);
+        });
+
+        return cardDiv;
+    }
+
+    // Положить карту в колоду
+    putCardToDeck(player, cardId, position) {
+        const card = this.cards.get(cardId);
+        if (!card) {
+            alert('Карта не найдена!');
+            return;
+        }
+
+        const deck = player === 'player1' ? this.player1Deck : this.player2Deck;
+
+        // Добавляем карту в колоду
+        deck.putCard({
+            id: card.id,
+            text: card.text,
+            image: card.image
+        }, position);
+
+        // Удаляем карту из руки
+        if (card.element) {
+            card.element.remove();
+        }
+        this.cards.delete(cardId);
+
+        // Обновляем отображение
+        this.updateDeckCounts();
+
+        // Обновляем модальное окно если оно открыто
+        if (document.getElementById('putToDeckModal').style.display === 'flex') {
+            this.showPutCardToDeckModal(player);
+        }
+
+        // Синхронизируем с сервером
+        this.gameBoard.socket.emit('card-put-to-deck', {
+            player: player,
+            cardId: cardId,
+            position: position
+        });
+
+        console.log(`Карта "${card.text}" положена в колоду на позицию ${position}`);
     }
 
     showDiscardPile(player) {
@@ -2020,6 +2510,60 @@ class CardManager {
         socket.on('hand-visibility-updated', (data) => {
             this.updateHandVisibilityFromServer(data);
         });
+
+        // Синхронизация взятия карты из колоды
+        socket.on('card-taken-from-deck', (data) => {
+            const deck = data.player === 'player1' ? this.player1Deck : this.player2Deck;
+            if (deck) {
+                // Удаляем карту из колоды (синхронизация)
+                deck.takeCard(data.position);
+                this.updateDeckCounts();
+            }
+
+            // Создаем карту у других игроков
+            if (data.player !== this.gameBoard.playerRole) {
+                const card = new Card(data.card.id, data.card.text, data.card.owner, data.card.image, data.card.backImage);
+                card.isFlipped = data.card.isFlipped;
+                card.currentField = data.card.field;
+                this.cards.set(card.id, card);
+
+                const targetField = this.getFieldElement(data.card.field);
+                const cardElement = card.createElement();
+
+                const shouldHide = this.shouldHideCard(card);
+                if (shouldHide) {
+                    cardElement.classList.add('hidden-card');
+                }
+
+                this.setupCardDragAndDrop(cardElement, card);
+                targetField.appendChild(cardElement);
+
+                this.addDiscardButton(cardElement, card.id);
+            }
+        });
+
+        // Синхронизация помещения карты в колоду
+        socket.on('card-put-to-deck', (data) => {
+            const deck = data.player === 'player1' ? this.player1Deck : this.player2Deck;
+            const card = this.cards.get(data.cardId);
+
+            if (card) {
+                // Добавляем карту в колоду
+                deck.putCard({
+                    id: card.id,
+                    text: card.text,
+                    image: card.image
+                }, data.position);
+
+                // Удаляем карту из руки у всех
+                if (card.element) {
+                    card.element.remove();
+                }
+                this.cards.delete(data.cardId);
+
+                this.updateDeckCounts();
+            }
+        });
     }
 
     drawCard(player) {
@@ -2030,28 +2574,27 @@ class CardManager {
         }
 
         const deck = player === 'player1' ? this.player1Deck : this.player2Deck;
-        const deckBack = player === 'player1' ? this.player1DeckBack : this.player2DeckBack;
         const cardData = deck.drawCard();
-        
+
         if (!cardData) {
             alert('Колода пуста!');
             return;
         }
 
-        const card = new Card(cardData.id, cardData.text, player, cardData.image, deckBack);
+        const card = new Card(cardData.id, cardData.text, player, cardData.image, deck.backImage);
         this.cards.set(card.id, card);
-        
+
         const targetField = player === 'player1' ? this.player1Field : this.player2Field;
         card.currentField = player;
-        
+
         const cardElement = card.createElement();
-        
+
         // Проверяем, должна ли карта быть скрыта
         const shouldHide = this.shouldHideCard(card);
         if (shouldHide) {
             cardElement.classList.add('hidden-card');
         }
-        
+
         this.setupCardDragAndDrop(cardElement, card);
         targetField.appendChild(cardElement);
 
@@ -2066,7 +2609,7 @@ class CardManager {
             field: card.currentField,
             isFlipped: card.isFlipped,
             image: card.image,
-            backImage: deckBack
+            backImage: deck.backImage
         });
 
         this.updateDeckCounts();

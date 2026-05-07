@@ -3,6 +3,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const fs = require('fs').promises;
+const multer = require('multer');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,8 +16,63 @@ const io = socketIo(server, {
     pingTimeout: 60000
 });
 
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        let uploadPath = '';
+        if (file.fieldname.includes('hero')) {
+            uploadPath = path.join(__dirname, 'heroes', 'images');
+        } else if (file.fieldname.includes('character')) {
+            uploadPath = path.join(__dirname, 'heroes', 'characters', 'images');
+        } else if (file.fieldname.includes('map')) {
+            uploadPath = path.join(__dirname, 'maps', 'images');
+        } else if (file.fieldname.includes('deck')) {
+            uploadPath = path.join(__dirname, 'decks', 'images');
+        } else {
+            uploadPath = path.join(__dirname, 'uploads');
+        }
+        
+        // Ensure directory exists
+        const fs = require('fs');
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+        }
+        cb(null, uploadPath);
+    },
+    filename: function (req, file, cb) {
+        // Create unique filename with timestamp
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ storage: storage });
+
 // Статические файлы
 app.use(express.static(path.join(__dirname)));
+
+// API для загрузки изображений
+app.post('/api/upload-image', upload.single('image'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'Файл не загружен' });
+        }
+        
+        // Возвращаем относительный путь для использования в клиенте
+        const relativePath = path.relative(__dirname, req.file.path);
+        res.json({ 
+            success: true, 
+            filename: req.file.filename,
+            path: relativePath,
+            url: `/${relativePath.replace(/\\/g, '/')}` // URL для доступа к файлу
+        });
+    } catch (error) {
+        console.error('Ошибка загрузки файла:', error);
+        res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+    }
+});
+
+// API для получения списка персонажей
 
 // API для получения списка персонажей
 app.get('/api/characters', async (req, res) => {
@@ -567,9 +623,27 @@ io.on('connection', (socket) => {
     socket.on('deck-shuffled', (data) => {
         const room = rooms.get(socket.roomCode);
         if (!room) return;
-        
+
         // Отправляем всем остальным в комнате
         socket.to(socket.roomCode).emit('deck-shuffled', data);
+    });
+
+    // Синхронизация взятия карты из колоды
+    socket.on('card-taken-from-deck', (data) => {
+        const room = rooms.get(socket.roomCode);
+        if (!room) return;
+
+        // Отправляем всем остальным в комнате
+        socket.to(socket.roomCode).emit('card-taken-from-deck', data);
+    });
+
+    // Синхронизация помещения карты в колоду
+    socket.on('card-put-to-deck', (data) => {
+        const room = rooms.get(socket.roomCode);
+        if (!room) return;
+
+        // Отправляем всем остальным в комнате
+        socket.to(socket.roomCode).emit('card-put-to-deck', data);
     });
 
     // Отключение игрока
