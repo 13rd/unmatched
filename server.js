@@ -7,6 +7,11 @@ const multer = require('multer');
 
 const app = express();
 const server = http.createServer(app);
+
+// Middleware for JSON and URL-encoded data
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
 const io = socketIo(server, {
     cors: {
         origin: "*",
@@ -645,6 +650,70 @@ io.on('connection', (socket) => {
         // Отправляем всем остальным в комнате
         socket.to(socket.roomCode).emit('card-put-to-deck', data);
     });
+
+    // API для сохранения персонажа на сервер
+    app.post('/api/save-character', express.json(), async (req, res) => {
+        try {
+            const { name, data } = req.body;
+
+            if (!name || !data) {
+                return res.status(400).json({ error: 'Не указано имя или данные' });
+            }
+
+            const filename = name.toLowerCase().replace(/\s+/g, '_') + '.json';
+            const filepath = path.join(__dirname, 'heroes', 'characters', filename);
+
+            await fs.writeFile(filepath, JSON.stringify(data, null, 2), 'utf8');
+
+            res.json({ success: true, filename, path: `/heroes/characters/${filename}` });
+        } catch (error) {
+            console.error('Ошибка сохранения персонажа:', error);
+            res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+        }
+    });
+
+    // API для сохранения колоды на сервер
+    app.post('/api/save-deck', express.json(), async (req, res) => {
+        try {
+            const { name, data } = req.body;
+
+            if (!name || !data) {
+                return res.status(400).json({ error: 'Не указано имя или данные' });
+            }
+
+            const filename = name.toLowerCase().replace(/\s+/g, '_') + '.json';
+            const filepath = path.join(__dirname, 'heroes', filename);
+
+            await fs.writeFile(filepath, JSON.stringify(data, null, 2), 'utf8');
+
+            res.json({ success: true, filename, path: `/heroes/${filename}` });
+        } catch (error) {
+            console.error('Ошибка сохранения колоды:', error);
+            res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+        }
+    });
+
+    // API для сохранения карты на сервер
+    app.post('/api/save-map', express.json(), async (req, res) => {
+        try {
+            const { name, data } = req.body;
+
+            if (!name || !data) {
+                return res.status(400).json({ error: 'Не указано имя или данные' });
+            }
+
+            const filename = name.toLowerCase().replace(/\s+/g, '_') + '.json';
+            const filepath = path.join(__dirname, 'maps', 'saved_maps', filename);
+
+            await fs.writeFile(filepath, JSON.stringify(data, null, 2), 'utf8');
+
+            res.json({ success: true, filename, path: `/maps/saved_maps/${filename}` });
+        } catch (error) {
+            console.error('Ошибка сохранения карты:', error);
+            res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+        }
+    });
+
 
     // Отключение игрока
     socket.on('disconnect', () => {

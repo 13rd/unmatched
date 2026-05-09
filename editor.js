@@ -395,35 +395,7 @@ class DeckEditor {
         this.updateCardsCount();
     }
 
-    exportDeck() {
-        if (this.cards.length !== this.maxCards) {
-            alert(`Колода должна содержать ровно ${this.maxCards} карт! Сейчас: ${this.cards.length}`);
-            return;
-        }
-
-        if (!this.backImage) {
-            alert('Загрузите рубашку колоды!');
-            return;
-        }
-
-        const deckData = {
-            backImage: this.backImage,
-            cards: this.cards
-        };
-
-        const jsonString = JSON.stringify(deckData, null, 2);
-        const blob = new Blob([jsonString], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'deck.json';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-
-        alert('Колода успешно экспортирована!');
-    }
+    // Old exportDeck removed - now using saveToServer method
 
     importDeck(deckData) {
         if (!deckData.cards || !Array.isArray(deckData.cards)) {
@@ -543,9 +515,9 @@ class CharacterEditor {
         });
 
         // Загрузка карт колоды
-        document.getElementById('charCardsUpload').addEventListener('change', (e) => {
+        document.getElementById('charCardsUpload').addEventListener('change', async (e) => {
             const files = Array.from(e.target.files);
-            
+
             if (!this.deck) {
                 this.deck = { backImage: null, cards: [] };
             }
@@ -555,19 +527,33 @@ class CharacterEditor {
                 return;
             }
 
-            files.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (event) => {
+            for (const file of files) {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                try {
+                    const response = await fetch('/api/upload-image', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Ошибка загрузки изображения');
+                    }
+
+                    const result = await response.json();
                     this.deck.cards.push({
-                        image: event.target.result,
+                        image: result.url,
                         text: file.name.replace(/\.[^/.]+$/, '')
                     });
                     this.updateCharCardsGrid();
                     this.updateCharCardsCount();
                     this.checkDeckComplete();
-                };
-                reader.readAsDataURL(file);
-            });
+                } catch (error) {
+                    console.error('Ошибка загрузки изображения карты:', error);
+                    alert('Не удалось загрузить изображение карты: ' + error.message);
+                }
+            }
         });
 
         // Главный токен - изображение
@@ -1060,22 +1046,59 @@ class CharacterEditor {
             }))
         };
 
-        // Экспорт в JSON
-        const jsonString = JSON.stringify(characterData, null, 2);
-        const blob = new Blob([jsonString], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${this.characterName.toLowerCase().replace(/\s+/g, '_')}.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-
-        alert('Персонаж успешно экспортирован! Сохраните файл в папку heroes/characters/');
+        // Сохраняем на сервер
+        this.saveToServer('character', this.characterName, characterData);
     }
 
-    importCharacter(characterData) {
+    exportDeck() {
+        if (this.cards.length !== this.maxCards) {
+            alert(`Колода должна содержать ровно ${this.maxCards} карт! Сейчас: ${this.cards.length}`);
+            return;
+        }
+
+        if (!this.backImage) {
+            alert('Загрузите рубашку колоды!');
+            return;
+        }
+
+        const deckData = {
+            backImage: this.backImage,
+            cards: this.cards
+        };
+
+        // Сохраняем на сервер
+        const deckName = prompt('Введите имя колоды:', 'deck');
+        if (deckName) {
+            this.saveToServer('deck', deckName, deckData);
+        }
+    }
+
+    async saveToServer(type, name, data) {
+        try {
+            const response = await fetch('/api/save-' + type, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    data: data
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Ошибка сохранения');
+            }
+
+            const result = await response.json();
+            alert(`Файл успешно сохранён на сервере: ${result.filename}`);
+        } catch (error) {
+            console.error('Ошибка сохранения на сервер:', error);
+            alert('Не удалось сохранить файл на сервере: ' + error.message);
+        }
+    }
+
+    async importCharacter(characterData) {
         // Валидация
         if (!characterData.name || !characterData.deck || !characterData.mainToken) {
             alert('Неверный формат файла персонажа!');
@@ -1084,7 +1107,6 @@ class CharacterEditor {
 
         this.characterName = characterData.name;
         this.speed = characterData.speed || 3;
-        this.characterImage = characterData.characterImage || null;
         this.deck = characterData.deck;
         this.mainToken = characterData.mainToken;
         this.extraTokens = characterData.extraTokens || [];
@@ -1102,11 +1124,36 @@ class CharacterEditor {
         document.getElementById('extraTokensCount').value = this.extraTokensCount;
         document.getElementById('extraTokenHP').value = this.extraTokenHP;
         document.getElementById('countersCount').value = this.countersCount;
-        document.getElementById('mainTokenImageName').textContent = 'Загружено из файла';
-        
-        if (this.characterImage) {
-            document.getElementById('characterImageName').textContent = 'Загружено из файла';
+
+        // Re-upload images if they're not server paths
+        if (this.deck.backImage && !this.deck.backImage.startsWith('/')) {
+            this.deck.backImage = await this.uploadImageFromDataURL(this.deck.backImage, 'deck_back');
         }
+
+        if (this.deck.cards) {
+            for (let i = 0; i < this.deck.cards.length; i++) {
+                if (this.deck.cards[i].image && !this.deck.cards[i].image.startsWith('/')) {
+                    this.deck.cards[i].image = await this.uploadImageFromDataURL(this.deck.cards[i].image, `card_${i}`);
+                }
+            }
+        }
+
+        if (this.mainToken.image && !this.mainToken.image.startsWith('/')) {
+            this.mainToken.image = await this.uploadImageFromDataURL(this.mainToken.image, 'main_token');
+        }
+
+        if (this.characterImage && !this.characterImage.startsWith('/')) {
+            this.characterImage = await this.uploadImageFromDataURL(this.characterImage, 'character');
+        }
+
+        for (let i = 0; i < this.extraTokens.length; i++) {
+            if (this.extraTokens[i].image && !this.extraTokens[i].image.startsWith('/')) {
+                this.extraTokens[i].image = await this.uploadImageFromDataURL(this.extraTokens[i].image, `extra_token_${i}`);
+            }
+        }
+
+        document.getElementById('mainTokenImageName').textContent = 'Загружено';
+        document.getElementById('characterImageName').textContent = 'Загружено';
 
         this.updateDeckStatus(true);
         this.updateMainTokenPreview();
@@ -1115,6 +1162,32 @@ class CharacterEditor {
         this.updateCountersFields();
 
         alert('Персонаж успешно импортирован!');
+    }
+
+    async uploadImageFromDataURL(dataURL, filename) {
+        try {
+            const response = await fetch(dataURL);
+            const blob = await response.blob();
+            const file = new File([blob], `${filename}.png`, { type: 'image/png' });
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const uploadResponse = await fetch('/api/upload-image', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!uploadResponse.ok) {
+                throw new Error('Ошибка загрузки изображения');
+            }
+
+            const result = await uploadResponse.json();
+            return result.url;
+        } catch (error) {
+            console.error('Ошибка при перезагрузке изображения:', error);
+            return dataURL;
+        }
     }
 }
 
@@ -1374,18 +1447,8 @@ class MapEditor {
             points: this.points.map(p => ({ x: p.x, y: p.y }))
         };
 
-        const jsonString = JSON.stringify(mapData, null, 2);
-        const blob = new Blob([jsonString], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${this.mapName.toLowerCase().replace(/\s+/g, '_')}.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-
-        alert('Карта успешно сохранена! Сохраните файл в папку maps/saved_maps/');
+        // Сохраняем на сервер
+        this.saveToServer('map', this.mapName, mapData);
     }
 
     loadMapData(mapData) {
@@ -1408,6 +1471,31 @@ class MapEditor {
 
         this.updatePointCount();
         alert('Карта успешно загружена!');
+    }
+
+    async saveToServer(type, name, data) {
+        try {
+            const response = await fetch('/api/save-map', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    data: data
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Ошибка сохранения');
+            }
+
+            const result = await response.json();
+            alert(`Файл успешно сохранён на сервере: ${result.filename}`);
+        } catch (error) {
+            console.error('Ошибка сохранения на сервер:', error);
+            alert('Не удалось сохранить файл на сервере: ' + error.message);
+        }
     }
 
     async loadSavedMaps() {

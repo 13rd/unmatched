@@ -3,6 +3,7 @@ version: '3.8'
 services:
   unmatched-game:
     build: .
+    image: docker.io/13imp/unmatched-game:0.3.2
     container_name: unmatched-game
     ports:
       - "3000:3000"
@@ -11,7 +12,6 @@ services:
       - PORT=3000
     restart: unless-stopped
     volumes:
-      # Монтируем только необходимые файлы для логов (опционально)
       - ./logs:/app/logs
     networks:
       - unmatched-network
