@@ -1,0 +1,145 @@
+{
+  "name": "Синбад",
+  "speed": 2,
+  "characterImage": "/uploads/image-1778431493420-866249874.png",
+  "deck": {
+    "backImage": "/uploads/image-1778431513982-157397658.png",
+    "cards": [
+      {
+        "image": "/uploads/image-1778431531193-923234594.png",
+        "text": "опасный_труд_4"
+      },
+      {
+        "image": "/uploads/image-1778431531200-438273991.png",
+        "text": "опасный_труд_3"
+      },
+      {
+        "image": "/uploads/image-1778431531209-641617443.png",
+        "text": "опасный_труд_2"
+      },
+      {
+        "image": "/uploads/image-1778431531237-621340429.png",
+        "text": "опасный_труд_1"
+      },
+      {
+        "image": "/uploads/image-1778431531244-320247104.png",
+        "text": "путешествие_домой"
+      },
+      {
+        "image": "/uploads/image-1778431531251-382304988.png",
+        "text": "несметные_богатства_2"
+      },
+      {
+        "image": "/uploads/image-1778431531264-989969826.png",
+        "text": "несметные_богатства_1"
+      },
+      {
+        "image": "/uploads/image-1778431531274-86579983.png",
+        "text": "фортуна_3"
+      },
+      {
+        "image": "/uploads/image-1778431531280-68770764.png",
+        "text": "фортуна_2"
+      },
+      {
+        "image": "/uploads/image-1778431531290-875416744.png",
+        "text": "фортуна_1"
+      },
+      {
+        "image": "/uploads/image-1778431531300-230408406.png",
+        "text": "путешествие_к_существу"
+      },
+      {
+        "image": "/uploads/image-1778431531307-698235203.png",
+        "text": "путешествие_на_китовий_остров"
+      },
+      {
+        "image": "/uploads/image-1778431531317-688870218.png",
+        "text": "путешествие_в_долину_гагантских_змей"
+      },
+      {
+        "image": "/uploads/image-1778431531327-670481403.png",
+        "text": "путешествие_к_канибалам"
+      },
+      {
+        "image": "/uploads/image-1778431531333-762022477.png",
+        "text": "путешествие_в_город_обезьян"
+      },
+      {
+        "image": "/uploads/image-1778431531343-651237941.png",
+        "text": "путешествие_в_город_сенедиба"
+      },
+      {
+        "image": "/uploads/image-1778431531354-585161559.png",
+        "text": "властное воздействие"
+      },
+      {
+        "image": "/uploads/image-1778431531367-69971935.png",
+        "text": "отскок_2"
+      },
+      {
+        "image": "/uploads/image-1778431531374-560149317.png",
+        "text": "отскок_1"
+      },
+      {
+        "image": "/uploads/image-1778431531383-906506474.png",
+        "text": "переломный_момент_3"
+      },
+      {
+        "image": "/uploads/image-1778431531394-422369843.png",
+        "text": "переломный_момент_2"
+      },
+      {
+        "image": "/uploads/image-1778431531400-371146066.png",
+        "text": "переломный_момент_1"
+      },
+      {
+        "image": "/uploads/image-1778431531411-228638653.png",
+        "text": "уловка_3"
+      },
+      {
+        "image": "/uploads/image-1778431531425-658673501.png",
+        "text": "уловка_2"
+      },
+      {
+        "image": "/uploads/image-1778431531434-611918218.png",
+        "text": "уловка_1"
+      },
+      {
+        "image": "/uploads/image-1778431531439-505712832.png",
+        "text": "эксплуатация_2"
+      },
+      {
+        "image": "/uploads/image-1778431531448-363289029.png",
+        "text": "эксплуатация_1"
+      },
+      {
+        "image": "/uploads/image-1778431531460-18294197.png",
+        "text": "передышка_3"
+      },
+      {
+        "image": "/uploads/image-1778431531467-88074125.png",
+        "text": "передышка_2"
+      },
+      {
+        "image": "/uploads/image-1778431531478-523274254.png",
+        "text": "передышка_1"
+      }
+    ]
+  },
+  "mainToken": {
+    "image": "/uploads/image-1778431743018-886990242.png",
+    "color": "#dd823e",
+    "hp": 15,
+    "attackType": "melee"
+  },
+  "extraTokens": [
+    {
+      "image": "/uploads/image-1778431750220-852074353.png",
+      "color": "#fe7f19",
+      "attackType": "melee"
+    }
+  ],
+  "extraTokenHP": 6,
+  "counters": []
+}

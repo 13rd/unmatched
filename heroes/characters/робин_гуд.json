@@ -1,0 +1,160 @@
+{
+  "name": "Робин Гуд",
+  "speed": 2,
+  "characterImage": "/uploads/image-1778423820205-69795328.png",
+  "deck": {
+    "backImage": "/uploads/image-1778423825404-774242290.png",
+    "cards": [
+      {
+        "image": "/uploads/image-1778423839296-213867292.png",
+        "text": "робин_ловкий_боец_3"
+      },
+      {
+        "image": "/uploads/image-1778423839303-400235604.png",
+        "text": "робин_ловкий_боец_2"
+      },
+      {
+        "image": "/uploads/image-1778423839313-94275508.png",
+        "text": "робин_ловкий_боец_1"
+      },
+      {
+        "image": "/uploads/image-1778423839321-256392270.png",
+        "text": "робин_уловка_3"
+      },
+      {
+        "image": "/uploads/image-1778423839330-211461596.png",
+        "text": "робин_уловка_2"
+      },
+      {
+        "image": "/uploads/image-1778423839338-902801700.png",
+        "text": "робин_уловка_1"
+      },
+      {
+        "image": "/uploads/image-1778423839351-179058193.png",
+        "text": "робин_передышка_3"
+      },
+      {
+        "image": "/uploads/image-1778423839361-505728518.png",
+        "text": "робин_передышка_2"
+      },
+      {
+        "image": "/uploads/image-1778423839369-921736274.png",
+        "text": "робин_передышка_1"
+      },
+      {
+        "image": "/uploads/image-1778423839379-457228437.png",
+        "text": "робин_разбой_4"
+      },
+      {
+        "image": "/uploads/image-1778423839387-912325676.png",
+        "text": "робин_разбой_3"
+      },
+      {
+        "image": "/uploads/image-1778423839395-422734969.png",
+        "text": "робин_разбой_2"
+      },
+      {
+        "image": "/uploads/image-1778423839406-90270945.png",
+        "text": "робин_разбой_1"
+      },
+      {
+        "image": "/uploads/image-1778423839415-958277530.png",
+        "text": "робин_засада_2"
+      },
+      {
+        "image": "/uploads/image-1778423839422-809335730.png",
+        "text": "робин_засада_1"
+      },
+      {
+        "image": "/uploads/image-1778423839431-172605644.png",
+        "text": "робин_насмешка_3"
+      },
+      {
+        "image": "/uploads/image-1778423839442-931945926.png",
+        "text": "робин_насмешка_2"
+      },
+      {
+        "image": "/uploads/image-1778423839449-711579735.png",
+        "text": "робин_насмешка_1"
+      },
+      {
+        "image": "/uploads/image-1778423839459-291446456.png",
+        "text": "робин_воровство_у_богатых_3"
+      },
+      {
+        "image": "/uploads/image-1778423839469-436998436.png",
+        "text": "робин_воровство_у_богатых_2"
+      },
+      {
+        "image": "/uploads/image-1778423839476-456729212.png",
+        "text": "робин_воровство_у_богатых_1"
+      },
+      {
+        "image": "/uploads/image-1778423839485-164689087.png",
+        "text": "робин_обезоруживающий_выстрел_2"
+      },
+      {
+        "image": "/uploads/image-1778423839495-112090142.png",
+        "text": "робин_обезоруживающий_выстрел_1"
+      },
+      {
+        "image": "/uploads/image-1778423839503-995485161.png",
+        "text": "робин_пронзающий_выстрел_2"
+      },
+      {
+        "image": "/uploads/image-1778423839512-369858114.png",
+        "text": "робин_пронзающий_выстрел_1"
+      },
+      {
+        "image": "/uploads/image-1778423839521-596891787.png",
+        "text": "робин_защитники_шервуда_2"
+      },
+      {
+        "image": "/uploads/image-1778423839528-713482671.png",
+        "text": "робин_защитники_шервуда_1"
+      },
+      {
+        "image": "/uploads/image-1778423839538-95617558.png",
+        "text": "робин_глаз_охотника_3"
+      },
+      {
+        "image": "/uploads/image-1778423839548-183206499.png",
+        "text": "робин_глаз_охотника_2"
+      },
+      {
+        "image": "/uploads/image-1778423839556-379020732.png",
+        "text": "робин_глаз_охотника_1"
+      }
+    ]
+  },
+  "mainToken": {
+    "image": "/uploads/image-1778423900016-643289199.png",
+    "color": "#beca93",
+    "hp": 13,
+    "attackType": "ranged"
+  },
+  "extraTokens": [
+    {
+      "image": "/uploads/image-1778423926778-589710751.png",
+      "color": "#067c57",
+      "attackType": "melee"
+    },
+    {
+      "image": "/uploads/image-1778423929400-945673794.png",
+      "color": "#067c57",
+      "attackType": "melee"
+    },
+    {
+      "image": "/uploads/image-1778423930847-241743964.png",
+      "color": "#067c57",
+      "attackType": "melee"
+    },
+    {
+      "image": "/uploads/image-1778423932442-725434597.png",
+      "color": "#067c57",
+      "attackType": "melee"
+    }
+  ],
+  "extraTokenHP": 1,
+  "counters": []
+}
