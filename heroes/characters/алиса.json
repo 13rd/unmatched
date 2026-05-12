@@ -1,7 +1,6 @@
 {
   "name": "Алиса",
   "speed": 3,
-  "characterImage": "/uploads/image-1778420772455-523492900.png",
   "deck": {
     "backImage": "/uploads/image-1778420748416-529801166.png",
     "cards": [
@@ -148,5 +147,8 @@
       "maxValue": 1,
       "currentValue": 0
     }
+  ],
+  "characterImages": [
+    "/uploads/image-1778420772455-523492900.png"
   ]
 }

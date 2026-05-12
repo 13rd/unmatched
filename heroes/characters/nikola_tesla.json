@@ -1,7 +1,6 @@
 {
   "name": "Никола Тесла",
   "speed": 2,
-  "characterImage": "/uploads/image-1778138241933-663952048.png",
   "deck": {
     "backImage": "/uploads/image-1778138226353-62979282.png",
     "cards": [
@@ -142,5 +141,8 @@
       "maxValue": 2,
       "currentValue": 1
     }
+  ],
+  "characterImages": [
+    "/uploads/image-1778138241933-663952048.png"
   ]
 }

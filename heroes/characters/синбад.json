@@ -1,7 +1,6 @@
 {
   "name": "Синбад",
   "speed": 2,
-  "characterImage": "/uploads/image-1778431493420-866249874.png",
   "deck": {
     "backImage": "/uploads/image-1778431513982-157397658.png",
     "cards": [
@@ -141,5 +140,8 @@
     }
   ],
   "extraTokenHP": 6,
-  "counters": []
+  "counters": [],
+  "characterImages": [
+    "/uploads/image-1778431493420-866249874.png"
+  ]
 }

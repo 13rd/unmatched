@@ -1444,27 +1444,34 @@ class CardManager {
 
     updateCharacterInfo(player, characterData) {
         if (!characterData) return;
-        
+
         const prefix = player === 'player1' ? 'player1' : 'player2';
-        
+
         // Обновляем скорость
         const speedEl = document.getElementById(`${prefix}Speed`);
         if (speedEl && characterData.speed) {
             speedEl.textContent = characterData.speed;
         }
-        
-        // Обновляем изображение персонажа
-        const imageEl = document.getElementById(`${prefix}CharacterImage`);
-        if (imageEl && characterData.characterImage) {
-            imageEl.src = characterData.characterImage;
-            imageEl.style.display = 'block';
-            
-            // Добавляем обработчик клика для увеличения изображения
-            imageEl.addEventListener('click', () => {
-                this.showCharacterImagePreview(characterData.characterImage, characterData.name);
+
+        // Обновляем изображения персонажа (1-3)
+        const container = document.getElementById(`${prefix}CharacterImages`);
+        if (container) {
+            container.innerHTML = '';
+            const images = characterData.characterImages || (characterData.characterImage ? [characterData.characterImage] : []);
+            images.forEach((src) => {
+                if (!src) return;
+                const img = document.createElement('img');
+                img.className = 'character-image';
+                img.src = src;
+                img.alt = characterData.name;
+                img.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.showCharacterImagePreview(images, characterData.name, images.indexOf(src));
+                });
+                container.appendChild(img);
             });
         }
-        
+
         // Обновляем тип атаки главного токена
         const mainAttackEl = document.getElementById(`${prefix}MainAttack`);
         if (mainAttackEl && characterData.mainToken && characterData.mainToken.attackType) {
@@ -1592,8 +1599,14 @@ class CardManager {
         }
     }
 
-    showCharacterImagePreview(imageSrc, characterName) {
-        // Создаем оверлей для превью
+    showCharacterImagePreview(images, characterName, startIndex = 0) {
+        if (!images || images.length === 0) return;
+        if (!Array.isArray(images)) {
+            images = [images];
+        }
+
+        let currentIndex = startIndex;
+
         const overlay = document.createElement('div');
         overlay.style.cssText = `
             position: fixed;
@@ -1601,52 +1614,138 @@ class CardManager {
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 10000;
             cursor: pointer;
+            flex-direction: column;
+            gap: 16px;
         `;
 
         const previewContainer = document.createElement('div');
         previewContainer.style.cssText = `
-            background: white;
+            background: var(--color-bg-white, white);
             border-radius: 12px;
             padding: 20px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            position: relative;
+            cursor: default;
         `;
 
         const img = document.createElement('img');
-        img.src = imageSrc;
         img.style.cssText = `
             max-width: 600px;
             max-height: 800px;
             width: auto;
             height: auto;
             border-radius: 8px;
+            display: block;
         `;
-        
-        if (characterName) {
-            const title = document.createElement('div');
-            title.textContent = characterName;
-            title.style.cssText = `
-                font-size: 24px;
-                font-weight: bold;
-                color: #2d3748;
-                margin-bottom: 15px;
-                text-align: center;
-            `;
-            previewContainer.appendChild(title);
+
+        const title = document.createElement('div');
+        title.style.cssText = `
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--color-text, #2d3748);
+            margin-bottom: 15px;
+            text-align: center;
+        `;
+        title.textContent = characterName || '';
+
+        const counter = document.createElement('div');
+        counter.style.cssText = `
+            font-size: 14px;
+            color: var(--color-text-muted, #718096);
+            text-align: center;
+            margin-bottom: 10px;
+        `;
+
+        function updateImage() {
+            img.src = images[currentIndex];
+            if (images.length > 1) {
+                counter.textContent = `${currentIndex + 1} / ${images.length}`;
+                counter.style.display = 'block';
+            } else {
+                counter.style.display = 'none';
+            }
         }
-        
+
+        previewContainer.appendChild(title);
+        previewContainer.appendChild(counter);
         previewContainer.appendChild(img);
+
+        if (images.length > 1) {
+            const navStyle = `
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                background: rgba(0,0,0,0.5);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+                cursor: pointer;
+                z-index: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background 0.2s;
+            `;
+
+            const prevBtn = document.createElement('button');
+            prevBtn.innerHTML = '◀';
+            prevBtn.style.cssText = navStyle + 'left: -50px;';
+            prevBtn.onclick = (e) => {
+                e.stopPropagation();
+                currentIndex = (currentIndex - 1 + images.length) % images.length;
+                updateImage();
+            };
+
+            const nextBtn = document.createElement('button');
+            nextBtn.innerHTML = '▶';
+            nextBtn.style.cssText = navStyle + 'right: -50px;';
+            nextBtn.onclick = (e) => {
+                e.stopPropagation();
+                currentIndex = (currentIndex + 1) % images.length;
+                updateImage();
+            };
+
+            previewContainer.appendChild(prevBtn);
+            previewContainer.appendChild(nextBtn);
+            previewContainer.style.paddingLeft = '60px';
+            previewContainer.style.paddingRight = '60px';
+        }
+
         overlay.appendChild(previewContainer);
         document.body.appendChild(overlay);
 
-        // Закрытие по клику
+        updateImage();
+
         overlay.addEventListener('click', () => {
             document.body.removeChild(overlay);
+        });
+
+        previewContainer.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        document.addEventListener('keydown', function onKey(e) {
+            if (e.key === 'Escape') {
+                document.body.removeChild(overlay);
+                document.removeEventListener('keydown', onKey);
+            } else if (e.key === 'ArrowLeft' && images.length > 1) {
+                e.preventDefault();
+                currentIndex = (currentIndex - 1 + images.length) % images.length;
+                updateImage();
+            } else if (e.key === 'ArrowRight' && images.length > 1) {
+                e.preventDefault();
+                currentIndex = (currentIndex + 1) % images.length;
+                updateImage();
+            }
         });
     }
 

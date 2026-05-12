@@ -1,7 +1,6 @@
 {
   "name": "Человек-Невидимка",
   "speed": 2,
-  "characterImage": "/uploads/image-1778424050460-971569465.png",
   "deck": {
     "backImage": "/uploads/image-1778424013239-281938886.png",
     "cards": [
@@ -151,5 +150,8 @@
     }
   ],
   "extraTokenHP": 0,
-  "counters": []
+  "counters": [],
+  "characterImages": [
+    "/uploads/image-1778424050460-971569465.png"
+  ]
 }

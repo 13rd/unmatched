@@ -1,0 +1,149 @@
+{
+  "name": "Эсканор",
+  "speed": 2,
+  "characterImages": [
+    "/uploads/image-1778605192415-460364147.png",
+    "/uploads/image-1778605196635-191059492.png"
+  ],
+  "deck": {
+    "backImage": "/uploads/image-1778605156895-79636288.png",
+    "cards": [
+      {
+        "image": "/uploads/image-1778605166461-88135010.png",
+        "text": "escanor-action-card-39249_3"
+      },
+      {
+        "image": "/uploads/image-1778605166467-732784119.png",
+        "text": "escanor-action-card-39249_2"
+      },
+      {
+        "image": "/uploads/image-1778605166473-901082313.png",
+        "text": "escanor-action-card-39249_1"
+      },
+      {
+        "image": "/uploads/image-1778605166483-653148052.png",
+        "text": "escanor-action-card-39245_1"
+      },
+      {
+        "image": "/uploads/image-1778605166488-885959582.png",
+        "text": "escanor-action-card-39244_3"
+      },
+      {
+        "image": "/uploads/image-1778605166496-353248492.png",
+        "text": "escanor-action-card-39244_2"
+      },
+      {
+        "image": "/uploads/image-1778605166501-386390072.png",
+        "text": "escanor-action-card-39244_1"
+      },
+      {
+        "image": "/uploads/image-1778605166509-793809170.png",
+        "text": "escanor-action-card-39243_3"
+      },
+      {
+        "image": "/uploads/image-1778605166514-477628687.png",
+        "text": "escanor-action-card-39243_2"
+      },
+      {
+        "image": "/uploads/image-1778605166523-273986812.png",
+        "text": "escanor-action-card-39243_1"
+      },
+      {
+        "image": "/uploads/image-1778605166528-528478471.png",
+        "text": "escanor-action-card-39242_2"
+      },
+      {
+        "image": "/uploads/image-1778605166536-640159772.png",
+        "text": "escanor-action-card-39242_1"
+      },
+      {
+        "image": "/uploads/image-1778605166541-811694016.png",
+        "text": "escanor-action-card-39238_1"
+      },
+      {
+        "image": "/uploads/image-1778605166550-930481971.png",
+        "text": "escanor-action-card-39237_2"
+      },
+      {
+        "image": "/uploads/image-1778605166555-948581913.png",
+        "text": "escanor-action-card-39237_1"
+      },
+      {
+        "image": "/uploads/image-1778605166562-433773572.png",
+        "text": "escanor-action-card-39235_2"
+      },
+      {
+        "image": "/uploads/image-1778605166567-505903853.png",
+        "text": "escanor-action-card-39235_1"
+      },
+      {
+        "image": "/uploads/image-1778605166576-149160240.png",
+        "text": "escanor-action-card-39227_2"
+      },
+      {
+        "image": "/uploads/image-1778605166582-281051025.png",
+        "text": "escanor-action-card-39227_1"
+      },
+      {
+        "image": "/uploads/image-1778605166591-486380829.png",
+        "text": "escanor-action-card-39223_2"
+      },
+      {
+        "image": "/uploads/image-1778605166595-479135067.png",
+        "text": "escanor-action-card-39223_1"
+      },
+      {
+        "image": "/uploads/image-1778605166603-220401316.png",
+        "text": "escanor-action-card-32548_1"
+      },
+      {
+        "image": "/uploads/image-1778605166608-907015880.png",
+        "text": "escanor-action-card-32544_2"
+      },
+      {
+        "image": "/uploads/image-1778605166616-331528606.png",
+        "text": "escanor-action-card-32544_1"
+      },
+      {
+        "image": "/uploads/image-1778605166620-778058110.png",
+        "text": "escanor-action-card-32542_2"
+      },
+      {
+        "image": "/uploads/image-1778605166640-35898161.png",
+        "text": "escanor-action-card-32542_1"
+      },
+      {
+        "image": "/uploads/image-1778605166645-329024387.png",
+        "text": "escanor-action-card-32539_2"
+      },
+      {
+        "image": "/uploads/image-1778605166652-275866164.png",
+        "text": "escanor-action-card-32539_1"
+      },
+      {
+        "image": "/uploads/image-1778605166657-228966970.png",
+        "text": "escanor-action-card-32538_2"
+      },
+      {
+        "image": "/uploads/image-1778605166661-256641655.png",
+        "text": "escanor-action-card-32538_1"
+      }
+    ]
+  },
+  "mainToken": {
+    "image": "/uploads/image-1778605515749-942686403.png",
+    "color": "#b8903a",
+    "hp": 16,
+    "attackType": "melee"
+  },
+  "extraTokens": [],
+  "extraTokenHP": 1,
+  "counters": [
+    {
+      "name": "Фаза дня",
+      "minValue": 1,
+      "maxValue": 5,
+      "currentValue": 1
+    }
+  ]
+}

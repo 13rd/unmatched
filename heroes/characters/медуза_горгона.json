@@ -1,7 +1,6 @@
 {
   "name": "Медуза Горгона",
   "speed": 3,
-  "characterImage": "/uploads/image-1778421529466-287309761.png",
   "deck": {
     "backImage": "/uploads/image-1778421503885-194662493.png",
     "cards": [
@@ -151,5 +150,8 @@
     }
   ],
   "extraTokenHP": 1,
-  "counters": []
+  "counters": [],
+  "characterImages": [
+    "/uploads/image-1778421529466-287309761.png"
+  ]
 }

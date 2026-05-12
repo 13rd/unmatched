@@ -1,7 +1,6 @@
 {
   "name": "Золотой крылан",
   "speed": 3,
-  "characterImage": "/uploads/image-1778423271104-91705534.png",
   "deck": {
     "backImage": "/uploads/image-1778423245612-235513253.png",
     "cards": [
@@ -135,5 +134,8 @@
   },
   "extraTokens": [],
   "extraTokenHP": 1,
-  "counters": []
+  "counters": [],
+  "characterImages": [
+    "/uploads/image-1778423271104-91705534.png"
+  ]
 }

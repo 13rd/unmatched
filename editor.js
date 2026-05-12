@@ -428,7 +428,7 @@ class CharacterEditor {
     constructor() {
         this.characterName = '';
         this.speed = 3;
-        this.characterImage = null;
+        this.characterImages = [];
         this.deck = null; // { backImage, cards }
         this.mainToken = {
             image: null,
@@ -605,33 +605,34 @@ class CharacterEditor {
             this.speed = parseInt(e.target.value);
         });
 
-        // Изображение персонажа
-        document.getElementById('characterImage').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                document.getElementById('characterImageName').textContent = file.name;
-                const formData = new FormData();
-                formData.append('image', file);
-                
-                try {
-                    const response = await fetch('/api/upload-image', {
-                        method: 'POST',
-                        body: formData
-                    });
+        // Изображения персонажа (1-3)
+        for (let slot = 0; slot < 3; slot++) {
+            document.getElementById(`characterImage${slot}`).addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const formData = new FormData();
+                    formData.append('image', file);
                     
-                    if (!response.ok) {
-                        throw new Error('Ошибка загрузки изображения');
+                    try {
+                        const response = await fetch('/api/upload-image', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Ошибка загрузки изображения');
+                        }
+                        
+                        const result = await response.json();
+                        this.characterImages[slot] = result.url;
+                        this.updateCharacterImagePreview();
+                    } catch (error) {
+                        console.error('Ошибка загрузки изображения персонажа:', error);
+                        alert('Не удалось загрузить изображение персонажа: ' + error.message);
                     }
-                    
-                    const result = await response.json();
-                    this.characterImage = result.url; // Store the server path
-                    this.updateCharacterImagePreview();
-                } catch (error) {
-                    console.error('Ошибка загрузки изображения персонажа:', error);
-                    alert('Не удалось загрузить изображение персонажа: ' + error.message);
                 }
-            }
-        });
+            });
+        }
 
         // Количество дополнительных токенов
         document.getElementById('extraTokensCount').addEventListener('change', (e) => {
@@ -753,11 +754,17 @@ class CharacterEditor {
     }
 
     updateCharacterImagePreview() {
-        const preview = document.getElementById('characterImagePreview');
-        if (this.characterImage) {
-            preview.innerHTML = `<img src="${this.characterImage}" alt="Изображение персонажа" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
-        } else {
-            preview.innerHTML = '<div class="image-preview-placeholder">Загрузите изображение</div>';
+        for (let slot = 0; slot < 3; slot++) {
+            const preview = document.getElementById(`characterImagePreview${slot}`);
+            if (this.characterImages[slot]) {
+                preview.innerHTML = `<img src="${this.characterImages[slot]}" alt="Изображение персонажа ${slot + 1}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
+                const label = preview.closest('.character-image-slot').querySelector('.btn');
+                if (label) label.textContent = `\u0417\u0430\u043C\u0435\u043D\u0438\u0442\u044C #${slot + 1}`;
+            } else {
+                preview.innerHTML = '<div class="image-preview-placeholder">\u041D\u0435\u0442</div>';
+                const label = preview.closest('.character-image-slot').querySelector('.btn');
+                if (label) label.textContent = `\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C #${slot + 1}`;
+            }
         }
     }
 
@@ -960,7 +967,7 @@ class CharacterEditor {
     clearAll() {
         this.characterName = '';
         this.speed = 3;
-        this.characterImage = null;
+        this.characterImages = [];
         this.deck = null;
         this.mainToken = {
             image: null,
@@ -983,7 +990,6 @@ class CharacterEditor {
         document.getElementById('extraTokenHP').value = 1;
         document.getElementById('countersCount').value = 0;
         document.getElementById('mainTokenImageName').textContent = 'Изображение не выбрано';
-        document.getElementById('characterImageName').textContent = 'Изображение не выбрано';
         document.getElementById('charDeckBackFileName').textContent = 'Рубашка не выбрана';
         document.getElementById('deckImagesSection').style.display = 'none';
         
@@ -1024,7 +1030,7 @@ class CharacterEditor {
         const characterData = {
             name: this.characterName,
             speed: this.speed,
-            characterImage: this.characterImage,
+            characterImages: this.characterImages.filter(Boolean),
             deck: this.deck,
             mainToken: {
                 image: this.mainToken.image,
@@ -1109,6 +1115,7 @@ class CharacterEditor {
         this.speed = characterData.speed || 3;
         this.deck = characterData.deck;
         this.mainToken = characterData.mainToken;
+        this.characterImages = (characterData.characterImages || (characterData.characterImage ? [characterData.characterImage] : [])).slice();
         this.extraTokens = characterData.extraTokens || [];
         this.extraTokenHP = characterData.extraTokenHP || 1;
         this.extraTokensCount = this.extraTokens.length;
@@ -1142,8 +1149,10 @@ class CharacterEditor {
             this.mainToken.image = await this.uploadImageFromDataURL(this.mainToken.image, 'main_token');
         }
 
-        if (this.characterImage && !this.characterImage.startsWith('/')) {
-            this.characterImage = await this.uploadImageFromDataURL(this.characterImage, 'character');
+        for (let i = 0; i < this.characterImages.length; i++) {
+            if (this.characterImages[i] && !this.characterImages[i].startsWith('/')) {
+                this.characterImages[i] = await this.uploadImageFromDataURL(this.characterImages[i], `character_${i}`);
+            }
         }
 
         for (let i = 0; i < this.extraTokens.length; i++) {
@@ -1153,7 +1162,6 @@ class CharacterEditor {
         }
 
         document.getElementById('mainTokenImageName').textContent = 'Загружено';
-        document.getElementById('characterImageName').textContent = 'Загружено';
 
         this.updateDeckStatus(true);
         this.updateMainTokenPreview();
