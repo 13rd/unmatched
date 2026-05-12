@@ -2839,11 +2839,6 @@ class CardManager {
         
         // Добавляем кнопку сброса
         this.addDiscardButton(cardElement, card.id);
-    
-        
-        
-        this.setupCardDragAndDrop(cardElement, card);
-        targetField.appendChild(cardElement);
 
         if (card.isFlipped) {
             card.setFlipped(true);
@@ -2858,21 +2853,21 @@ class CardManager {
             return false;
         }
         
-        // Проверяем, показывает ли игрок свою руку
+        // Если игрок показывает свою руку, все видят
         if (card.currentField === 'player1' && this.player1HandVisible) {
-            return false; // Игрок 1 показывает руку - все видят
+            return false;
         }
         
         if (card.currentField === 'player2' && this.player2HandVisible) {
-            return false; // Игрок 2 показывает руку - все видят
+            return false;
         }
         
-        // Если игрок 1, скрываем карты игрока 2 (если он не показывает руку)
+        // Если игрок 1, скрываем карты игрока 2
         if (playerRole === 'player1' && card.currentField === 'player2') {
             return true;
         }
         
-        // Если игрок 2, скрываем карты игрока 1 (если он не показывает руку)
+        // Если игрок 2, скрываем карты игрока 1
         if (playerRole === 'player2' && card.currentField === 'player1') {
             return true;
         }
