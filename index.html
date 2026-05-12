@@ -14,7 +14,13 @@
             <span id="roomCodeText">Комната: </span>
             <button id="copyRoomCode" class="copy-btn" title="Копировать код комнаты">📋</button>
         </div>
+        <div id="turnIndicator" class="turn-indicator" style="display: none;">
+            <span class="turn-marker-dot" id="turnMarkerDot"></span>
+            <span id="turnText">Ход: Игрок 1</span>
+        </div>
+        <button id="passTurnBtn" class="pass-turn-btn" style="display: none;">Передать ход</button>
         <button id="logoutBtn" class="logout-btn">Выйти</button>
+        <button class="theme-toggle"></button>
     </div>
     
     <div class="top-section">
@@ -289,6 +295,7 @@
         </div>
     </div>
     
+    <script src="theme.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="game.js"></script>
 </body>

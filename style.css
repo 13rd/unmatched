@@ -57,10 +57,363 @@
     --transition-slow: 0.5s ease;
 }
 
+.dark-theme {
+    --color-primary: #e2e8f0;
+    --color-primary-light: #cbd5e0;
+    --color-secondary: #818cf8;
+    --color-secondary-dark: #6366f1;
+    --color-accent: #a78bfa;
+    --color-accent-dark: #8b5cf6;
+    
+    --color-bg-light: #0f172a;
+    --color-bg-white: #1e293b;
+    --color-border: #334155;
+    --color-border-dark: #475569;
+    --color-text: #e2e8f0;
+    --color-text-muted: #94a3b8;
+    
+    --gradient-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+    --gradient-card: linear-gradient(135deg, #475569 0%, #334155 100%);
+    
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.6);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.7);
+}
+
+.dark-theme body {
+    background: var(--color-bg-light);
+}
+
+.dark-theme .user-info {
+    background: var(--gradient-bg);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.dark-theme .container {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+}
+
+.dark-theme .container2 {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+}
+
+.dark-theme .controls button {
+    background: var(--color-bg-white);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+}
+
+.dark-theme .controls button:hover {
+    background: var(--color-bg-light);
+}
+
+.dark-theme .hp-panel {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+}
+
+.dark-theme .hp-panel h2 {
+    color: var(--color-text);
+    border-bottom: 2px solid var(--color-border);
+}
+
+.dark-theme .player-hp-section h3 {
+    color: var(--color-primary);
+}
+
+.dark-theme .chip-hp-item {
+    background: var(--color-bg-light);
+    border: 1px solid var(--color-border);
+}
+
+.dark-theme .chip-hp-item .chip-name {
+    color: var(--color-text);
+}
+
+.dark-theme .hp-controls button {
+    background: var(--color-bg-white);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+}
+
+.dark-theme .hp-controls button:hover {
+    background: var(--color-bg-light);
+}
+
+.dark-theme .cards-container {
+    background: var(--color-bg-light);
+}
+
+.dark-theme .card-area {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+}
+
+.dark-theme .card-area h3 {
+    color: var(--color-text);
+}
+
+.dark-theme .player-header {
+    border-bottom: 1px solid var(--color-border);
+}
+
+.dark-theme .player-info-panel {
+    background: var(--color-bg-light);
+}
+
+.dark-theme .stat-label {
+    color: var(--color-text-muted);
+}
+
+.dark-theme .stat-value {
+    color: var(--color-text);
+}
+
+.dark-theme .deck-info button,
+.dark-theme .discard-pile button {
+    background: var(--color-info);
+    color: white;
+}
+
+.dark-theme .deck-info button:hover,
+.dark-theme .discard-pile button:hover {
+    background: var(--color-info-dark);
+}
+
+.dark-theme .deck-count {
+    color: var(--color-text-muted);
+}
+
+.dark-theme .card-field {
+    background: var(--color-bg-light);
+    border: 1px solid var(--color-border);
+}
+
+.dark-theme .card {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border-dark);
+}
+
+.dark-theme .card-field.player-field.active-turn {
+    box-shadow: 0 0 20px rgba(129, 140, 248, 0.4);
+    border-color: var(--color-secondary);
+}
+
+.dark-theme .turn-indicator {
+    color: var(--color-text);
+}
+
+.dark-theme .pass-turn-btn {
+    background: var(--color-secondary);
+    color: white;
+}
+
+.dark-theme .pass-turn-btn:hover {
+    background: var(--color-secondary-dark);
+}
+
+.dark-theme .shared-area {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+}
+
+.dark-theme .shared-area h3 {
+    color: var(--color-text);
+}
+
+.dark-theme .shared-field {
+    background: var(--color-bg-light);
+}
+
+.dark-theme .modal-content {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+}
+
+.dark-theme .modal-header {
+    background: var(--gradient-bg);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.dark-theme .modal-header h2 {
+    color: white;
+}
+
+.dark-theme .modal-close {
+    color: white;
+}
+
+.dark-theme .modal-close:hover {
+    color: var(--color-danger);
+}
+
+.dark-theme .deck-options-content h3 {
+    color: var(--color-text) !important;
+}
+
+.dark-theme .deck-options-content label {
+    color: var(--color-text-muted) !important;
+}
+
+.dark-theme .deck-options-buttons button {
+    background: var(--color-info) !important;
+}
+
+.dark-theme .deck-options-buttons button:hover {
+    background: var(--color-info-dark) !important;
+}
+
+.dark-theme input[type="number"],
+.dark-theme input[type="text"] {
+    background: var(--color-bg-light);
+    color: var(--color-text);
+    border-color: var(--color-border) !important;
+}
+
+.dark-theme .discard-grid {
+    background: var(--color-bg-light);
+}
+
+.dark-theme .discard-grid .discard-card {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+}
+
+.dark-theme .discard-grid .discard-card:hover {
+    border-color: var(--color-secondary);
+}
+
+.dark-theme .deck-view-controls {
+    background: var(--color-bg-light);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.dark-theme .deck-view-btn {
+    background: var(--color-info);
+    color: white;
+}
+
+.dark-theme .deck-view-btn:hover {
+    background: var(--color-info-dark);
+}
+
+.dark-theme .deck-view-count {
+    color: var(--color-text-muted);
+}
+
+.dark-theme .put-to-deck-controls {
+    background: var(--color-bg-light);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.dark-theme .put-to-deck-btn {
+    background: var(--color-info);
+    color: white;
+}
+
+.dark-theme .put-to-deck-btn:hover {
+    background: var(--color-info-dark);
+}
+
+.dark-theme .put-to-deck-grid,
+.dark-theme .deck-view-grid {
+    background: var(--color-bg-light);
+}
+
+.dark-theme .discard-btn,
+.dark-theme .show-hand-btn,
+.dark-theme .view-deck-btn,
+.dark-theme .put-to-deck-btn,
+.dark-theme .shuffle-btn,
+.dark-theme .draw-card-btn {
+    background: var(--color-info);
+    color: white;
+}
+
+.dark-theme .discard-btn:hover,
+.dark-theme .show-hand-btn:hover,
+.dark-theme .view-deck-btn:hover,
+.dark-theme .put-to-deck-btn:hover,
+.dark-theme .shuffle-btn:hover,
+.dark-theme .draw-card-btn:hover {
+    background: var(--color-info-dark);
+}
+
+.dark-theme .card-control-btn {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.dark-theme .card-control-btn:hover {
+    background: var(--color-danger);
+}
+
+.dark-theme .hidden-card .card-back {
+    background: var(--color-bg-white);
+    border-color: var(--color-border-dark);
+}
+
+.dark-theme .counter-bar {
+    background: var(--color-bg-light);
+}
+
+.dark-theme .counter-fill {
+    background: var(--gradient-card);
+}
+
+.dark-theme .counter-label {
+    color: var(--color-text);
+}
+
+.dark-theme .counter-value {
+    color: var(--color-text);
+}
+
+.dark-theme .extra-attacks {
+    color: var(--color-text-muted);
+}
+
+.dark-theme .character-image-container {
+    border-color: var(--color-border);
+}
+
+.dark-theme .card .card-controls {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.dark-theme .card .card-controls button {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.dark-theme .card .card-controls button:hover {
+    background: var(--color-danger);
+}
+
+.dark-theme .card-preview-overlay {
+    background: rgba(0, 0, 0, 0.85);
+}
+
+.dark-theme .card-preview-overlay .card-preview-container {
+    background: var(--color-bg-white);
+    border: 2px solid var(--color-border);
+}
+
+.dark-theme .theme-toggle {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+}
+
+.dark-theme .theme-toggle:hover {
+    background: var(--color-bg-light);
+}
+
 * {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
 }
 
 body {
@@ -93,6 +446,98 @@ body {
     color: var(--color-text);
     font-weight: 600;
     font-size: 14px;
+}
+
+.theme-toggle {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 18px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    line-height: 1;
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+}
+
+.theme-toggle:hover {
+    background: var(--color-bg-light);
+    transform: scale(1.1);
+}
+
+.turn-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text);
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-light);
+    border: 2px solid var(--color-border);
+}
+
+.turn-indicator.turn-player1 {
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
+.turn-indicator.turn-player2 {
+    border-color: var(--color-info);
+    color: var(--color-info);
+}
+
+.turn-marker-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: var(--radius-full);
+    display: inline-block;
+    animation: pulse-turn 1.5s ease-in-out infinite;
+}
+
+.turn-marker-dot.turn-player1 {
+    background: var(--color-danger);
+    box-shadow: 0 0 8px var(--color-danger);
+}
+
+.turn-marker-dot.turn-player2 {
+    background: var(--color-info);
+    box-shadow: 0 0 8px var(--color-info);
+}
+
+@keyframes pulse-turn {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.pass-turn-btn {
+    background: var(--color-secondary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+}
+
+.pass-turn-btn:hover {
+    background: var(--color-secondary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.pass-turn-btn:active {
+    transform: translateY(0);
+}
+
+.card-field.player-field.active-turn {
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+    border-color: var(--color-secondary);
+    transition: all var(--transition-base);
 }
 
 .room-code-display {

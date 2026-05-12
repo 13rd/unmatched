@@ -146,6 +146,7 @@ class GameBoard {
         this.playerRole = null; // 'player1', 'player2', или 'spectator'
         this.userId = localStorage.getItem('userId');
         this.username = localStorage.getItem('username');
+        this.currentTurn = 'player1';
         
         // Проверка авторизации
         if (!this.userId || !this.username) {
@@ -202,6 +203,7 @@ class GameBoard {
         this.socket.on('room-created', (data) => {
             console.log('Комната создана:', data.roomCode);
             this.playerRole = data.playerRole || 'player1';
+            this.currentTurn = data.currentTurn || 'player1';
             
             if (!this.isInitialized) {
                 // Создаем фишки для новой комнаты
@@ -218,6 +220,7 @@ class GameBoard {
             // Обновляем UI после небольшой задержки
             setTimeout(() => {
                 this.updatePlayerRoleUI();
+                this.updateTurnUI();
             }, 100);
         });
 
@@ -225,7 +228,9 @@ class GameBoard {
         this.socket.on('room-joined', (data) => {
             console.log('Подключились к комнате:', data.roomCode);
             this.playerRole = data.playerRole;
+            this.currentTurn = data.currentTurn || 'player1';
             console.log('Роль игрока:', this.playerRole);
+            console.log('Текущий ход:', this.currentTurn);
             
             // Сохраняем настройки с сервера
             this.settings = data.settings;
@@ -261,6 +266,7 @@ class GameBoard {
             // Обновляем UI после небольшой задержки, чтобы DOM был готов
             setTimeout(() => {
                 this.updatePlayerRoleUI();
+                this.updateTurnUI();
             }, 100);
         });
         
@@ -336,6 +342,12 @@ class GameBoard {
                 this.hpPanel.renderChips();
             }
             this.draw();
+        });
+
+        // Синхронизация смены хода
+        this.socket.on('turn-changed', (data) => {
+            this.currentTurn = data.currentTurn;
+            this.updateTurnUI();
         });
     }
 
@@ -424,6 +436,50 @@ class GameBoard {
         }
         
         console.log('UI обновлен для роли:', this.playerRole);
+    }
+
+    updateTurnUI() {
+        const turnIndicator = document.getElementById('turnIndicator');
+        const turnText = document.getElementById('turnText');
+        const turnDot = document.getElementById('turnMarkerDot');
+        const passBtn = document.getElementById('passTurnBtn');
+
+        if (!turnIndicator || !turnText || !turnDot) return;
+
+        turnIndicator.style.display = 'flex';
+
+        const playerNames = {
+            'player1': 'Игрок 1',
+            'player2': 'Игрок 2'
+        };
+
+        turnIndicator.className = 'turn-indicator turn-' + this.currentTurn;
+        turnDot.className = 'turn-marker-dot turn-' + this.currentTurn;
+        turnText.textContent = 'Ход: ' + (playerNames[this.currentTurn] || this.currentTurn);
+
+        if (passBtn) {
+            passBtn.style.display = this.playerRole === this.currentTurn ? 'inline-block' : 'none';
+        }
+
+        const player1Field = document.querySelector('#player1CardField');
+        const player2Field = document.querySelector('#player2CardField');
+
+        if (player1Field) {
+            player1Field.classList.toggle('active-turn', this.currentTurn === 'player1');
+        }
+        if (player2Field) {
+            player2Field.classList.toggle('active-turn', this.currentTurn === 'player2');
+        }
+    }
+
+    setupTurnControls() {
+        const passBtn = document.getElementById('passTurnBtn');
+        if (passBtn && !passBtn.hasAttribute('data-turn-listener')) {
+            passBtn.setAttribute('data-turn-listener', 'true');
+            passBtn.addEventListener('click', () => {
+                this.socket.emit('pass-turn');
+            });
+        }
     }
 
     loadChipsFromServer(chipsData) {
@@ -612,6 +668,8 @@ class GameBoard {
                 });
             }
         });
+        
+        this.setupTurnControls();
     }
 
     getMousePos(e) {

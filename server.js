@@ -220,6 +220,7 @@ io.on('connection', (socket) => {
             chips: [],
             players: [userId],
             playerRoles: { [userId]: 'player1' },
+            currentTurn: 'player1',
             createdAt: Date.now()
         });
         
@@ -248,7 +249,8 @@ io.on('connection', (socket) => {
                 player2: {
                     character: settings.player2.character
                 }
-            }
+            },
+            currentTurn: 'player1'
         });
     });
 
@@ -329,7 +331,8 @@ io.on('connection', (socket) => {
             chips: room.chips,
             cards: room.cards || [],
             discardPiles: room.discardPiles || { player1: [], player2: [] },
-            handVisibility: room.handVisibility || { player1: false, player2: false }
+            handVisibility: room.handVisibility || { player1: false, player2: false },
+            currentTurn: room.currentTurn || 'player1'
         });
         
         // Уведомляем других игроков о новом подключении
@@ -512,6 +515,20 @@ io.on('connection', (socket) => {
         
         // Отправляем всем в комнате
         socket.to(socket.roomCode).emit('board-cleared');
+    });
+
+    // Синхронизация передачи хода
+    socket.on('pass-turn', () => {
+        const room = rooms.get(socket.roomCode);
+        if (!room) return;
+        
+        // Переключаем ход
+        room.currentTurn = room.currentTurn === 'player1' ? 'player2' : 'player1';
+        
+        // Отправляем всем в комнате
+        io.to(socket.roomCode).emit('turn-changed', {
+            currentTurn: room.currentTurn
+        });
     });
 
     // Синхронизация создания карты
