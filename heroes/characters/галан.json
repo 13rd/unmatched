@@ -1,0 +1,141 @@
+{
+  "name": "Галан",
+  "speed": 3,
+  "characterImages": [
+    "/uploads/image-1778609791272-253219269.png"
+  ],
+  "deck": {
+    "backImage": "/uploads/image-1778609640134-51626609.png",
+    "cards": [
+      {
+        "image": "/uploads/image-1778609781138-926749246.png",
+        "text": "галан-action-card-5149_3"
+      },
+      {
+        "image": "/uploads/image-1778609781146-538531949.png",
+        "text": "галан-action-card-5164_2"
+      },
+      {
+        "image": "/uploads/image-1778609781154-224731608.png",
+        "text": "галан-action-card-5163_2"
+      },
+      {
+        "image": "/uploads/image-1778609781163-6360375.png",
+        "text": "галан-action-card-5161_2"
+      },
+      {
+        "image": "/uploads/image-1778609781169-528639644.png",
+        "text": "галан-action-card-5163_1"
+      },
+      {
+        "image": "/uploads/image-1778609781179-890005397.png",
+        "text": "галан-action-card-5160_2"
+      },
+      {
+        "image": "/uploads/image-1778609781185-889139000.png",
+        "text": "галан-action-card-5161_1"
+      },
+      {
+        "image": "/uploads/image-1778609781199-593599629.png",
+        "text": "галан-action-card-5159_2"
+      },
+      {
+        "image": "/uploads/image-1778609781207-232745208.png",
+        "text": "галан-action-card-5157_2"
+      },
+      {
+        "image": "/uploads/image-1778609781212-712820542.png",
+        "text": "галан-action-card-5159_1"
+      },
+      {
+        "image": "/uploads/image-1778609781219-590384853.png",
+        "text": "галан-action-card-5155_2"
+      },
+      {
+        "image": "/uploads/image-1778609781224-957164863.png",
+        "text": "галан-action-card-5164_1"
+      },
+      {
+        "image": "/uploads/image-1778609781243-153233799.png",
+        "text": "галан-action-card-5154_2"
+      },
+      {
+        "image": "/uploads/image-1778609781248-290800523.png",
+        "text": "галан-action-card-5165_1"
+      },
+      {
+        "image": "/uploads/image-1778609781256-723716000.png",
+        "text": "галан-action-card-5153_2"
+      },
+      {
+        "image": "/uploads/image-1778609781262-108400692.png",
+        "text": "галан-action-card-5154_1"
+      },
+      {
+        "image": "/uploads/image-1778609781270-992137119.png",
+        "text": "галан-action-card-5152_2"
+      },
+      {
+        "image": "/uploads/image-1778609781274-590677076.png",
+        "text": "галан-action-card-5153_1"
+      },
+      {
+        "image": "/uploads/image-1778609781283-225418249.png",
+        "text": "галан-action-card-5150_2"
+      },
+      {
+        "image": "/uploads/image-1778609781289-899658833.png",
+        "text": "галан-action-card-5152_1"
+      },
+      {
+        "image": "/uploads/image-1778609781296-89958404.png",
+        "text": "галан-action-card-5149_2"
+      },
+      {
+        "image": "/uploads/image-1778609781301-186379298.png",
+        "text": "галан-action-card-5148_2"
+      },
+      {
+        "image": "/uploads/image-1778609781310-61405446.png",
+        "text": "галан-action-card-5148_1"
+      },
+      {
+        "image": "/uploads/image-1778609781315-400010023.png",
+        "text": "галан-action-card-5150_1"
+      },
+      {
+        "image": "/uploads/image-1778609781323-698743565.png",
+        "text": "галан-action-card-5147_1"
+      },
+      {
+        "image": "/uploads/image-1778609781328-3509740.png",
+        "text": "галан-action-card-5166_1"
+      },
+      {
+        "image": "/uploads/image-1778609781336-66526370.png",
+        "text": "галан-action-card-5160_1"
+      },
+      {
+        "image": "/uploads/image-1778609781342-963207949.png",
+        "text": "галан-action-card-5155_1"
+      },
+      {
+        "image": "/uploads/image-1778609781349-739759488.png",
+        "text": "галан-action-card-5157_1"
+      },
+      {
+        "image": "/uploads/image-1778609781354-824281764.png",
+        "text": "галан-action-card-5149_1"
+      }
+    ]
+  },
+  "mainToken": {
+    "image": "/uploads/image-1778609846116-140614234.png",
+    "color": "#c4244f",
+    "hp": 16,
+    "attackType": "melee"
+  },
+  "extraTokens": [],
+  "extraTokenHP": 1,
+  "counters": []
+}
