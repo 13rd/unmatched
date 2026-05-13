@@ -1,0 +1,141 @@
+{
+  "name": "Лаббок",
+  "speed": null,
+  "deck": {
+    "backImage": "/uploads/Лаббок_back.png",
+    "cards": [
+      {
+        "image": "/uploads/Лаббок_card_8103_0.png",
+        "text": "Лаббок_8103"
+      },
+      {
+        "image": "/uploads/Лаббок_card_8103_1.png",
+        "text": "Лаббок_8103"
+      },
+      {
+        "image": "/uploads/Лаббок_card_8103_2.png",
+        "text": "Лаббок_8103"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15122_0.png",
+        "text": "Лаббок_15122"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15122_1.png",
+        "text": "Лаббок_15122"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15127_0.png",
+        "text": "Лаббок_15127"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15127_1.png",
+        "text": "Лаббок_15127"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15127_2.png",
+        "text": "Лаббок_15127"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15128_0.png",
+        "text": "Лаббок_15128"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15128_1.png",
+        "text": "Лаббок_15128"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15129_0.png",
+        "text": "Лаббок_15129"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15129_1.png",
+        "text": "Лаббок_15129"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15131_0.png",
+        "text": "Лаббок_15131"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15131_1.png",
+        "text": "Лаббок_15131"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15132_0.png",
+        "text": "Лаббок_15132"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15132_1.png",
+        "text": "Лаббок_15132"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15126_0.png",
+        "text": "Лаббок_15126"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15126_1.png",
+        "text": "Лаббок_15126"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15126_2.png",
+        "text": "Лаббок_15126"
+      },
+      {
+        "image": "/uploads/Лаббок_card_8101_0.png",
+        "text": "Лаббок_8101"
+      },
+      {
+        "image": "/uploads/Лаббок_card_8102_0.png",
+        "text": "Лаббок_8102"
+      },
+      {
+        "image": "/uploads/Лаббок_card_8100_0.png",
+        "text": "Лаббок_8100"
+      },
+      {
+        "image": "/uploads/Лаббок_card_8100_1.png",
+        "text": "Лаббок_8100"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15124_0.png",
+        "text": "Лаббок_15124"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15124_1.png",
+        "text": "Лаббок_15124"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15124_2.png",
+        "text": "Лаббок_15124"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15130_0.png",
+        "text": "Лаббок_15130"
+      },
+      {
+        "image": "/uploads/Лаббок_card_15130_1.png",
+        "text": "Лаббок_15130"
+      },
+      {
+        "image": "/uploads/Лаббок_card_8099_0.png",
+        "text": "Лаббок_8099"
+      },
+      {
+        "image": "/uploads/Лаббок_card_8099_1.png",
+        "text": "Лаббок_8099"
+      }
+    ]
+  },
+  "mainToken": {
+    "image": "/uploads/Лаббок_token.png",
+    "color": null,
+    "hp": null,
+    "attackType": null
+  },
+  "extraTokens": [],
+  "extraTokenHP": 0,
+  "counters": [],
+  "characterImages": [
+    "/uploads/Лаббок_token.png"
+  ]
+}

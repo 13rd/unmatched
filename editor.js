@@ -683,6 +683,92 @@ class CharacterEditor {
                 reader.readAsText(file);
             }
         });
+
+        // Импорт TTS (.zip)
+        document.getElementById('importCharacterTTS').addEventListener('click', () => {
+            document.getElementById('importTTSFile').click();
+        });
+
+        document.getElementById('importTTSFile').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/import-tts', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || err.error || 'Ошибка импорта');
+                }
+
+                const result = await response.json();
+                this._applyTTSImport(result);
+            } catch (error) {
+                alert('Ошибка импорта TTS: ' + error.message);
+            }
+
+            e.target.value = '';
+        });
+    }
+
+    _applyTTSImport(result) {
+        const char = result.character;
+
+        this.characterName = char.name;
+        document.getElementById('characterName').value = char.name;
+
+        this.deck = char.deck;
+        if (char.deck.backImage) {
+            document.getElementById('charDeckBackFileName').textContent = 'Загружено из TTS';
+        }
+        this.updateDeckStatus(char.deck.backImage && char.deck.cards.length === 30);
+        this.updateCharCardsGrid();
+        this.updateCharCardsCount();
+
+        if (char.mainToken.image) {
+            this.mainToken.image = char.mainToken.image;
+            this.mainToken.color = char.mainToken.color || '#ff0000';
+            this.mainToken.hp = char.mainToken.hp || 14;
+            this.mainToken.attackType = char.mainToken.attackType || 'melee';
+            document.getElementById('mainTokenImageName').textContent = 'Загружено из TTS';
+            document.getElementById('mainTokenColor').value = this.mainToken.color;
+            document.getElementById('mainTokenHP').value = this.mainToken.hp;
+            document.getElementById('mainTokenAttackType').value = this.mainToken.attackType;
+            this.updateMainTokenPreview();
+        }
+
+        this.speed = char.speed || 3;
+        document.getElementById('characterSpeed').value = this.speed;
+
+        this.characterImages = char.characterImages || [];
+        this.updateCharacterImagePreview();
+
+        this.extraTokens = char.extraTokens || [];
+        this.extraTokensCount = this.extraTokens.length || 0;
+        document.getElementById('extraTokensCount').value = this.extraTokensCount;
+        this.extraTokenHP = char.extraTokenHP || 0;
+        document.getElementById('extraTokenHP').value = this.extraTokenHP;
+        this.updateExtraTokensFields();
+
+        this.counters = char.counters || [];
+        this.countersCount = this.counters.length;
+        document.getElementById('countersCount').value = this.countersCount;
+        this.updateCountersFields();
+
+        if (result.missingFields && result.missingFields.length > 0) {
+            const fields = result.missingFields.join(', ');
+            alert(
+                `TTS импорт завершён!\n\nФайл сохранён: ${result.characterPath}\n\nСводка: ${result.summary}\n\nЗаполните вручную: ${fields}`
+            );
+        } else {
+            alert(`TTS импорт завершён!\n\nФайл сохранён: ${result.characterPath}\n\n${result.summary}`);
+        }
     }
 
     validateDeck(deckData) {

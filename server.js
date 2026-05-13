@@ -51,6 +51,8 @@ const storage = multer.diskStorage({
     }
 });
 
+const { execSync } = require('child_process');
+
 const upload = multer({ storage: storage });
 
 // Статические файлы
@@ -121,6 +123,34 @@ app.get('/api/maps', async (req, res) => {
     } catch (error) {
         console.error('Ошибка загрузки карт:', error);
         res.json([]);
+    }
+});
+
+// API для импорта TTS колоды
+app.post('/api/import-tts', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'Файл не загружен' });
+        }
+
+        const zipPath = req.file.path;
+        const scriptPath = path.join(__dirname, 'scripts', 'import_tts_character.py');
+        const cmd = `python3 "${scriptPath}" --zip "${zipPath}" --project-dir "${__dirname}"`;
+
+        const stdout = execSync(cmd, { encoding: 'utf-8', timeout: 60000 });
+        const result = JSON.parse(stdout);
+
+        // Clean up temp upload
+        try { require('fs').unlinkSync(zipPath); } catch (e) { /* ignore */ }
+
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('Ошибка импорта TTS:', error.message);
+        res.status(500).json({ error: 'Ошибка импорта TTS', detail: error.message });
     }
 });
 

@@ -1,6 +1,9 @@
 {
-  "name": "галан",
-  "speed": null,
+  "name": "галан2",
+  "speed": 3,
+  "characterImages": [
+    "/uploads/галан_token.png"
+  ],
   "deck": {
     "backImage": "/uploads/галан_back.png",
     "cards": [
@@ -127,15 +130,12 @@
     ]
   },
   "mainToken": {
-    "image": "/uploads/галан_token.png",
-    "color": null,
-    "hp": null,
-    "attackType": null
+    "image": "/uploads/image-1778697415668-348557557.png",
+    "color": "#c4244f",
+    "hp": 16,
+    "attackType": "melee"
   },
   "extraTokens": [],
   "extraTokenHP": 0,
-  "counters": [],
-  "characterImages": [
-    "/uploads/галан_token.png"
-  ]
+  "counters": []
 }
