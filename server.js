@@ -154,6 +154,31 @@ app.post('/api/import-tts', upload.single('file'), async (req, res) => {
     }
 });
 
+// API для импорта с the-unmatched.club
+app.post('/api/import-theunmatched', express.json(), async (req, res) => {
+    try {
+        const { url } = req.body;
+        if (!url) {
+            return res.status(400).json({ error: 'URL не указан' });
+        }
+
+        const scriptPath = path.join(__dirname, 'scripts', 'fetch_theunmatched.py');
+        const cmd = `python3 "${scriptPath}" "${url}" --project-dir "${__dirname}"`;
+
+        const stdout = execSync(cmd, { encoding: 'utf-8', timeout: 120000 });
+        const result = JSON.parse(stdout);
+
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('Ошибка импорта с the-unmatched.club:', error.message);
+        res.status(500).json({ error: 'Ошибка импорта с the-unmatched.club', detail: error.message });
+    }
+});
+
 // Хранилище игровых комнат
 const rooms = new Map();
 // Хранилище пользователей (userId -> { socketId, username, roomCode })
@@ -248,6 +273,10 @@ io.on('connection', (socket) => {
         rooms.set(roomCode, {
             settings: settings, // Храним полные настройки с колодами на сервере
             chips: [],
+            cards: [],
+            discardPiles: { player1: [], player2: [] },
+            handVisibility: { player1: false, player2: false },
+            counters: { player1: [], player2: [] },
             players: [userId],
             playerRoles: { [userId]: 'player1' },
             currentTurn: 'player1',
@@ -305,15 +334,29 @@ io.on('connection', (socket) => {
         
         // Определяем роль игрока
         let playerRole = null;
+        let isReconnecting = false;
         
         // Проверяем, был ли этот пользователь уже в комнате
         if (room.playerRoles[userId]) {
             // Пользователь переподключается - восстанавливаем его роль
             playerRole = room.playerRoles[userId];
+            isReconnecting = true;
             console.log(`Пользователь ${socket.username} переподключился к комнате ${roomCode} как ${playerRole}`);
         } else {
-            // Новый пользователь - назначаем роль
-            // Проверяем, какие роли уже заняты
+            // Новый пользователь
+            // Освобождаем слоты отключившихся игроков перед назначением роли
+            for (const [existingUserId, existingRole] of Object.entries(room.playerRoles)) {
+                if (existingRole !== 'player1' && existingRole !== 'player2') continue;
+                const existingUser = users.get(existingUserId);
+                const isConnected = existingUser && io.sockets.sockets.get(existingUser.socketId);
+                if (!isConnected) {
+                    delete room.playerRoles[existingUserId];
+                    room.players = room.players.filter(pid => pid !== existingUserId);
+                    console.log(`Роль ${existingRole} освобождена: игрок ${existingUserId} отключён`);
+                }
+            }
+            
+            // Проверяем, какие роли заняты
             const existingRoles = Object.values(room.playerRoles);
             const hasPlayer1 = existingRoles.includes('player1');
             const hasPlayer2 = existingRoles.includes('player2');
@@ -365,8 +408,12 @@ io.on('connection', (socket) => {
             currentTurn: room.currentTurn || 'player1'
         });
         
-        // Уведомляем других игроков о новом подключении
-        socket.to(roomCode).emit('player-joined', { userId, username: socket.username });
+        // Уведомляем других игроков о подключении/переподключении
+        if (isReconnecting) {
+            socket.to(roomCode).emit('player-reconnected', { userId, username: socket.username, role: playerRole });
+        } else {
+            socket.to(roomCode).emit('player-joined', { userId, username: socket.username });
+        }
     });
 
     // Запрос колод
@@ -379,7 +426,7 @@ io.on('connection', (socket) => {
         
         console.log('Запрос колод от пользователя', socket.username, 'для комнаты', socket.roomCode);
         
-        // Отправляем колоды из персонажей
+        // Отправляем оригинальные колоды из настроек персонажей
         const decksData = {
             player1: room.settings.player1.character ? room.settings.player1.character.deck : null,
             player2: room.settings.player2.character ? room.settings.player2.character.deck : null,
@@ -780,7 +827,6 @@ io.on('connection', (socket) => {
         if (socket.roomCode) {
             const room = rooms.get(socket.roomCode);
             if (room) {
-                // НЕ удаляем игрока из комнаты - он может вернуться
                 // Уведомляем других игроков об отключении
                 socket.to(socket.roomCode).emit('player-disconnected', { 
                     userId: userId, 

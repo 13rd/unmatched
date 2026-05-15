@@ -1,136 +1,136 @@
 {
   "name": "галан",
-  "speed": null,
+  "speed": 3,
   "deck": {
     "backImage": "/uploads/галан_back.png",
     "cards": [
       {
-        "image": "/uploads/галан_card_5157_0.png",
-        "text": "галан_5157"
+        "image": "/uploads/галан_card_0_0.png",
+        "text": "заинтересованность"
       },
       {
-        "image": "/uploads/галан_card_5157_1.png",
-        "text": "галан_5157"
+        "image": "/uploads/галан_card_0_1.png",
+        "text": "заинтересованность"
       },
       {
-        "image": "/uploads/галан_card_5152_0.png",
-        "text": "галан_5152"
+        "image": "/uploads/галан_card_1_0.jpg",
+        "text": "горькая правда"
       },
       {
-        "image": "/uploads/галан_card_5152_1.png",
-        "text": "галан_5152"
+        "image": "/uploads/галан_card_1_1.jpg",
+        "text": "горькая правда"
       },
       {
-        "image": "/uploads/галан_card_5149_0.png",
-        "text": "галан_5149"
+        "image": "/uploads/галан_card_2_0.png",
+        "text": "резвый выпад"
       },
       {
-        "image": "/uploads/галан_card_5149_1.png",
-        "text": "галан_5149"
+        "image": "/uploads/галан_card_2_1.png",
+        "text": "резвый выпад"
       },
       {
-        "image": "/uploads/галан_card_5149_2.png",
-        "text": "галан_5149"
+        "image": "/uploads/галан_card_2_2.png",
+        "text": "резвый выпад"
       },
       {
-        "image": "/uploads/галан_card_5153_0.png",
-        "text": "галан_5153"
+        "image": "/uploads/галан_card_3_0.jpg",
+        "text": "ложь - не укрытие"
       },
       {
-        "image": "/uploads/галан_card_5153_1.png",
-        "text": "галан_5153"
+        "image": "/uploads/галан_card_3_1.jpg",
+        "text": "ложь - не укрытие"
       },
       {
-        "image": "/uploads/галан_card_5155_0.png",
-        "text": "галан_5155"
+        "image": "/uploads/галан_card_4_0.png",
+        "text": "широкий размах"
       },
       {
-        "image": "/uploads/галан_card_5155_1.png",
-        "text": "галан_5155"
+        "image": "/uploads/галан_card_4_1.png",
+        "text": "широкий размах"
       },
       {
-        "image": "/uploads/галан_card_5147_0.png",
-        "text": "галан_5147"
+        "image": "/uploads/галан_card_5_0.jpg",
+        "text": "\"я - галан! Заповедь правды\""
       },
       {
-        "image": "/uploads/галан_card_5148_0.png",
-        "text": "галан_5148"
+        "image": "/uploads/галан_card_6_0.png",
+        "text": "адское пламя"
       },
       {
-        "image": "/uploads/галан_card_5148_1.png",
-        "text": "галан_5148"
+        "image": "/uploads/галан_card_6_1.png",
+        "text": "адское пламя"
       },
       {
-        "image": "/uploads/галан_card_5150_0.png",
-        "text": "галан_5150"
+        "image": "/uploads/галан_card_7_0.jpg",
+        "text": "бегством не спастись"
       },
       {
-        "image": "/uploads/галан_card_5150_1.png",
-        "text": "галан_5150"
+        "image": "/uploads/галан_card_7_1.jpg",
+        "text": "бегством не спастись"
       },
       {
-        "image": "/uploads/галан_card_5154_0.png",
-        "text": "галан_5154"
+        "image": "/uploads/галан_card_8_0.jpg",
+        "text": "подавление"
       },
       {
-        "image": "/uploads/галан_card_5154_1.png",
-        "text": "галан_5154"
+        "image": "/uploads/галан_card_8_1.jpg",
+        "text": "подавление"
       },
       {
-        "image": "/uploads/галан_card_5163_0.png",
-        "text": "галан_5163"
+        "image": "/uploads/галан_card_9_0.jpg",
+        "text": "заповедь правды"
       },
       {
-        "image": "/uploads/галан_card_5163_1.png",
-        "text": "галан_5163"
+        "image": "/uploads/галан_card_9_1.jpg",
+        "text": "заповедь правды"
       },
       {
-        "image": "/uploads/галан_card_5164_0.png",
-        "text": "галан_5164"
+        "image": "/uploads/галан_card_10_0.jpg",
+        "text": "\"Я никогда не лгу\""
       },
       {
-        "image": "/uploads/галан_card_5164_1.png",
-        "text": "галан_5164"
+        "image": "/uploads/галан_card_10_1.jpg",
+        "text": "\"Я никогда не лгу\""
       },
       {
-        "image": "/uploads/галан_card_5160_0.png",
-        "text": "галан_5160"
+        "image": "/uploads/галан_card_11_0.png",
+        "text": "пристрастие"
       },
       {
-        "image": "/uploads/галан_card_5160_1.png",
-        "text": "галан_5160"
+        "image": "/uploads/галан_card_11_1.png",
+        "text": "пристрастие"
       },
       {
-        "image": "/uploads/галан_card_5159_0.png",
-        "text": "галан_5159"
+        "image": "/uploads/галан_card_12_0.jpg",
+        "text": "хитрость заповеди"
       },
       {
-        "image": "/uploads/галан_card_5159_1.png",
-        "text": "галан_5159"
+        "image": "/uploads/галан_card_12_1.jpg",
+        "text": "хитрость заповеди"
       },
       {
-        "image": "/uploads/галан_card_5165_0.png",
-        "text": "галан_5165"
+        "image": "/uploads/галан_card_13_0.jpg",
+        "text": "критичный предел"
       },
       {
-        "image": "/uploads/галан_card_5161_0.png",
-        "text": "галан_5161"
+        "image": "/uploads/галан_card_14_0.jpg",
+        "text": "ложь во благо"
       },
       {
-        "image": "/uploads/галан_card_5161_1.png",
-        "text": "галан_5161"
+        "image": "/uploads/галан_card_14_1.jpg",
+        "text": "ложь во благо"
       },
       {
-        "image": "/uploads/галан_card_5166_0.png",
-        "text": "галан_5166"
+        "image": "/uploads/галан_card_15_0.jpg",
+        "text": "регенерация демона"
       }
     ]
   },
   "mainToken": {
     "image": "/uploads/галан_token.png",
-    "color": null,
-    "hp": null,
-    "attackType": null
+    "color": "#c52550",
+    "hp": 16,
+    "attackType": "melee"
   },
   "extraTokens": [],
   "extraTokenHP": 0,

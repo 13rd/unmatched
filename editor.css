@@ -1023,6 +1023,52 @@ h1 {
     text-align: center;
 }
 
+/* Импорт с the-unmatched.club */
+.import-theunmatched-section {
+    padding: var(--spacing-xl);
+    background: var(--color-bg-light);
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--color-border);
+}
+
+.import-theunmatched-section h3 {
+    margin-bottom: var(--spacing-lg);
+    color: var(--color-text);
+    font-weight: 700;
+}
+
+.theunmatched-input-group {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+}
+
+.theunmatched-input-group .text-input {
+    flex: 1;
+}
+
+.import-status {
+    margin-top: var(--spacing-sm);
+    font-size: 13px;
+    color: var(--color-text-muted);
+    min-height: 20px;
+}
+
+.import-status.loading {
+    color: var(--color-info);
+    font-weight: 600;
+}
+
+.import-status.success {
+    color: var(--color-success);
+    font-weight: 600;
+}
+
+.import-status.error {
+    color: var(--color-danger);
+    font-weight: 600;
+}
+
 @media (max-width: 768px) {
     body {
         padding: var(--spacing-md);

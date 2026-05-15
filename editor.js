@@ -715,6 +715,103 @@ class CharacterEditor {
 
             e.target.value = '';
         });
+
+        // Импорт с the-unmatched.club
+        document.getElementById('importTheUnmatched').addEventListener('click', async () => {
+            const urlInput = document.getElementById('theunmatchedUrl');
+            const status = document.getElementById('theunmatchedStatus');
+            const url = urlInput.value.trim();
+            if (!url) {
+                status.textContent = 'Введите URL страницы персонажа';
+                status.className = 'import-status error';
+                return;
+            }
+
+            status.textContent = 'Загрузка...';
+            status.className = 'import-status loading';
+
+            try {
+                const response = await fetch('/api/import-theunmatched', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || err.error || 'Ошибка импорта');
+                }
+
+                const result = await response.json();
+                this._applyTheUnmatchedImport(result);
+                status.textContent = 'Готово!';
+                status.className = 'import-status success';
+            } catch (error) {
+                status.textContent = 'Ошибка: ' + error.message;
+                status.className = 'import-status error';
+            }
+        });
+
+        // Поддержка Enter в поле URL
+        document.getElementById('theunmatchedUrl').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('importTheUnmatched').click();
+            }
+        });
+    }
+
+    _applyTheUnmatchedImport(result) {
+        const char = result.character;
+
+        this.characterName = char.name;
+        document.getElementById('characterName').value = char.name;
+
+        this.deck = char.deck;
+        if (char.deck.backImage) {
+            document.getElementById('charDeckBackFileName').textContent = 'Загружено с the-unmatched.club';
+        }
+        this.updateDeckStatus(char.deck.backImage && char.deck.cards.length === 30);
+        this.updateCharCardsGrid();
+        this.updateCharCardsCount();
+
+        if (char.mainToken.image) {
+            this.mainToken.image = char.mainToken.image;
+            this.mainToken.color = char.mainToken.color || '#ff0000';
+            this.mainToken.hp = char.mainToken.hp || 14;
+            this.mainToken.attackType = char.mainToken.attackType || 'melee';
+            document.getElementById('mainTokenImageName').textContent = 'Загружено с the-unmatched.club';
+            document.getElementById('mainTokenColor').value = this.mainToken.color;
+            document.getElementById('mainTokenHP').value = this.mainToken.hp;
+            document.getElementById('mainTokenAttackType').value = this.mainToken.attackType;
+            this.updateMainTokenPreview();
+        }
+
+        this.speed = char.speed || 3;
+        document.getElementById('characterSpeed').value = this.speed;
+
+        this.characterImages = char.characterImages || [];
+        this.updateCharacterImagePreview();
+
+        this.extraTokens = char.extraTokens || [];
+        this.extraTokensCount = this.extraTokens.length || 0;
+        document.getElementById('extraTokensCount').value = this.extraTokensCount;
+        this.extraTokenHP = char.extraTokenHP || 0;
+        document.getElementById('extraTokenHP').value = this.extraTokenHP;
+        this.updateExtraTokensFields();
+
+        this.counters = char.counters || [];
+        this.countersCount = this.counters.length;
+        document.getElementById('countersCount').value = this.countersCount;
+        this.updateCountersFields();
+
+        if (result.missingFields && result.missingFields.length > 0) {
+            const fields = result.missingFields.join(', ');
+            alert(
+                `Импорт с the-unmatched.club завершён!\n\nФайл сохранён: ${result.characterPath}\n\nСводка: ${result.summary}\n\nЗаполните вручную: ${fields}`
+            );
+        } else {
+            alert(`Импорт с the-unmatched.club завершён!\n\nФайл сохранён: ${result.characterPath}\n\n${result.summary}`);
+        }
     }
 
     _applyTTSImport(result) {

@@ -251,6 +251,18 @@ class GameBoard {
             
             // ВАЖНО: Запрашиваем колоды ПОСЛЕ подключения к комнате
             if (window.cardManager) {
+                // Если на сервере уже есть карты в игре (т.е. это переподключение),
+                // сохраняем информацию, сколько карт уже вытянуто из каждой колоды
+                const cardsInPlay1 = (data.cards || []).filter(c => c.owner === 'player1').length;
+                const discard1 = (data.discardPiles && data.discardPiles.player1) ? data.discardPiles.player1.length : 0;
+                const cardsInPlay2 = (data.cards || []).filter(c => c.owner === 'player2').length;
+                const discard2 = (data.discardPiles && data.discardPiles.player2) ? data.discardPiles.player2.length : 0;
+                window.cardManager._preRemoveCards = {
+                    player1: cardsInPlay1 + discard1,
+                    player2: cardsInPlay2 + discard2
+                };
+                console.log('Пред-вытягивание карт:', window.cardManager._preRemoveCards);
+                
                 console.log('Запрос колод после подключения к комнате');
                 window.cardManager.requestDecks();
                 
@@ -285,8 +297,13 @@ class GameBoard {
         });
 
         // Другой игрок присоединился
-        this.socket.on('player-joined', (playerId) => {
-            console.log('Игрок присоединился:', playerId);
+        this.socket.on('player-joined', (data) => {
+            console.log('Игрок присоединился:', data);
+        });
+
+        // Игрок переподключился
+        this.socket.on('player-reconnected', (data) => {
+            console.log('Игрок переподключился:', data);
         });
 
         // Другой игрок покинул комнату
@@ -1416,7 +1433,7 @@ class CardManager {
         this.gameBoard.socket.emit('request-decks');
     }
 
-    loadDecks(decksData) {
+    loadDecks(decksData, preRemoveCards) {
         // Загружаем колоды с сервера
         console.log('Получены колоды с сервера:', decksData);
 
@@ -1431,6 +1448,18 @@ class CardManager {
         // Перемешиваем колоды
         this.player1Deck.shuffle();
         this.player2Deck.shuffle();
+
+        // При переподключении: пред-вытягиваем карты, которые уже в игре/сбросе
+        if (preRemoveCards) {
+            const removeFromDeck = (deck, count) => {
+                for (let i = 0; i < count && deck.cards.length > 0; i++) {
+                    deck.cards.shift();
+                }
+            };
+            removeFromDeck(this.player1Deck, preRemoveCards.player1 || 0);
+            removeFromDeck(this.player2Deck, preRemoveCards.player2 || 0);
+            console.log(`Пред-вытянуто карт: player1=${preRemoveCards.player1 || 0}, player2=${preRemoveCards.player2 || 0}`);
+        }
 
         this.decksLoaded = true;
         this.updateDeckCounts();
@@ -2557,7 +2586,9 @@ class CardManager {
         // Получение колод с сервера
         socket.on('decks-data', (decksData) => {
             console.log('Событие decks-data получено:', decksData);
-            this.loadDecks(decksData);
+            const preRemove = this._preRemoveCards || null;
+            this._preRemoveCards = null; // Сбрасываем после использования
+            this.loadDecks(decksData, preRemove);
         });
 
         // Синхронизация создания карты
@@ -2606,6 +2637,7 @@ class CardManager {
             const deck = data.player === 'player1' ? this.player1Deck : this.player2Deck;
             if (deck) {
                 deck.shuffle();
+                this.updateDeckCounts();
             }
         });
 
@@ -2801,16 +2833,7 @@ class CardManager {
         const controls = cardElement.querySelector('.card-controls');
         if (controls) {
             controls.appendChild(discardBtn);
-        
-    
-            // Отправляем событие удаления на сервер
-            this.gameBoard.socket.emit('card-removed', { cardId: cardId });
-        };
-        
-        // const controls = cardElement.querySelector('.card-controls');
-        // if (controls) {
-        //     controls.appendChild(discardBtn);
-        // }
+        }
     }
     
 
