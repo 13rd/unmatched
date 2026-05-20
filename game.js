@@ -370,8 +370,9 @@ class GameBoard {
 
     updatePlayerRoleUI() {
         // Обновляем UI в зависимости от роли игрока
-        const player1Area = document.querySelector('.card-area.player-area:nth-of-type(2)');
-        const player2Area = document.querySelector('.card-area.player-area:nth-of-type(3)');
+        const playerAreas = document.querySelectorAll('.players-cards-grid .card-area.player-area');
+        const player1Area = playerAreas[0];
+        const player2Area = playerAreas[1];
         
         // Отображаем информацию о пользователе
         const usernameElement = document.getElementById('currentUsername');
