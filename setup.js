@@ -270,15 +270,81 @@ class GameSetup {
     updateSelectedCharacterInfo(playerNum, character) {
         const infoContainer = document.getElementById(`player${playerNum}SelectedCharacter`);
         infoContainer.classList.add('has-character');
-        
+
         const extraCount = character.extraTokens ? character.extraTokens.length : 0;
-        
+        const deckCards = character.deck && character.deck.cards ? character.deck.cards : [];
+        const backImage = character.deck && character.deck.backImage ? character.deck.backImage : null;
+        const artImage = character.characterImages && character.characterImages[0] ? character.characterImages[0] : null;
+        const avatarImage = character.mainToken && character.mainToken.image ? character.mainToken.image : null;
+        const avatarColor = character.mainToken && character.mainToken.color ? character.mainToken.color : '#666';
+
         infoContainer.innerHTML = `
-            <p><strong>Выбран:</strong> ${character.name}</p>
-            <p><strong>Главный токен:</strong> HP ${character.mainToken.hp}</p>
-            <p><strong>Дополнительные токены:</strong> ${extraCount} шт., HP ${character.extraTokenHP}</p>
-            <p><strong>Колода:</strong> 30 карт</p>
+            <div class="sc-header">
+                <div class="sc-avatar" style="background-color:${avatarColor}">
+                    ${avatarImage ? `<img src="${avatarImage}" alt="${character.name}">` : ''}
+                </div>
+                <div class="sc-meta">
+                    <div class="sc-name">${character.name}</div>
+                    <div class="sc-stats">
+                        <span class="sc-stat">♥ ${character.mainToken.hp}</span>
+                        <span class="sc-stat">⚔ ×${extraCount}</span>
+                        <span class="sc-stat">🃏 ${deckCards.length}</span>
+                    </div>
+                </div>
+                <div class="sc-images">
+                    ${artImage ? `<img class="sc-art" src="${artImage}" alt="Арт персонажа">` : ''}
+                    ${backImage ? `<img class="sc-back" src="${backImage}" alt="Обложка колоды">` : ''}
+                </div>
+            </div>
+            <button class="sc-view-btn">Посмотреть все карты (${deckCards.length})</button>
         `;
+
+        infoContainer.querySelector('.sc-view-btn').addEventListener('click', () => {
+            this.showCharacterCards(character);
+        });
+    }
+
+    showCharacterCards(character) {
+        let modal = document.getElementById('charCardsModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'charCardsModal';
+            modal.className = 'ccard-modal';
+            document.body.appendChild(modal);
+        }
+
+        const cards = character.deck && character.deck.cards ? character.deck.cards : [];
+        const backImage = character.deck && character.deck.backImage ? character.deck.backImage : null;
+
+        modal.innerHTML = `
+            <div class="ccard-content">
+                <div class="ccard-header">
+                    <span>${character.name} — ${cards.length} карт</span>
+                    <button class="ccard-close">&times;</button>
+                </div>
+                <div class="ccard-grid">
+                    ${cards.map((card, i) => `
+                        <div class="ccard-item" title="${card.text || ''}">
+                            ${card.image
+                                ? `<img src="${card.image}" alt="${card.text || 'Карта ' + (i + 1)}">`
+                                : (backImage
+                                    ? `<img src="${backImage}" alt="Карта ${i + 1}">`
+                                    : `<div class="ccard-text">${card.text || 'Карта ' + (i + 1)}</div>`)
+                            }
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'flex';
+
+        modal.querySelector('.ccard-close').addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+        modal.addEventListener('click', e => {
+            if (e.target === modal) modal.style.display = 'none';
+        });
     }
 
     showCharacterError() {

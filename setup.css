@@ -179,7 +179,7 @@ body {
 
 /* ── Main Container ────────────────────────────────────────────── */
 .container {
-    max-width: 1100px;
+    max-width: 1440px;
     margin: 60px auto 0;
     background: var(--bg-card);
     border: 2px solid var(--border);
@@ -701,7 +701,7 @@ h4 {
 }
 
 .selected-character-info {
-    padding: 12px 16px;
+    padding: 12px 14px;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
@@ -722,6 +722,260 @@ h4 {
 .selected-character-info strong {
     color: var(--text-primary);
     font-style: normal;
+}
+
+/* ── Selected Character Card ───────────────────────────────────── */
+.sc-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.sc-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+    overflow: hidden;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+}
+
+.sc-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.sc-meta {
+    flex: 1;
+    min-width: 0;
+}
+
+.sc-name {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sc-stats {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.sc-stat {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    padding: 2px 7px;
+    white-space: nowrap;
+}
+
+.sc-images {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+    flex-shrink: 0;
+}
+
+.sc-art {
+    width: 50px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: transform var(--t-fast), box-shadow var(--t-fast);
+}
+
+.sc-art:hover {
+    transform: scale(1.08) rotate(-1deg);
+    box-shadow: var(--shadow-md);
+}
+
+.sc-back {
+    width: 50px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: transform var(--t-fast), box-shadow var(--t-fast);
+}
+
+.sc-back:hover {
+    transform: scale(1.08) rotate(1deg);
+    box-shadow: var(--shadow-md);
+}
+
+.sc-view-btn {
+    width: 100%;
+    padding: 8px;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all var(--t-fast);
+}
+
+.sc-view-btn:hover {
+    background: var(--accent);
+    color: var(--bg-page);
+    border-color: var(--accent-bright);
+    box-shadow: 0 0 12px var(--accent-glow);
+    transform: none;
+}
+
+/* ── Cards Modal ───────────────────────────────────────────────── */
+.ccard-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 9, 6, 0.80);
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    backdrop-filter: blur(3px);
+    animation: ccFadeIn 0.2s ease both;
+}
+
+@keyframes ccFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.ccard-content {
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.55);
+    max-width: 92vw;
+    max-height: 88vh;
+    width: 860px;
+    display: flex;
+    flex-direction: column;
+    animation: ccSlideUp 0.2s ease both;
+    overflow: hidden;
+}
+
+@keyframes ccSlideUp {
+    from { transform: translateY(16px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+.ccard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.ccard-header span {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.ccard-close {
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--t-fast);
+    padding: 0;
+    box-shadow: none;
+}
+
+.ccard-close:hover {
+    color: var(--danger-bright);
+    background: var(--bg-card);
+    transform: rotate(90deg);
+    border-color: transparent;
+}
+
+.ccard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    padding: 16px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-dark) var(--bg-surface);
+}
+
+.ccard-grid::-webkit-scrollbar { width: 7px; }
+.ccard-grid::-webkit-scrollbar-track  { background: var(--bg-surface); border-radius: 4px; }
+.ccard-grid::-webkit-scrollbar-thumb  { background: var(--border-dark); border-radius: 4px; }
+
+.ccard-item {
+    aspect-ratio: 2/3;
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--bg-surface);
+    cursor: pointer;
+    transition: all var(--t-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ccard-item:hover {
+    transform: translateY(-5px) scale(1.03);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent);
+    z-index: 2;
+}
+
+.ccard-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ccard-text {
+    padding: 8px;
+    font-size: 11px;
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    word-break: break-word;
 }
 
 /* ── File Upload ───────────────────────────────────────────────── */

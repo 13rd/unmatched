@@ -357,6 +357,8 @@ body {
 /* ── Canvas Container ───────────────────────────────────────────── */
 .container {
     flex: 1;
+    width: 100%;
+    max-width: 100%;
     background: var(--bg-card);
     border: 2px solid var(--border);
     border-radius: var(--radius-xl);
@@ -1612,7 +1614,7 @@ button:disabled {
 /* ═══════════════════════════════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════════════════════════════ */
-@media (max-width: 1024px) {
+@media (max-width: 1440px) {
     .players-cards-grid { grid-template-columns: 1fr; }
     .container2 { width: 100%; }
     .top-section { flex-direction: column; }
