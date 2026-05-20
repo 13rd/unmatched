@@ -1,141 +1,369 @@
 {
   "name": "галан",
   "speed": 3,
+  "characterImages": [
+    "/uploads/галан_card_preview.webp"
+  ],
   "deck": {
     "backImage": "/uploads/галан_back.png",
     "cards": [
       {
-        "image": "/uploads/галан_card_0_0.png",
-        "text": "заинтересованность"
+        "image": "/uploads/галан_card_0.png",
+        "text": "заинтересованность",
+        "type": "defense",
+        "value": 3,
+        "boost": 2,
+        "effects": {
+          "during_combat": "Если противник солгал, выберите 1: Восстановить 1 здоровье. Взять до 2 карт.",
+          "after_combat": "Если противник не солгал, возьмите любую карту атаки из сброса или колоды."
+        }
       },
       {
-        "image": "/uploads/галан_card_0_1.png",
-        "text": "заинтересованность"
+        "image": "/uploads/галан_card_0.png",
+        "text": "заинтересованность",
+        "type": "defense",
+        "value": 3,
+        "boost": 2,
+        "effects": {
+          "during_combat": "Если противник солгал, выберите 1: Восстановить 1 здоровье. Взять до 2 карт.",
+          "after_combat": "Если противник не солгал, возьмите любую карту атаки из сброса или колоды."
+        }
       },
       {
-        "image": "/uploads/галан_card_1_0.jpg",
-        "text": "горькая правда"
+        "image": "/uploads/галан_card_1.jpg",
+        "text": "горькая правда",
+        "type": "defense",
+        "value": 3,
+        "boost": 2,
+        "effects": {
+          "during_combat": "Если противник не солгал, выберите 1: Нанести урон по его усилению. Сбросьте карту оппоненту с таким же именем с руки или колоды."
+        }
       },
       {
-        "image": "/uploads/галан_card_1_1.jpg",
-        "text": "горькая правда"
+        "image": "/uploads/галан_card_1.jpg",
+        "text": "горькая правда",
+        "type": "defense",
+        "value": 3,
+        "boost": 2,
+        "effects": {
+          "during_combat": "Если противник не солгал, выберите 1: Нанести урон по его усилению. Сбросьте карту оппоненту с таким же именем с руки или колоды."
+        }
       },
       {
-        "image": "/uploads/галан_card_2_0.png",
-        "text": "резвый выпад"
+        "image": "/uploads/галан_card_2.png",
+        "text": "резвый выпад",
+        "type": "attack",
+        "value": 0,
+        "boost": 3,
+        "effects": {
+          "default": "Эффект этой карты нельзя отменить.",
+          "after_combat": "Если противник сыграл карту град ударов"
+        },
+        "additionalAction": {
+          "type": "attack",
+          "value": 4,
+          "position": "at_end",
+          "name": "град ударов",
+          "effects": {}
+        }
       },
       {
-        "image": "/uploads/галан_card_2_1.png",
-        "text": "резвый выпад"
+        "image": "/uploads/галан_card_2.png",
+        "text": "резвый выпад",
+        "type": "attack",
+        "value": 0,
+        "boost": 3,
+        "effects": {
+          "default": "Эффект этой карты нельзя отменить.",
+          "after_combat": "Если противник сыграл карту град ударов"
+        },
+        "additionalAction": {
+          "type": "attack",
+          "value": 4,
+          "position": "at_end",
+          "name": "град ударов",
+          "effects": {}
+        }
       },
       {
-        "image": "/uploads/галан_card_2_2.png",
-        "text": "резвый выпад"
+        "image": "/uploads/галан_card_2.png",
+        "text": "резвый выпад",
+        "type": "attack",
+        "value": 0,
+        "boost": 3,
+        "effects": {
+          "default": "Эффект этой карты нельзя отменить.",
+          "after_combat": "Если противник сыграл карту град ударов"
+        },
+        "additionalAction": {
+          "type": "attack",
+          "value": 4,
+          "position": "at_end",
+          "name": "град ударов",
+          "effects": {}
+        }
       },
       {
-        "image": "/uploads/галан_card_3_0.jpg",
-        "text": "ложь - не укрытие"
+        "image": "/uploads/галан_card_3.jpg",
+        "text": "ложь - не укрытие",
+        "type": "versatile",
+        "value": 3,
+        "boost": 1,
+        "effects": {
+          "immediately": "Если противник солгал, отмените все эффекты его карты и нанесите ему урон равный разнице в названных значениях.",
+          "ongoing": "Противник не может солгать. X Конец вашего следующего хода."
+        }
       },
       {
-        "image": "/uploads/галан_card_3_1.jpg",
-        "text": "ложь - не укрытие"
+        "image": "/uploads/галан_card_3.jpg",
+        "text": "ложь - не укрытие",
+        "type": "versatile",
+        "value": 3,
+        "boost": 1,
+        "effects": {
+          "immediately": "Если противник солгал, отмените все эффекты его карты и нанесите ему урон равный разнице в названных значениях.",
+          "ongoing": "Противник не может солгать. X Конец вашего следующего хода."
+        }
       },
       {
-        "image": "/uploads/галан_card_4_0.png",
-        "text": "широкий размах"
+        "image": "/uploads/галан_card_4.png",
+        "text": "широкий размах",
+        "type": "versatile",
+        "value": 3,
+        "boost": 1,
+        "effects": {
+          "immediately": "Если противник не солгал, значение его карты не может быть изменено.",
+          "after_combat": "Все вражеские бойцы в дистанции 3 ячеек получают 1 урон."
+        }
       },
       {
-        "image": "/uploads/галан_card_4_1.png",
-        "text": "широкий размах"
+        "image": "/uploads/галан_card_4.png",
+        "text": "широкий размах",
+        "type": "versatile",
+        "value": 3,
+        "boost": 1,
+        "effects": {
+          "immediately": "Если противник не солгал, значение его карты не может быть изменено.",
+          "after_combat": "Все вражеские бойцы в дистанции 3 ячеек получают 1 урон."
+        }
       },
       {
-        "image": "/uploads/галан_card_5_0.jpg",
-        "text": "\"я - галан! Заповедь правды\""
+        "image": "/uploads/галан_card_5.jpg",
+        "text": "\"я - галан! Заповедь правды\"",
+        "type": "attack",
+        "value": 7,
+        "boost": 4,
+        "effects": {
+          "default": "Разыгрывая эту карту вы не можете солгать."
+        }
       },
       {
-        "image": "/uploads/галан_card_6_0.png",
-        "text": "адское пламя"
+        "image": "/uploads/галан_card_6.png",
+        "text": "адское пламя",
+        "type": "attack",
+        "value": 2,
+        "boost": 2,
+        "effects": {
+          "during_combat": "Если вы солгали, увеличьте значение этой карты усилением верхней карты вашего сброса.",
+          "after_combat": "Если вы проиграли бой получите 2 действия."
+        }
       },
       {
-        "image": "/uploads/галан_card_6_1.png",
-        "text": "адское пламя"
+        "image": "/uploads/галан_card_6.png",
+        "text": "адское пламя",
+        "type": "attack",
+        "value": 2,
+        "boost": 2,
+        "effects": {
+          "during_combat": "Если вы солгали, увеличьте значение этой карты усилением верхней карты вашего сброса.",
+          "after_combat": "Если вы проиграли бой получите 2 действия."
+        }
       },
       {
-        "image": "/uploads/галан_card_7_0.jpg",
-        "text": "бегством не спастись"
+        "image": "/uploads/галан_card_7.jpg",
+        "text": "бегством не спастись",
+        "type": "attack",
+        "value": 1,
+        "boost": 1,
+        "effects": {
+          "immediately": "Противник не может покинуть свою ячейку до конца его хода.",
+          "during_combat": "Если вы сказали правду, значение этой карты 5."
+        }
       },
       {
-        "image": "/uploads/галан_card_7_1.jpg",
-        "text": "бегством не спастись"
+        "image": "/uploads/галан_card_7.jpg",
+        "text": "бегством не спастись",
+        "type": "attack",
+        "value": 1,
+        "boost": 1,
+        "effects": {
+          "immediately": "Противник не может покинуть свою ячейку до конца его хода.",
+          "during_combat": "Если вы сказали правду, значение этой карты 5."
+        }
       },
       {
-        "image": "/uploads/галан_card_8_0.jpg",
-        "text": "подавление"
+        "image": "/uploads/галан_card_8.jpg",
+        "text": "подавление",
+        "type": "versatile",
+        "value": 5,
+        "boost": 1,
+        "effects": {
+          "during_combat": "Если вы сказали правду, посмотрите руку противника.",
+          "after_combat": "Если противник солгал в этом ходу, нанесите ему 1 урон.",
+          "ongoing": "Противник считается солгавшим. X Конец вашего следующего хода."
+        }
       },
       {
-        "image": "/uploads/галан_card_8_1.jpg",
-        "text": "подавление"
+        "image": "/uploads/галан_card_8.jpg",
+        "text": "подавление",
+        "type": "versatile",
+        "value": 5,
+        "boost": 1,
+        "effects": {
+          "during_combat": "Если вы сказали правду, посмотрите руку противника.",
+          "after_combat": "Если противник солгал в этом ходу, нанесите ему 1 урон.",
+          "ongoing": "Противник считается солгавшим. X Конец вашего следующего хода."
+        }
       },
       {
-        "image": "/uploads/галан_card_9_0.jpg",
-        "text": "заповедь правды"
+        "image": "/uploads/галан_card_9.jpg",
+        "text": "заповедь правды",
+        "type": "versatile",
+        "value": 4,
+        "boost": 2,
+        "effects": {
+          "during_combat": "Значение карты солгавшего в этом ходу равно 2."
+        }
       },
       {
-        "image": "/uploads/галан_card_9_1.jpg",
-        "text": "заповедь правды"
+        "image": "/uploads/галан_card_9.jpg",
+        "text": "заповедь правды",
+        "type": "versatile",
+        "value": 4,
+        "boost": 2,
+        "effects": {
+          "during_combat": "Значение карты солгавшего в этом ходу равно 2."
+        }
       },
       {
-        "image": "/uploads/галан_card_10_0.jpg",
-        "text": "\"Я никогда не лгу\""
+        "image": "/uploads/галан_card_10.jpg",
+        "text": "\"Я никогда не лгу\"",
+        "type": "defense",
+        "value": 5,
+        "boost": 1,
+        "effects": {
+          "after_combat": "Если вы сказали правду в прошлом ходу, восстановите 2 здоровья.",
+          "ongoing": "Все обязаны говорить правду. X Конец вашего хода."
+        }
       },
       {
-        "image": "/uploads/галан_card_10_1.jpg",
-        "text": "\"Я никогда не лгу\""
+        "image": "/uploads/галан_card_10.jpg",
+        "text": "\"Я никогда не лгу\"",
+        "type": "defense",
+        "value": 5,
+        "boost": 1,
+        "effects": {
+          "after_combat": "Если вы сказали правду в прошлом ходу, восстановите 2 здоровья.",
+          "ongoing": "Все обязаны говорить правду. X Конец вашего хода."
+        }
       },
       {
-        "image": "/uploads/галан_card_11_0.png",
-        "text": "пристрастие"
+        "image": "/uploads/галан_card_11.png",
+        "text": "пристрастие",
+        "type": "versatile",
+        "value": 3,
+        "boost": 2,
+        "effects": {
+          "immediately": "Если противник солгал, посмотрите его руку и сбросьте любую карту названного значения или меньше."
+        }
       },
       {
-        "image": "/uploads/галан_card_11_1.png",
-        "text": "пристрастие"
+        "image": "/uploads/галан_card_11.png",
+        "text": "пристрастие",
+        "type": "versatile",
+        "value": 3,
+        "boost": 2,
+        "effects": {
+          "immediately": "Если противник солгал, посмотрите его руку и сбросьте любую карту названного значения или меньше."
+        }
       },
       {
-        "image": "/uploads/галан_card_12_0.jpg",
-        "text": "хитрость заповеди"
+        "image": "/uploads/галан_card_12.jpg",
+        "text": "хитрость заповеди",
+        "type": "versatile",
+        "value": 3,
+        "boost": 1,
+        "effects": {
+          "default": "После того как противник назовет значение карты, откройте эту карту и попробуйте угадать напечатанное значение его карты.",
+          "after_combat": "Если вы угадали, назовите название карты. Противник обязан играть карты с таким названием в открытую."
+        }
       },
       {
-        "image": "/uploads/галан_card_12_1.jpg",
-        "text": "хитрость заповеди"
+        "image": "/uploads/галан_card_12.jpg",
+        "text": "хитрость заповеди",
+        "type": "versatile",
+        "value": 3,
+        "boost": 1,
+        "effects": {
+          "default": "После того как противник назовет значение карты, откройте эту карту и попробуйте угадать напечатанное значение его карты.",
+          "after_combat": "Если вы угадали, назовите название карты. Противник обязан играть карты с таким названием в открытую."
+        }
       },
       {
-        "image": "/uploads/галан_card_13_0.jpg",
-        "text": "критичный предел"
+        "image": "/uploads/галан_card_13.jpg",
+        "text": "критичный предел",
+        "type": "scheme",
+        "value": 0,
+        "boost": 3,
+        "effects": {
+          "default": "Возьмите любую карту с колоды. Получите действие.",
+          "ongoing": "Если вы говорите правду, увеличьте значение вашей карты на 1.\nX Конец вашего хода."
+        }
       },
       {
-        "image": "/uploads/галан_card_14_0.jpg",
-        "text": "ложь во благо"
+        "image": "/uploads/галан_card_14.jpg",
+        "text": "ложь во благо",
+        "type": "attack",
+        "value": 3,
+        "boost": 2,
+        "effects": {
+          "default": "Не получите урона за ложь.",
+          "after_combat": "Если вы солгали, возьмите карту с колоды того значения, которое вы назвали."
+        }
       },
       {
-        "image": "/uploads/галан_card_14_1.jpg",
-        "text": "ложь во благо"
+        "image": "/uploads/галан_card_14.jpg",
+        "text": "ложь во благо",
+        "type": "attack",
+        "value": 3,
+        "boost": 2,
+        "effects": {
+          "default": "Не получите урона за ложь.",
+          "after_combat": "Если вы солгали, возьмите карту с колоды того значения, которое вы назвали."
+        }
       },
       {
-        "image": "/uploads/галан_card_15_0.jpg",
-        "text": "регенерация демона"
+        "image": "/uploads/галан_card_15.jpg",
+        "text": "регенерация демона",
+        "type": "defense",
+        "value": 0,
+        "boost": 3,
+        "effects": {
+          "default": "Если противник солгал в этом ходу, значение этой карты 3.",
+          "immediately": "Восстановите 1 здоровье.",
+          "during_combat": "Восстановите 1 здоровье.",
+          "after_combat": "Восстановите 1 здоровье."
+        }
       }
     ]
   },
   "mainToken": {
-    "image": "/uploads/галан_token.png",
+    "image": "/uploads/image-1779303200318-251868991.png",
     "color": "#c52550",
     "hp": 16,
     "attackType": "melee"
   },
   "extraTokens": [],
   "extraTokenHP": 0,
-  "counters": [],
-  "characterImages": [
-    "/uploads/галан_token.png"
-  ]
+  "counters": []
 }

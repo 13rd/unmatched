@@ -720,6 +720,7 @@ class CharacterEditor {
         document.getElementById('importTheUnmatched').addEventListener('click', async () => {
             const urlInput = document.getElementById('theunmatchedUrl');
             const status = document.getElementById('theunmatchedStatus');
+            const btn = document.getElementById('importTheUnmatched');
             const url = urlInput.value.trim();
             if (!url) {
                 status.textContent = 'Введите URL страницы персонажа';
@@ -727,7 +728,13 @@ class CharacterEditor {
                 return;
             }
 
-            status.textContent = 'Загрузка...';
+            btn.disabled = true;
+            let elapsed = 0;
+            const timer = setInterval(() => {
+                elapsed++;
+                status.textContent = `Загрузка изображений... ${elapsed}с`;
+            }, 1000);
+            status.textContent = 'Загрузка изображений... 0с';
             status.className = 'import-status loading';
 
             try {
@@ -737,16 +744,20 @@ class CharacterEditor {
                     body: JSON.stringify({ url })
                 });
 
+                clearInterval(timer);
+                btn.disabled = false;
+
                 if (!response.ok) {
                     const err = await response.json();
                     throw new Error(err.detail || err.error || 'Ошибка импорта');
                 }
 
                 const result = await response.json();
+                result._elapsed = elapsed;
                 this._applyTheUnmatchedImport(result);
-                status.textContent = 'Готово!';
-                status.className = 'import-status success';
             } catch (error) {
+                clearInterval(timer);
+                btn.disabled = false;
                 status.textContent = 'Ошибка: ' + error.message;
                 status.className = 'import-status error';
             }
@@ -774,26 +785,36 @@ class CharacterEditor {
         this.updateCharCardsGrid();
         this.updateCharCardsCount();
 
-        if (char.mainToken.image) {
+        this.mainToken.color = (char.mainToken && char.mainToken.color) || '#ff0000';
+        this.mainToken.hp = (char.mainToken && char.mainToken.hp) || 14;
+        this.mainToken.attackType = (char.mainToken && char.mainToken.attackType) || 'melee';
+        document.getElementById('mainTokenColor').value = this.mainToken.color;
+        document.getElementById('mainTokenHP').value = this.mainToken.hp;
+        document.getElementById('mainTokenAttackType').value = this.mainToken.attackType;
+        if (char.mainToken && char.mainToken.image) {
             this.mainToken.image = char.mainToken.image;
-            this.mainToken.color = char.mainToken.color || '#ff0000';
-            this.mainToken.hp = char.mainToken.hp || 14;
-            this.mainToken.attackType = char.mainToken.attackType || 'melee';
             document.getElementById('mainTokenImageName').textContent = 'Загружено с the-unmatched.club';
-            document.getElementById('mainTokenColor').value = this.mainToken.color;
-            document.getElementById('mainTokenHP').value = this.mainToken.hp;
-            document.getElementById('mainTokenAttackType').value = this.mainToken.attackType;
             this.updateMainTokenPreview();
         }
 
         this.speed = char.speed || 3;
         document.getElementById('characterSpeed').value = this.speed;
 
+        // characterImages: token + unique card art images
         this.characterImages = char.characterImages || [];
         this.updateCharacterImagePreview();
 
-        this.extraTokens = char.extraTokens || [];
-        this.extraTokensCount = this.extraTokens.length || 0;
+        // Extra tokens (sidekicks) — preserve all fields including name, hp, count, speed
+        this.extraTokens = (char.extraTokens || []).map(t => ({
+            image: t.image || null,
+            color: t.color || '#0000ff',
+            attackType: t.attackType || 'melee',
+            name: t.name || '',
+            hp: t.hp || null,
+            count: t.count || 1,
+            speed: t.speed || null,
+        }));
+        this.extraTokensCount = this.extraTokens.length;
         document.getElementById('extraTokensCount').value = this.extraTokensCount;
         this.extraTokenHP = char.extraTokenHP || 0;
         document.getElementById('extraTokenHP').value = this.extraTokenHP;
@@ -804,14 +825,24 @@ class CharacterEditor {
         document.getElementById('countersCount').value = this.countersCount;
         this.updateCountersFields();
 
-        if (result.missingFields && result.missingFields.length > 0) {
-            const fields = result.missingFields.join(', ');
-            alert(
-                `Импорт с the-unmatched.club завершён!\n\nФайл сохранён: ${result.characterPath}\n\nСводка: ${result.summary}\n\nЗаполните вручную: ${fields}`
-            );
-        } else {
-            alert(`Импорт с the-unmatched.club завершён!\n\nФайл сохранён: ${result.characterPath}\n\n${result.summary}`);
+        // Show import summary below the button (no alert)
+        const status = document.getElementById('theunmatchedStatus');
+        const elapsed = result._elapsed || 0;
+        const lines = [
+            `Файл: ${result.characterPath}`,
+            `${result.summary} (${elapsed}с, файлов: ${result.filesCopied || 0})`,
+        ];
+        if (char.specialAbility && char.specialAbility.name) {
+            lines.push(`Способность: «${char.specialAbility.name}»`);
         }
+        if (char.ruleCards && char.ruleCards.length > 0) {
+            lines.push(`Доп. правила: ${char.ruleCards[0].title}`);
+        }
+        if (result.missingFields && result.missingFields.length > 0) {
+            lines.push(`⚠ Заполните вручную: ${result.missingFields.join(', ')}`);
+        }
+        status.innerHTML = lines.map(l => `<div>${l}</div>`).join('');
+        status.className = 'import-status success';
     }
 
     _applyTTSImport(result) {
@@ -972,8 +1003,12 @@ class CharacterEditor {
             const tokenItem = document.createElement('div');
             tokenItem.className = 'extra-token-item';
             
+            const nameLabel = token.name ? `${token.name}` : `Токен ${index + 1}`;
+            const hpInfo = token.hp ? ` · HP: ${token.hp}` : '';
+            const speedInfo = token.speed ? ` · Скорость: ${token.speed}` : '';
+            const countInfo = token.count > 1 ? ` · Кол-во: ${token.count}` : '';
             tokenItem.innerHTML = `
-                <h4>Дополнительный токен ${index + 1}</h4>
+                <h4>${nameLabel}${hpInfo}${speedInfo}${countInfo}</h4>
                 <div class="extra-token-config">
                     <div class="extra-token-preview" id="extraTokenPreview${index}">
                         <div class="token-preview-placeholder">Загрузите изображение</div>
@@ -987,7 +1022,7 @@ class CharacterEditor {
                         </div>
                         <div class="setting-group">
                             <label for="extraTokenColor${index}">Цвет токена:</label>
-                            <input type="color" id="extraTokenColor${index}" value="${token.color}">
+                            <input type="color" id="extraTokenColor${index}" value="${token.color || '#0000ff'}">
                         </div>
                         <div class="setting-group">
                             <label for="extraTokenAttackType${index}">Тип атаки:</label>

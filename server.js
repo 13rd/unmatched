@@ -51,7 +51,9 @@ const storage = multer.diskStorage({
     }
 });
 
-const { execSync } = require('child_process');
+const { execSync, exec } = require('child_process');
+const { promisify } = require('util');
+const execAsync = promisify(exec);
 
 const upload = multer({ storage: storage });
 
@@ -128,52 +130,53 @@ app.get('/api/maps', async (req, res) => {
 
 // API для импорта TTS колоды
 app.post('/api/import-tts', upload.single('file'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'Файл не загружен' });
+    }
+
+    const zipPath = req.file.path;
+    const scriptPath = path.join(__dirname, 'scripts', 'import_tts_character.py');
+    const cmd = `python3 "${scriptPath}" --zip "${zipPath}" --project-dir "${__dirname}"`;
+
     try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'Файл не загружен' });
-        }
-
-        const zipPath = req.file.path;
-        const scriptPath = path.join(__dirname, 'scripts', 'import_tts_character.py');
-        const cmd = `python3 "${scriptPath}" --zip "${zipPath}" --project-dir "${__dirname}"`;
-
-        const stdout = execSync(cmd, { encoding: 'utf-8', timeout: 60000 });
+        const { stdout } = await execAsync(cmd, { timeout: 60000, maxBuffer: 10 * 1024 * 1024 });
+        try { require('fs').unlinkSync(zipPath); } catch (_) {}
         const result = JSON.parse(stdout);
-
-        // Clean up temp upload
-        try { require('fs').unlinkSync(zipPath); } catch (e) { /* ignore */ }
-
-        if (!result.success) {
-            return res.status(400).json(result);
-        }
-
+        if (!result.success) return res.status(400).json(result);
         res.json(result);
     } catch (error) {
+        try { require('fs').unlinkSync(zipPath); } catch (_) {}
+        const stdout = error.stdout || '';
+        if (stdout) {
+            try { return res.status(400).json(JSON.parse(stdout)); } catch (_) {}
+        }
         console.error('Ошибка импорта TTS:', error.message);
         res.status(500).json({ error: 'Ошибка импорта TTS', detail: error.message });
     }
 });
 
 // API для импорта с the-unmatched.club
+// Используем execAsync вместо execSync — импорт занимает несколько минут (Chrome rendering),
+// и блокировка event loop приводила к потере соединения.
 app.post('/api/import-theunmatched', express.json(), async (req, res) => {
+    const { url } = req.body || {};
+    if (!url) {
+        return res.status(400).json({ error: 'URL не указан' });
+    }
+
+    const scriptPath = path.join(__dirname, 'scripts', 'fetch_theunmatched.py');
+    const cmd = `python3 "${scriptPath}" "${url}" --project-dir "${__dirname}"`;
+
     try {
-        const { url } = req.body;
-        if (!url) {
-            return res.status(400).json({ error: 'URL не указан' });
-        }
-
-        const scriptPath = path.join(__dirname, 'scripts', 'fetch_theunmatched.py');
-        const cmd = `python3 "${scriptPath}" "${url}" --project-dir "${__dirname}"`;
-
-        const stdout = execSync(cmd, { encoding: 'utf-8', timeout: 120000 });
+        const { stdout } = await execAsync(cmd, { timeout: 360000, maxBuffer: 10 * 1024 * 1024 });
         const result = JSON.parse(stdout);
-
-        if (!result.success) {
-            return res.status(400).json(result);
-        }
-
+        if (!result.success) return res.status(400).json(result);
         res.json(result);
     } catch (error) {
+        const stdout = error.stdout || '';
+        if (stdout) {
+            try { return res.status(400).json(JSON.parse(stdout)); } catch (_) {}
+        }
         console.error('Ошибка импорта с the-unmatched.club:', error.message);
         res.status(500).json({ error: 'Ошибка импорта с the-unmatched.club', detail: error.message });
     }
