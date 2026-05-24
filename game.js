@@ -1314,7 +1314,8 @@ class CardManager {
         // Сброшенные карты
         this.player1Discard = [];
         this.player2Discard = [];
-        
+        this.updateDiscardCounts();
+
         // Состояние показа руки
         this.player1HandVisible = false;
         this.player2HandVisible = false;
@@ -1789,8 +1790,19 @@ class CardManager {
     }
 
     updateDiscardCounts() {
-        document.getElementById('discardPilePlayer1').textContent = `Сброс: ${this.player1Discard.length}`;
-        document.getElementById('discardPilePlayer2').textContent = `Сброс: ${this.player2Discard.length}`;
+        this._renderDiscardButton('discardPilePlayer1', this.player1Discard);
+        this._renderDiscardButton('discardPilePlayer2', this.player2Discard);
+    }
+
+    _renderDiscardButton(btnId, discardPile) {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        const topCard = discardPile.length > 0 ? discardPile[discardPile.length - 1] : null;
+        if (topCard && topCard.image) {
+            btn.innerHTML = `<div class="discard-top-card"><img src="${topCard.image}" alt=""><span class="discard-count-badge">${discardPile.length}</span></div>`;
+        } else {
+            btn.innerHTML = `<div class="discard-top-card discard-top-empty"><span class="discard-empty-label">Сброс</span><span class="discard-count-badge">${discardPile.length}</span></div>`;
+        }
     }
 
     setupEventListeners() {
