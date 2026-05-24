@@ -429,12 +429,26 @@ io.on('connection', (socket) => {
         
         console.log('Запрос колод от пользователя', socket.username, 'для комнаты', socket.roomCode);
         
-        // Отправляем оригинальные колоды из настроек персонажей
+        const p1Char = room.settings.player1.character;
+        const p2Char = room.settings.player2.character;
+        const p1Extra = room.settings.player1.additionalCharacter;
+        const p2Extra = room.settings.player2.additionalCharacter;
+
+        let p1Deck = p1Char ? p1Char.deck : null;
+        let p2Deck = p2Char ? p2Char.deck : null;
+
+        if (p1Deck && p1Extra && p1Extra.deck && p1Extra.deck.cards && p1Extra.deck.cards.length > 0) {
+            p1Deck = { backImage: p1Deck.backImage, cards: [...p1Deck.cards, ...p1Extra.deck.cards] };
+        }
+        if (p2Deck && p2Extra && p2Extra.deck && p2Extra.deck.cards && p2Extra.deck.cards.length > 0) {
+            p2Deck = { backImage: p2Deck.backImage, cards: [...p2Deck.cards, ...p2Extra.deck.cards] };
+        }
+
         const decksData = {
-            player1: room.settings.player1.character ? room.settings.player1.character.deck : null,
-            player2: room.settings.player2.character ? room.settings.player2.character.deck : null,
-            player1Character: room.settings.player1.character || null,
-            player2Character: room.settings.player2.character || null
+            player1: p1Deck,
+            player2: p2Deck,
+            player1Character: p1Char || null,
+            player2Character: p2Char || null
         };
         
         console.log('Отправка колод:', {

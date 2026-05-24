@@ -31,11 +31,13 @@ class GameSetup {
         this.ctx = this.canvas.getContext('2d');
         
         this.settings = {
-            player1: { 
-                character: null // Выбранный персонаж
+            player1: {
+                character: null,
+                additionalCharacter: null
             },
-            player2: { 
-                character: null // Выбранный персонаж
+            player2: {
+                character: null,
+                additionalCharacter: null
             }
         };
         
@@ -265,6 +267,142 @@ class GameSetup {
 
         // Обновляем информацию о выбранном персонаже
         this.updateSelectedCharacterInfo(playerNum, character);
+
+        // Сбрасываем дополнительного персонажа при смене основного
+        if (playerNum === 1) {
+            this.settings.player1.additionalCharacter = null;
+        } else {
+            this.settings.player2.additionalCharacter = null;
+        }
+
+        // Показываем секцию дополнительной колоды только если у персонажа есть allyCharacter
+        this.showAdditionalDeckSection(playerNum);
+    }
+
+    showAdditionalDeckSection(playerNum) {
+        const section = document.getElementById(`player${playerNum}AdditionalDeckSection`);
+        if (!section) return;
+
+        const character = playerNum === 1
+            ? this.settings.player1.character
+            : this.settings.player2.character;
+
+        if (!character || !character.allyCharacter) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+        this.renderAdditionalDeckGallery(playerNum);
+        this.updateAdditionalDeckInfo(playerNum);
+    }
+
+    renderAdditionalDeckGallery(playerNum) {
+        const gallery = document.getElementById(`player${playerNum}AdditionalDeckGallery`);
+        if (!gallery) return;
+        gallery.innerHTML = '';
+
+        const mainCharacter = playerNum === 1
+            ? this.settings.player1.character
+            : this.settings.player2.character;
+
+        if (!mainCharacter || !mainCharacter.allyCharacter) return;
+
+        const selectedAdditional = playerNum === 1
+            ? this.settings.player1.additionalCharacter
+            : this.settings.player2.additionalCharacter;
+
+        const allies = Array.isArray(mainCharacter.allyCharacter)
+            ? mainCharacter.allyCharacter
+            : [mainCharacter.allyCharacter];
+
+        allies.forEach((ally, index) => {
+            const card = document.createElement('div');
+            card.className = 'character-card';
+            if (selectedAdditional && selectedAdditional.name === ally.name) card.classList.add('selected');
+            card.dataset.allyIndex = index;
+
+            const imageDiv = document.createElement('div');
+            imageDiv.className = 'character-card-image';
+            if (ally.mainToken && ally.mainToken.image) {
+                const img = document.createElement('img');
+                img.src = ally.mainToken.image;
+                img.alt = ally.name;
+                imageDiv.style.backgroundColor = ally.mainToken.color || '#666';
+                imageDiv.appendChild(img);
+            }
+
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'character-card-name';
+            nameDiv.textContent = ally.name;
+
+            const deckCards = ally.deck && ally.deck.cards ? ally.deck.cards.length : 0;
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'character-card-info';
+            infoDiv.textContent = `${deckCards} карт`;
+
+            card.appendChild(imageDiv);
+            card.appendChild(nameDiv);
+            card.appendChild(infoDiv);
+
+            card.addEventListener('click', () => {
+                this.selectAdditionalDeck(playerNum, ally, index);
+            });
+
+            gallery.appendChild(card);
+        });
+    }
+
+    selectAdditionalDeck(playerNum, ally, allyIndex) {
+        if (playerNum === 1) {
+            this.settings.player1.additionalCharacter = ally;
+        } else {
+            this.settings.player2.additionalCharacter = ally;
+        }
+
+        const gallery = document.getElementById(`player${playerNum}AdditionalDeckGallery`);
+        gallery.querySelectorAll('.character-card').forEach(card => card.classList.remove('selected'));
+        gallery.querySelector(`[data-ally-index="${allyIndex}"]`).classList.add('selected');
+
+        this.updateAdditionalDeckInfo(playerNum);
+    }
+
+    clearAdditionalDeck(playerNum) {
+        if (playerNum === 1) {
+            this.settings.player1.additionalCharacter = null;
+        } else {
+            this.settings.player2.additionalCharacter = null;
+        }
+
+        const gallery = document.getElementById(`player${playerNum}AdditionalDeckGallery`);
+        if (gallery) gallery.querySelectorAll('.character-card').forEach(card => card.classList.remove('selected'));
+
+        this.updateAdditionalDeckInfo(playerNum);
+    }
+
+    updateAdditionalDeckInfo(playerNum) {
+        const infoEl = document.getElementById(`player${playerNum}AdditionalDeckSelected`);
+        if (!infoEl) return;
+
+        const additional = playerNum === 1
+            ? this.settings.player1.additionalCharacter
+            : this.settings.player2.additionalCharacter;
+
+        if (!additional) {
+            infoEl.innerHTML = '';
+            return;
+        }
+
+        const deckCards = additional.deck && additional.deck.cards ? additional.deck.cards.length : 0;
+        infoEl.innerHTML = `
+            <div class="additional-deck-badge">
+                <span class="additional-deck-badge-name">+ ${additional.name} (${deckCards} карт)</span>
+                <button class="additional-deck-clear" title="Убрать дополнительную колоду">&times;</button>
+            </div>
+        `;
+        infoEl.querySelector('.additional-deck-clear').addEventListener('click', () => {
+            this.clearAdditionalDeck(playerNum);
+        });
     }
 
     updateSelectedCharacterInfo(playerNum, character) {
@@ -594,10 +732,12 @@ class GameSetup {
                 backgroundImage: this.backgroundImageData,
                 points: this.pointsData,
                 player1: {
-                    character: this.settings.player1.character
+                    character: this.settings.player1.character,
+                    additionalCharacter: this.settings.player1.additionalCharacter || null
                 },
                 player2: {
-                    character: this.settings.player2.character
+                    character: this.settings.player2.character,
+                    additionalCharacter: this.settings.player2.additionalCharacter || null
                 }
             };
 

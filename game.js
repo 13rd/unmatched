@@ -1194,7 +1194,7 @@ class Deck {
     }
 
     loadCustomDeck(customDeck) {
-        if (customDeck.cards && customDeck.cards.length === 30) {
+        if (customDeck.cards && customDeck.cards.length > 0) {
             this.cards = customDeck.cards.map((card, index) => ({
                 text: card.text || `Карта ${index + 1}`,
                 id: `${this.owner}_card_${this.nextCardId++}`,
