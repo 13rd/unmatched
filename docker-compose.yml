@@ -3,7 +3,7 @@ version: '3.8'
 services:
   unmatched-game:
     build: .
-    image: docker.io/13imp/unmatched-game:0.3.9
+    image: docker.io/13imp/unmatched-game:0.4.5
     container_name: unmatched-game
     ports:
       - "3000:3000"

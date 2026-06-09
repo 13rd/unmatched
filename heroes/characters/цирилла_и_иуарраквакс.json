@@ -1,0 +1,154 @@
+{
+  "name": "Цирилла и Иуарраквакс",
+  "speed": 2,
+  "characterImages": [
+    "/uploads/image-1779614177348-297357560.png"
+  ],
+  "deck": {
+    "backImage": "/uploads/image-1779614160549-154874428.png",
+    "cards": [
+      {
+        "image": "/uploads/image-1779614169654-13846539.png",
+        "text": "дитя_2"
+      },
+      {
+        "image": "/uploads/image-1779614169662-316451723.png",
+        "text": "дитя_1"
+      },
+      {
+        "image": "/uploads/image-1779614169673-317460420.png",
+        "text": "союзник_2"
+      },
+      {
+        "image": "/uploads/image-1779614169683-235058574.png",
+        "text": "союзник_1"
+      },
+      {
+        "image": "/uploads/image-1779614169692-995564649.png",
+        "text": "госпожа_2"
+      },
+      {
+        "image": "/uploads/image-1779614169698-260342419.png",
+        "text": "госпожа_1"
+      },
+      {
+        "image": "/uploads/image-1779614169706-457911943.png",
+        "text": "путеводный_свет_3"
+      },
+      {
+        "image": "/uploads/image-1779614169715-517517293.png",
+        "text": "путеводный_свет_2"
+      },
+      {
+        "image": "/uploads/image-1779614169723-955219510.png",
+        "text": "путеводный_свет_1"
+      },
+      {
+        "image": "/uploads/image-1779614169733-941279829.png",
+        "text": "парирование_3"
+      },
+      {
+        "image": "/uploads/image-1779614169739-751442285.png",
+        "text": "парирование_2"
+      },
+      {
+        "image": "/uploads/image-1779614169750-824577199.png",
+        "text": "парирование_1"
+      },
+      {
+        "image": "/uploads/image-1779614169759-82050922.png",
+        "text": "зираэль_3"
+      },
+      {
+        "image": "/uploads/image-1779614169766-784975059.png",
+        "text": "зираэль_2"
+      },
+      {
+        "image": "/uploads/image-1779614169776-32882313.png",
+        "text": "зираэль_1"
+      },
+      {
+        "image": "/uploads/image-1779614169786-19818398.png",
+        "text": "миг_3"
+      },
+      {
+        "image": "/uploads/image-1779614169792-456322131.png",
+        "text": "миг_2"
+      },
+      {
+        "image": "/uploads/image-1779614169805-292346863.png",
+        "text": "миг_1"
+      },
+      {
+        "image": "/uploads/image-1779614169813-308465772.png",
+        "text": "на_гарни_3"
+      },
+      {
+        "image": "/uploads/image-1779614169822-277551444.png",
+        "text": "на_гарни_2"
+      },
+      {
+        "image": "/uploads/image-1779614169830-345822491.png",
+        "text": "на_гарни_1"
+      },
+      {
+        "image": "/uploads/image-1779614169839-154558923.png",
+        "text": "проклятие_3"
+      },
+      {
+        "image": "/uploads/image-1779614169847-804833137.png",
+        "text": "проклятие_2"
+      },
+      {
+        "image": "/uploads/image-1779614169858-811542410.png",
+        "text": "проклятие_1"
+      },
+      {
+        "image": "/uploads/image-1779614169866-956974740.png",
+        "text": "проводник_3"
+      },
+      {
+        "image": "/uploads/image-1779614169872-953532435.png",
+        "text": "проводник_2"
+      },
+      {
+        "image": "/uploads/image-1779614169884-670337995.png",
+        "text": "проводник_1"
+      },
+      {
+        "image": "/uploads/image-1779614169893-717714299.png",
+        "text": "львёнок_3"
+      },
+      {
+        "image": "/uploads/image-1779614169899-417095359.png",
+        "text": "львёнок_2"
+      },
+      {
+        "image": "/uploads/image-1779614169911-154123184.png",
+        "text": "львёнок_1"
+      }
+    ]
+  },
+  "mainToken": {
+    "image": "/uploads/image-1779614214177-660852404.png",
+    "color": "#64b3b0",
+    "hp": 15,
+    "attackType": "melee"
+  },
+  "extraTokens": [
+    {
+      "image": "/uploads/image-1779614217682-124469636.png",
+      "color": "#62a0ea",
+      "attackType": "melee"
+    }
+  ],
+  "extraTokenHP": 7,
+  "counters": [
+    {
+      "name": "Исток",
+      "minValue": 0,
+      "maxValue": 10,
+      "currentValue": 0
+    }
+  ]
+}
